@@ -1,0 +1,54 @@
+import { CreateDAOFact } from "./create-dao.js";
+import { ProposeFact } from "./propose.js";
+import { CancelProposalFact } from "./cancel-proposal.js";
+import { RegisterFact } from "./register.js";
+import { PreSnapFact } from "./pre-snap.js";
+import { PostSnapFact } from "./post-snap.js";
+import { VoteFact } from "./vote.js";
+import { ExecuteFact } from "./execute.js";
+import { CryptoProposal, BizProposal } from "./proposal.js";
+import { TransferCalldata, GovernanceCalldata } from "./proposal.js";
+import { ContractGenerator, Operation } from "../base/index.js";
+import { Address } from "../../key/index.js";
+import { CurrencyID } from "../../common/index.js";
+import { Big, IP, LongString } from "../../types/index.js";
+import { UpdatePolicyFact } from "./update-policy.js";
+type policyData = {
+    token: string | CurrencyID;
+    threshold: string | number | Big;
+    fee: string | number | Big;
+    proposers: (string | Address)[];
+    proposalReviewPeriod: string | number | Big;
+    registrationPeriod: string | number | Big;
+    preSnapshotPeriod: string | number | Big;
+    votingPeriod: string | number | Big;
+    postSnapshotPeriod: string | number | Big;
+    executionDelayPeriod: string | number | Big;
+    turnout: string | number | Big;
+    quorum: string | number | Big;
+};
+type daoData = policyData & {
+    option: "crypto" | "biz";
+};
+export declare class DAO extends ContractGenerator {
+    constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
+    createService(contractAddr: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): Operation<CreateDAOFact>;
+    updateService(contractAddr: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): Operation<UpdatePolicyFact>;
+    formTransferCalldata(sender: string | Address, receiver: string | Address, currency: string | CurrencyID, amount: string | number | Big): TransferCalldata;
+    formSetPolicyCalldata(data: policyData, currency: string | CurrencyID): GovernanceCalldata;
+    writeCryptoProposal(proposer: string, startTime: number, calldata: TransferCalldata | GovernanceCalldata): CryptoProposal;
+    writeBizProposal(proposer: string | Address, startTime: string | number | Big, url: string | LongString, hash: string | LongString, options: string | number | Big): BizProposal;
+    propose(contractAddr: string | Address, sender: string | Address, proposalID: string, proposal: CryptoProposal | BizProposal, currency: string | CurrencyID): Operation<ProposeFact>;
+    register(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID, delegator?: string | Address): Operation<RegisterFact>;
+    cancel(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<CancelProposalFact>;
+    snapBeforeVoting(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<PreSnapFact>;
+    castVote(contractAddr: string | Address, sender: string | Address, proposalID: string, voteOption: number, currency: string | CurrencyID): Operation<VoteFact>;
+    snapAfterVoting(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<PostSnapFact>;
+    execute(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<ExecuteFact>;
+    getServiceInfo(contractAddr: string | Address): Promise<any>;
+    getProposalInfo(contractAddr: string | Address, proposalID: string): Promise<any>;
+    getDelegatorInfo(contractAddr: string | Address, proposalID: string, delegator: string | Address): Promise<any>;
+    getVoterInfo(contractAddr: string | Address, proposalID: string): Promise<any>;
+    getVotingResult(contractAddr: string | Address, proposalID: string): Promise<any>;
+}
+export {};

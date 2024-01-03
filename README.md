@@ -1,6 +1,5 @@
 ## Abstraction
-
-- __mitum.js__ is the framework of the mitum blockchain written in the typescript language.
+- __mitum.js__ is the framework of the mitum blockchain written in the typescript language and provided in esm, cjs builded form.
 - The Mitum blockchain operates on a __multi-sig account__ basis. However, for user convenience, __single-sig__ is prioritized.
 - Name the method so that it can be called intuitively from the user's perspective.
 - For consistency, method names use camel notation.
@@ -10,32 +9,33 @@
     
 </br> 
 
-## **Install**
+</br> 
 
-You can import and use TypeScript as is, but you can also build it with JavaScript and use it.
-    
+## **Install**    
 - Both commonjs (cjs) and ES2020 (esm) are available.
     
+This project has been developed in the following environments:
+* node version <code>>=</code> 16
+* npm version <code>>=</code> 8
+
+Check your node, npm version
+```bash
+$ node --version
+$ npm --version
+```
+
+You can install this package locally using this command:
 
 ```bash
-$ git clone https://github.com/ProtoconNet/mitumjs.git
-# or
-$ git clone git@github.com:ProtoconNet/mitumjs.git
-$ cd mitumjs
-$ npm i
-$ npm run build
-# link locally
-$ npm link
-# Use in another project
-$ cd another_project_folder
-$ npm link mitum
+$ npm i @mitumjs/mitumjs
 ```
 
 </br> 
 
-## Usage
+</br> 
 
-- Assume that the paths where CJS and ESM code is stored are "./cjs" and "./esm" respectively.
+## Usage
+- Use the cjs module or esm module as described below.
 
 - This is an example of how to 'require' a CJS module.
     
@@ -44,28 +44,36 @@ $ npm link mitum
     You can omit the RPC-URL if you don't need to communicate with the node (for example, to generate a simple key pair or an operation for signing).
     
     You can set the RPC-URL as shown below.
-    
 
 ```jsx
-const { Mitum } = require("./cjs");
+// test.cjs
+const { Mitum } = require("@mitumjs/mitumjs");
 
-const mitum = new Mitum(/* "RPC-URL" */);
+const mitum = new Mitum("http://127.0.0.1:54320");
 
-// You can set the RPC-URL as shown below.
-const rpcurl = "http://127.0.0.1:54320";
-mitum.setNode(rpcurl);
+const keys = mitum.account.etherKeys(2);
+console.log(keys);
 ```
 
-- This is an example of using an ESM module by 'importing' it.
-    
-    The rest of the usage is the same, except for the syntax to 'import' the Mitum module at the beginning.
-    
+- This is an example of how to 'import' a ESM module.
 
 ```jsx
-import Mitum from "./esm/index.js";
+// test.mjs
+import { Mitum } from '@mitumjs/mitumjs';
 
-const mitum = new Mitum(/* "RPC-URL" */);
+const mitum = new Mitum("http://127.0.0.1:54320");
+
+const keys = mitum.account.etherKeys(2);
+console.log(keys);
 ```
+
+> **⚠️ Note**
+> 
+> If you want to specify whether to use CommonJS or ESM in your package, add the following entry in the <code>package.json</code> : </br>
+> <code>"type": "commonjs"</code> or <code>"type": "module"</code>. <br>
+> Also, consider explicitly specifying the file extension as <code>.cjs</code> or <code>.mjs</code> rather than <code>.js</code> in the execution file.</br>
+
+</br>
 
 </br> 
 
