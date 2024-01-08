@@ -6,8 +6,9 @@ export default [
   {
     input: 'src/index.ts',
     output: {
-      file: 'dist/bundle.cjs.js',
-      format: 'cjs'
+      file: 'dist/bundle.cjs.cjs',
+      format: 'cjs',
+      exports: 'named'
     },
     plugins: [
       typescript()
@@ -16,7 +17,7 @@ export default [
   {
     input: 'src/index.ts',
     output: {
-      file: 'dist/bundle.esm.js',
+      file: 'dist/bundle.esm.mjs',
       format: 'esm'
     },
     plugins: [

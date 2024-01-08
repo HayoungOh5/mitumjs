@@ -59,7 +59,7 @@ console.log(keys);
 
 ```jsx
 // test.mjs
-import { Mitum } from '@mitumjs/mitumjs';
+import Mitum from '@mitumjs/mitumjs';
 
 const mitum = new Mitum("http://127.0.0.1:54320");
 
