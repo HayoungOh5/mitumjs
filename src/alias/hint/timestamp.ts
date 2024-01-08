@@ -1,0 +1,10 @@
+export default {
+    CREATE_SERVICE: {
+        FACT: "mitum-timestamp-create-service-operation-fact",
+        OPERATION: "mitum-timestamp-create-service-operation",
+    },
+    APPEND: {
+        FACT: "mitum-timestamp-append-operation-fact",
+        OPERATION: "mitum-timestamp-append-operation",
+    },
+}
