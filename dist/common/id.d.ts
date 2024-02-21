@@ -11,8 +11,4 @@ export declare class CurrencyID extends ID {
     constructor(s: string);
     static from(s: string | CurrencyID): CurrencyID;
 }
-export declare class ContractID extends ID {
-    constructor(s: string);
-    static from(s: string | ContractID): ContractID;
-}
 export {};

@@ -28,12 +28,8 @@ export declare class NFT extends ContractGenerator {
     transfer(contractAddr: string | Address, sender: string | Address, receiver: string | Address, nftID: string | number | Big, currency: string | CurrencyID): Operation<TransferFact>;
     approve(contractAddr: string | Address, owner: string | Address, operator: string | Address, nftID: string | number | Big, currency: string | CurrencyID): Operation<ApproveFact>;
     setApprovalForAll(contractAddr: string | Address, owner: string | Address, operator: string | Address, mode: "allow" | "cancel", currency: string | CurrencyID): Operation<DelegateFact>;
-    signNFT(contractAddr: string | Address, creator: string | Address, nftID: string | number | Big, currency: string | CurrencyID): Operation<SignFact>;
+    sign(contractAddr: string | Address, creator: string | Address, nftID: string | number | Big, currency: string | CurrencyID): Operation<SignFact>;
     getCollectionInfo(contractAddr: string | Address): Promise<any>;
-    /**
-     * @deprecated use getCollectionInfo()
-     */
-    getCollectionPolicy(contractAddr: string | Address): Promise<any>;
     ownerOf(contractAddr: string | Address, nftID: string | number | Big): Promise<any>;
     getApproved(contractAddr: string | Address, nftID: number): Promise<any>;
     totalSupply(contractAddr: string | Address): Promise<any>;

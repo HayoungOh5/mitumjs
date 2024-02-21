@@ -4,7 +4,7 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
-    ISSUE_SECURITY_TOKEN: {
+    ISSUE: {
         ITEM: string;
         FACT: string;
         OPERATION: string;
@@ -23,7 +23,7 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
-    TRANSFER_SECURITY_TOKEN_PARTITION: {
+    TRANSFER_BY_PARTITION: {
         ITEM: string;
         FACT: string;
         OPERATION: string;

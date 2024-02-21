@@ -34,19 +34,11 @@ export declare class Mitum extends Generator {
     get dao(): DAO;
     get token(): Token;
     get point(): Point;
-    /**
-     * @deprecated use setAPI(api?: string | IP)
-     */
-    setNode(api?: string): void;
-    setAPI(api?: string | IP): void;
+    setAPI(api: string | IP): void;
     setDelegate(delegateIP: string | IP): void;
-    getDelegate(): string;
-    /**
-     * @deprecated use .api (get)
-     */
-    getNode(): string;
+    setNetworkID(networkID: string): void;
     getAPI(): string;
-    getChain(): string;
-    setChain(networkID: string): void;
+    getDelegate(): string;
+    getNetworkID(): string;
 }
 export default Mitum;

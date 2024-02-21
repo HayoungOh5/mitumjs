@@ -221,20 +221,8 @@ class Generator {
         this._api = api ? IP.from(api) : undefined;
         this._delegateIP = delegateIP ? IP.from(delegateIP) : undefined;
     }
-    /**
-     * @deprecated use setNetworkID(networkID: string)
-     */
-    setChainID(networkID) {
-        this.setNetworkID(networkID);
-    }
     setNetworkID(networkID) {
         this._networkID = networkID;
-    }
-    /**
-     * @deprecated use setAPI(api?: string | IP)
-     */
-    setNode(api) {
-        this.setAPI(api);
     }
     setAPI(api) {
         this._api = api ? IP.from(api) : undefined;
@@ -754,7 +742,7 @@ var STO$1 = {
         FACT: "mitum-sto-create-security-token-operation-fact",
         OPERATION: "mitum-sto-create-security-token-operation",
     },
-    ISSUE_SECURITY_TOKEN: {
+    ISSUE: {
         ITEM: "mitum-sto-issue-item",
         FACT: "mitum-sto-issue-operation-fact",
         OPERATION: "mitum-sto-issue-operation",
@@ -773,7 +761,7 @@ var STO$1 = {
         FACT: "mitum-sto-set-document-operation-fact",
         OPERATION: "mitum-sto-set-document-operation",
     },
-    TRANSFER_SECURITY_TOKEN_PARTITION: {
+    TRANSFER_BY_PARTITION: {
         ITEM: "mitum-sto-transfer-by-partition-item",
         FACT: "mitum-sto-transfer-by-partition-operation-fact",
         OPERATION: "mitum-sto-transfer-by-partition-operation",
@@ -1285,7 +1273,15 @@ KeyPair.generator = {
     random(option) {
         option = option ?? "btc";
         if (option === "btc") {
-            return new KeyPair(base58.encode(Buffer.from(secureRandom(32, { type: "Uint8Array" }))) + SUFFIX.KEY.MITUM.PRIVATE);
+            const safeRandomArray = () => {
+                while (true) {
+                    const randomArray = secureRandom(32, { type: "Uint8Array" });
+                    if (randomArray[0] !== 0) {
+                        return randomArray;
+                    }
+                }
+            };
+            return new KeyPair(base58.encode(Buffer.from(safeRandomArray())) + SUFFIX.KEY.MITUM.PRIVATE);
         }
         //return new KeyPair(ethWallet.generate().getPrivateKeyString().substring(2) + SUFFIX.KEY.ETHER.PRIVATE)
         return new KeyPair(Wallet.createRandom().privateKey.substring(2) + SUFFIX.KEY.ETHER.PRIVATE);
@@ -1533,7 +1529,7 @@ var nft = {
 
 const url$5 = (api, contract) => `${IP.from(api).toString()}/did/${Address.from(contract).toString()}`;
 const delegateUri$5 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getIssuer(api, contract, delegateIP) {
+async function getService$3(api, contract, delegateIP) {
     const apiPath = `${url$5(api, contract)}/service`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$5(delegateIP) + encodeURIComponent(apiPath));
 }
@@ -1554,7 +1550,7 @@ async function getCredentialByHolder(api, contract, holder, delegateIP) {
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$5(delegateIP) + encodeURIComponent(apiPath));
 }
 var credential = {
-    getIssuer,
+    getService: getService$3,
     getCredential,
     getTemplate,
     getCredentials,
@@ -1715,8 +1711,8 @@ class Node extends Generator {
     }
 }
 class Block extends Generator {
-    constructor(api, delegate) {
-        super("", api, delegate);
+    constructor(api, delegateIP) {
+        super("", api, delegateIP);
     }
     async getAllBlocks() {
         Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
@@ -2474,7 +2470,7 @@ class Currency extends Generator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
-    create(data) {
+    registerCurrency(data) {
         const keysToCheck = ['currency', 'genesisAddress', 'totalSupply', 'minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the createData structure`));
@@ -2483,7 +2479,7 @@ class Currency extends Generator {
         const design = new CurrencyDesign(amount, data.genesisAddress, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee));
         return new Operation$1(this.networkID, new RegisterCurrencyFact(TimeStamp$1.new().UTC(), design));
     }
-    setPolicy(data) {
+    updateCurrency(data) {
         const keysToCheck = ['currency', 'genesisAddress', 'totalSupply', 'minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the createData structure`));
@@ -2527,8 +2523,8 @@ class Currency extends Generator {
             ? Object.keys(datas._links).filter(c => !(c === "self" || c === "currency:{currencyid}")).map(c => c)
             : null;
     }
-    async getCurrency(cid) {
-        const data = await getAPIData(() => api.currency.getCurrency(this.api, cid, this.delegateIP));
+    async getCurrency(currencyID) {
+        const data = await getAPIData(() => api.currency.getCurrency(this.api, currencyID, this.delegateIP));
         return data ? data._embedded : null;
     }
 }
@@ -2557,7 +2553,7 @@ class Account extends KeyG {
             wallet: {
                 privatekey: kp.privateKey.toString(),
                 publickey: kp.publicKey.toString(),
-                address: this.etherAddress(kp.publicKey),
+                address: ks.etherAddress.toString()
             },
             operation: new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, [
                 new CreateAccountItem(ks, [new Amount(currency, amount)], "ether")
@@ -2607,10 +2603,6 @@ class Account extends KeyG {
         }
         return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new EtherKeys(newKeys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), currency));
     }
-    getMultiSigAddress(keys, threshold) {
-        const keysArray = new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold);
-        return keysArray.address.toString(); // btc
-    }
     async touch(privatekey, wallet) {
         const op = wallet.operation;
         op.sign(privatekey);
@@ -2618,11 +2610,11 @@ class Account extends KeyG {
     }
     async getAccountInfo(address) {
         const data = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
-        return data ? data._embedded : null;
+        return data._embedded ? data._embedded : null;
     }
     async getOperations(address) {
         const data = await getAPIData(() => api.operation.getAccountOperations(this.api, address, this.delegateIP));
-        return data ? data._embedded : null;
+        return data._embedded ? data._embedded : null;
     }
     async getByPublickey(publickey) {
         const data = await getAPIData(() => api.account.getAccountByPublicKey(this.api, publickey, this.delegateIP));
@@ -2658,7 +2650,7 @@ class Contract extends Generator {
             wallet: {
                 privatekey: kp.privateKey.toString(),
                 publickey: kp.publicKey.toString(),
-                address: new EtherKeys([new PubKey(kp.publicKey, 100)], 100).etherAddress.toString(),
+                address: ks.etherAddress.toString()
             },
             operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
                 new CreateContractAccountItem(ks, [new Amount(currency, amount)], "ether")
@@ -2692,10 +2684,6 @@ class Contract extends Generator {
         const op = wallet.operation;
         op.sign(privatekey);
         return await getAPIData(() => api.operation.send(this.api, op.toHintedObject(), this.delegateIP));
-    }
-    async getContractInfo(address) {
-        const data = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
-        return data ? data._embedded : null;
     }
 }
 
@@ -3061,7 +3049,7 @@ class NFT extends ContractGenerator {
             new DelegateItem(contractAddr, operator, mode, currency)
         ]));
     }
-    signNFT(contractAddr, creator, nftID, currency) {
+    sign(contractAddr, creator, nftID, currency) {
         return new Operation$1(this.networkID, new SignFact(TimeStamp$1.new().UTC(), creator, [
             new SignItem(contractAddr, nftID, currency)
         ]));
@@ -3069,13 +3057,6 @@ class NFT extends ContractGenerator {
     async getCollectionInfo(contractAddr) {
         const data = await getAPIData(() => contract.nft.getCollection(this.api, contractAddr, this.delegateIP));
         return data ? data._embedded : null;
-    }
-    /**
-     * @deprecated use getCollectionInfo()
-     */
-    async getCollectionPolicy(contractAddr) {
-        const design = await this.getCollectionInfo(contractAddr);
-        return design ? design.policy : null;
     }
     async ownerOf(contractAddr, nftID) {
         const data = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
@@ -3312,7 +3293,7 @@ class Credential extends ContractGenerator {
         ]));
     }
     async getServiceInfo(contractAddr) {
-        return await getAPIData(() => contract.credential.getIssuer(this.api, contractAddr, this.delegateIP));
+        return await getAPIData(() => contract.credential.getService(this.api, contractAddr, this.delegateIP));
     }
     async getCredentialInfo(contractAddr, templateID, credentialID) {
         return await getAPIData(() => contract.credential.getCredential(this.api, contractAddr, templateID, credentialID, this.delegateIP));
@@ -3950,9 +3931,9 @@ class CreateSecurityTokenFact extends OperationFact {
     }
 }
 
-class IssueSecurityTokenItem extends STOItem {
+class IssueItem extends STOItem {
     constructor(contract, receiver, amount, partition, currency) {
-        super(HINT.STO.ISSUE_SECURITY_TOKEN.ITEM, contract, currency);
+        super(HINT.STO.ISSUE.ITEM, contract, currency);
         this.receiver = Address.from(receiver);
         this.amount = Big.from(amount);
         this.partition = Partition.from(partition);
@@ -3977,13 +3958,13 @@ class IssueSecurityTokenItem extends STOItem {
         };
     }
 }
-class IssueSecurityTokenFact extends OperationFact {
+class IssueFact extends OperationFact {
     constructor(token, sender, items) {
-        super(HINT.STO.ISSUE_SECURITY_TOKEN.FACT, token, sender, items);
+        super(HINT.STO.ISSUE.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate contract found in items"));
     }
     get operationHint() {
-        return HINT.STO.ISSUE_SECURITY_TOKEN.OPERATION;
+        return HINT.STO.ISSUE.OPERATION;
     }
 }
 
@@ -4059,7 +4040,7 @@ class RevokeOperatorFact extends OperationFact {
     }
 }
 
-class RedeemTokenItem extends STOItem {
+class RedeemItem extends STOItem {
     constructor(contract, tokenHolder, amount, partition, currency) {
         super(HINT.STO.REDEEM.ITEM, contract, currency);
         this.tokenHolder = Address.from(tokenHolder);
@@ -4089,7 +4070,7 @@ class RedeemTokenItem extends STOItem {
         return this.tokenHolder.toString();
     }
 }
-class RedeemTokenFact extends OperationFact {
+class RedeemFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.STO.REDEEM.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate token holder found in items"));
@@ -4129,9 +4110,9 @@ class SetDocumentFact extends ContractFact {
     }
 }
 
-class TransferSecurityTokenPartitionItem extends STOItem {
+class TransferByPartitionItem extends STOItem {
     constructor(contract, tokenHolder, receiver, partition, amount, currency) {
-        super(HINT.STO.TRANSFER_SECURITY_TOKEN_PARTITION.ITEM, contract, currency);
+        super(HINT.STO.TRANSFER_BY_PARTITION.ITEM, contract, currency);
         this.tokenHolder = Address.from(tokenHolder);
         this.receiver = Address.from(receiver);
         this.partition = Partition.from(partition);
@@ -4164,13 +4145,13 @@ class TransferSecurityTokenPartitionItem extends STOItem {
         return `${this.tokenHolder.toString()}-${this.receiver.toString()}-${this.partition.toString()}`;
     }
 }
-class TransferSecurityTokenPartitionFact extends OperationFact {
+class TransferByPartitionFact extends OperationFact {
     constructor(token, sender, items) {
-        super(HINT.STO.TRANSFER_SECURITY_TOKEN_PARTITION.FACT, token, sender, items);
+        super(HINT.STO.TRANSFER_BY_PARTITION.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate token holder-receiver-partition found in items"));
     }
     get operationHint() {
-        return HINT.STO.TRANSFER_SECURITY_TOKEN_PARTITION.OPERATION;
+        return HINT.STO.TRANSFER_BY_PARTITION.OPERATION;
     }
 }
 
@@ -4193,13 +4174,13 @@ class STO extends ContractGenerator {
         ]));
     }
     issue(contractAddr, sender, receiver, partition, amount, currency) {
-        return new Operation$1(this.networkID, new IssueSecurityTokenFact(TimeStamp$1.new().UTC(), sender, [
-            new IssueSecurityTokenItem(contractAddr, receiver, amount, partition, currency)
+        return new Operation$1(this.networkID, new IssueFact(TimeStamp$1.new().UTC(), sender, [
+            new IssueItem(contractAddr, receiver, amount, partition, currency)
         ]));
     }
     redeem(contractAddr, sender, tokenHolder, partition, amount, currency) {
-        return new Operation$1(this.networkID, new RedeemTokenFact(TimeStamp$1.new().UTC(), sender, [
-            new RedeemTokenItem(contractAddr, tokenHolder, amount, partition, currency)
+        return new Operation$1(this.networkID, new RedeemFact(TimeStamp$1.new().UTC(), sender, [
+            new RedeemItem(contractAddr, tokenHolder, amount, partition, currency)
         ]));
     }
     revokeOperator(contractAddr, sender, operator, partition, currency) {
@@ -4211,8 +4192,8 @@ class STO extends ContractGenerator {
         return new Operation$1(this.networkID, new SetDocumentFact(TimeStamp$1.new().UTC(), sender, contractAddr, title, uri, documentHash, currency));
     }
     transferByPartition(contractAddr, sender, holder, receiver, partition, amount, currency) {
-        return new Operation$1(this.networkID, new TransferSecurityTokenPartitionFact(TimeStamp$1.new().UTC(), sender, [
-            new TransferSecurityTokenPartitionItem(contractAddr, holder, receiver, partition, amount, currency)
+        return new Operation$1(this.networkID, new TransferByPartitionFact(TimeStamp$1.new().UTC(), sender, [
+            new TransferByPartitionItem(contractAddr, holder, receiver, partition, amount, currency)
         ]));
     }
     async getServiceInfo(contractAddr) {
@@ -5179,12 +5160,6 @@ class Mitum extends Generator {
     get point() {
         return this._point;
     }
-    /**
-     * @deprecated use setAPI(api?: string | IP)
-     */
-    setNode(api) {
-        this.setAPI(api);
-    }
     setAPI(api) {
         super.setAPI(api);
         this.refresh();
@@ -5193,24 +5168,18 @@ class Mitum extends Generator {
         super.setDelegate(delegateIP);
         this.refresh();
     }
-    getDelegate() {
-        return this.delegateIP.toString();
-    }
-    /**
-     * @deprecated use .api (get)
-     */
-    getNode() {
-        return this.api.toString();
+    setNetworkID(networkID) {
+        super.setNetworkID(networkID);
+        this.refresh();
     }
     getAPI() {
         return this.api.toString();
     }
-    getChain() {
-        return this.networkID;
+    getDelegate() {
+        return this.delegateIP.toString();
     }
-    setChain(networkID) {
-        super.setNetworkID(networkID);
-        this.refresh();
+    getNetworkID() {
+        return this.networkID;
     }
 }
 

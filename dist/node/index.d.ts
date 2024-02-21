@@ -6,7 +6,7 @@ export declare class Node extends Generator {
     getNodeInfo(): Promise<import("axios").AxiosResponse<any, any>>;
 }
 export declare class Block extends Generator {
-    constructor(api?: string | IP, delegate?: string | IP);
+    constructor(api?: string | IP, delegateIP?: string | IP);
     getAllBlocks(): Promise<import("axios").AxiosResponse<any, any>>;
     getBlockByHash(hash: string): Promise<import("axios").AxiosResponse<any, any>>;
     getBlockByHeight(height: number | string): Promise<import("axios").AxiosResponse<any, any>>;

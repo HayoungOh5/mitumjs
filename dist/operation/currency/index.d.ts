@@ -11,7 +11,7 @@ import { Operation } from "../base";
 import { CurrencyID } from "../../common";
 import { Big, Generator, IP } from "../../types";
 import { Address, Key, PubKey, Account as AccountType, KeyG } from "../../key";
-type createData = {
+type currencyPolicyData = {
     currency: string | CurrencyID;
     genesisAddress: string | Address;
     totalSupply: string | number | Big;
@@ -32,14 +32,14 @@ type keysType = ({
 }>;
 export declare class Currency extends Generator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
-    create(data: createData): Operation<RegisterCurrencyFact>;
-    setPolicy(data: createData): Operation<UpdateCurrencyFact>;
+    registerCurrency(data: currencyPolicyData): Operation<RegisterCurrencyFact>;
+    updateCurrency(data: currencyPolicyData): Operation<UpdateCurrencyFact>;
     private buildPolicy;
     transfer(sender: string | Address, receiver: string | Address, currency: string | CurrencyID, amount: string | number | Big): Operation<TransferFact>;
     withdraw(sender: string | Address, target: string | Address, currency: string | CurrencyID, amount: string | number | Big): Operation<WithdrawFact>;
     mint(receiver: string | Address, currency: string | CurrencyID, amount: number): Operation<MintFact>;
     getAllCurrencies(): Promise<string[] | null>;
-    getCurrency(cid: string | CurrencyID): Promise<any>;
+    getCurrency(currencyID: string | CurrencyID): Promise<any>;
 }
 export declare class Account extends KeyG {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
@@ -61,7 +61,6 @@ export declare class Account extends KeyG {
     createEtherMultiSig(sender: string | Address, keys: keysType, currency: string | CurrencyID, amount: string | number | Big, threshold: string | number | Big): Operation<CreateAccountFact>;
     update(target: string | Address, newKey: string | Key | PubKey, currency: string | CurrencyID): Operation<UpdateKeyFact>;
     updateMultiSig(target: string | Address, newKeys: keysType, currency: string | CurrencyID, threshold: string | number | Big): Operation<UpdateKeyFact>;
-    getMultiSigAddress(keys: keysType, threshold: string | number | Big): string;
     touch(privatekey: string | Key, wallet: {
         wallet: AccountType;
         operation: Operation<CreateAccountFact>;
@@ -90,6 +89,5 @@ export declare class Contract extends Generator {
         wallet: AccountType;
         operation: Operation<CreateContractAccountFact>;
     }): Promise<any>;
-    getContractInfo(address: string | Address): Promise<any>;
 }
 export {};

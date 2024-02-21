@@ -11,7 +11,7 @@ declare const _default: {
             getAccountOperators: (api: string | import("../../types").IP, contract: string | import("../../key").Address, account: string | import("../../key").Address, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
         };
         credential: {
-            getIssuer: (api: string | import("../../types").IP, contract: string | import("../../key").Address, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
+            getService: (api: string | import("../../types").IP, contract: string | import("../../key").Address, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
             getCredential: (api: string | import("../../types").IP, contract: string | import("../../key").Address, templateID: string, credentialID: string, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
             getTemplate: (api: string | import("../../types").IP, contract: string | import("../../key").Address, templateID: string, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
             getCredentials: (api: string | import("../../types").IP, contract: string | import("../../key").Address, templateID: string, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
