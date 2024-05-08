@@ -1112,7 +1112,11 @@ export class Contract extends Generator {
      * **null means that the contract account has not yet been recorded in the block.**
      */
     async getContractInfo(address: string | Address) {
-        return await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP))
+        const response = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
+        if (isSuccessResponse(response)) {
+            response.data = response.data? response.data : null;
+        }
+        return response
     }
 
     /**
