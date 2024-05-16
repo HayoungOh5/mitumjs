@@ -272,7 +272,7 @@ export class Currency extends Generator {
     async getAllCurrencies(): Promise<any> {
         const response = await getAPIData(() => api.currency.getCurrencies(this.api, this.delegateIP), true);
 
-        if (isSuccessResponse(response)) {
+        if (isSuccessResponse(response) && response.data) {
             response.data = response.data._links ?
             Object.keys(response.data._links)
                 .filter(c => !(c === "self" || c === "currency:{currencyid}"))
@@ -783,7 +783,7 @@ export class Account extends KeyG {
      */
     async balance(address: string | Address) {
         const response = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
-        if (isSuccessResponse(response)) {
+        if (isSuccessResponse(response) && response.data) {
             response.data = response.data.balance ? response.data.balance : null;
         }
         return response
