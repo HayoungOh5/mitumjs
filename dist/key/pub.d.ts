@@ -28,17 +28,7 @@ export declare class Keys implements IBuffer, IHintedObject {
     readonly threshold: Big;
     constructor(keys: Pub[], threshold: BigArg);
     get keys(): PubKey[];
-    get address(): Address;
-    toBuffer(): Buffer;
-    toHintedObject(): HintedObject;
-}
-export declare class EtherKeys implements IBuffer, IHintedObject {
-    private static hint;
-    private readonly _keys;
-    readonly threshold: Big;
-    constructor(keys: Pub[], threshold: BigArg);
-    get keys(): PubKey[];
-    get etherAddress(): Address;
+    get checksum(): Address;
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
 }

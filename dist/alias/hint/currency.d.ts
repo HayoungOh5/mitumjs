@@ -1,7 +1,6 @@
 declare const _default: {
     KEY: string;
     KEYS: string;
-    ETH_KEYS: string;
     AMOUNT: string;
     DESIGN: string;
     POLICY: string;

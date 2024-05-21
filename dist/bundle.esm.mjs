@@ -5,8 +5,6 @@ import base58 from 'bs58';
 import pkg from 'js-sha3';
 const { sha3_256, keccak256: keccak256$1 } = pkg;
 import { Wallet } from 'ethers';
-import secureRandom from 'secure-random';
-import { getPublicCompressed } from 'eccrypto-js';
 import { hmac } from '@noble/hashes/hmac';
 import { sha256 as sha256$1 } from '@noble/hashes/sha256';
 import * as secp256k1 from '@noble/secp256k1';
@@ -14,14 +12,15 @@ import { getPublicKey } from '@noble/secp256k1';
 import * as crypto from 'crypto';
 import pkg2 from 'elliptic';
 const { ec } = pkg2;
-import { writeFile } from 'fs';
 
 const ECODE = {
     NO_API: "EC_NO_API",
     UNKNOWN: "EC_UNKNOWN",
     EMPTY_STRING: "EC_EMPTY_STRING",
+    EMPTY_SIGN: "EC_EMPTY_SIGN",
     INVALID_DATE: "EC_INVALID_DATE",
     INVALID_IP: "EC_INVALID_IP",
+    INVALID_LENGTH: "EC_INVALID_LENGTH",
     INVALID_SEED: "EC_INVALID_SEED",
     INVALID_KEY: "EC_INVALID_KEY",
     INVALID_KEYS: "EC_INVALID_KEYS",
@@ -32,6 +31,7 @@ const ECODE = {
     INVALID_THRESHOLD: "EC_INVALID_THRESHOLD",
     INVALID_ADDRESS: "EC_INVALID_ADDRESS",
     INVALID_ADDRESS_TYPE: "EC_INVALID_ADDRESS_TYPE",
+    INVALID_ADDRESS_CHECKSUM: "EC_INVALID_ADDRESS_CHECKSUM",
     INVALID_BIG_INTEGER: "EC_INVALID_BIG_INTERGER",
     INVALID_FLOAT: "EC_INVALID_FLOAT",
     INVALID_UINT8: "EC_INVALID_UINT8",
@@ -75,7 +75,320 @@ const ECODE = {
     DAO: {
         INVALID_WHITELIST: "EC_INVALID_WHITELIST",
         UNMATCHED_SENDER: "EC_UNMATCHED_SENDER"
+    },
+    TIME_OUT: "EC_TIME_OUT",
+    TRANSACTION_REVERTED: "EC_TRANSACTION_REVERTED"
+};
+// ECODE: Mitum Node Process Error code
+const PCODE = {
+    AMBIGUOUS: {
+        code: "P0A",
+        keyword: [""],
+        description: "AMBIGUOUS",
+        subject: "",
+    },
+    MITUM_CORE: {
+        code: "P0M",
+        keyword: [""],
+        description: "MITUM CORE",
+        subject: "",
+    },
+    UNDEFINED: {
+        code: "P00",
+        keyword: [""],
+        description: "UNDEFINED",
+        subject: "",
+    },
+    IV_BASE_OP: {
+        code: "P01",
+        keyword: ["Invalid BaseOperation"],
+        description: "Error from IsValid(BaseOperation)",
+        subject: "",
+    },
+    IV_BASE_NODE_OP: {
+        code: "P02",
+        keyword: ["Invalid BaseNodeOperation"],
+        description: "Error from IsValid(BaseNodeOperation)",
+        subject: "",
+    },
+    IV_BASE_STATE: {
+        code: "P03",
+        keyword: ["Invalid BaseState"],
+        description: "Error from IsValid(BaseState)",
+        subject: "",
+    },
+    IV_FACT: {
+        code: "P04",
+        keyword: ["Invalid fact"],
+        description: "Error from IsValid(Fact)",
+        subject: "",
+    },
+    IV_ITEM: {
+        code: "P05",
+        keyword: ["Invalid item"],
+        description: "Error from IsValid(Item)",
+        subject: "",
+    },
+    PREPROCESS: {
+        code: "P06",
+        keyword: ["PreProcess"],
+        description: "Error from PreProcess",
+        subject: "",
+    },
+    DECODE_JSON: {
+        code: "P07",
+        keyword: ["Decode Json"],
+        description: "Error from DecodeJSON",
+        subject: "",
+    },
+    DECODE_BSON: {
+        code: "P08",
+        keyword: ["Decode Bson"],
+        description: "Error from DecodeBSON",
+        subject: "",
+    },
+};
+const DCODE = {
+    AMBIGUOUS: {
+        code: "D00A",
+        keyword: [""],
+        description: "AMBIGUOUS",
+        subject: "",
+    },
+    COMPLEX: {
+        code: "D00C",
+        keyword: [""],
+        description: "COMPLEX",
+        subject: "",
+    },
+    OP_DEP: {
+        code: "D00D",
+        keyword: [""],
+        description: "Operation dependent",
+        subject: "",
+    },
+    UNDEFINED: {
+        code: "D000",
+        keyword: [""],
+        description: "UNDEFINED",
+        subject: ""
+    },
+    // data validation
+    EMPTY: {
+        code: "D101",
+        keyword: ["Operation has empty token"],
+        description: "EMPTY or NULL data",
+        subject: ""
+    },
+    IV_LENGTH: {
+        code: "D102",
+        keyword: ["Array length"],
+        description: "length of array",
+        subject: ""
+    },
+    IV_RANGE: {
+        code: "D103",
+        keyword: ["Value out of range", "Operation token size too large"],
+        description: "Out of range",
+        subject: ""
+    },
+    IV_TYPE: {
+        code: "D104",
+        keyword: ["Type mismatch", "Invalid account type", "Invalid value"],
+        description: "Invalid type",
+        subject: ""
+    },
+    DUPLICATED_VAL: {
+        code: "D105",
+        keyword: ["Duplicated value"],
+        description: "Duplicated value",
+        subject: ""
+    },
+    D106: {
+        code: "D106",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    IV_CHAR: {
+        code: "D107",
+        keyword: [""],
+        description: "Special characters",
+        subject: ""
+    },
+    DECODE_FACT: {
+        code: "D108",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    DECODE_ITEM: {
+        code: "D109",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    DECODE_OP: {
+        code: "D110",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    UNMARSHAL_ITEM: {
+        code: "D111",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    UNMARSHAL_FACT: {
+        code: "D112",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    SELF_TARGETED: {
+        code: "D113",
+        keyword: ["Self targeted"],
+        description: "",
+        subject: ""
+    },
+    D114: {
+        code: "D114",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    D115: {
+        code: "D115",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    D116: {
+        code: "D116",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    D117: {
+        code: "D117",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    // signature related
+    IV_SIGN: {
+        code: "D201",
+        keyword: ["Invalid signing"],
+        description: "",
+        subject: ""
+    },
+    D202: {
+        code: "D202",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    LACK_OF_SIGN: {
+        code: "D203",
+        keyword: ["Not enough signs"],
+        description: "",
+        subject: ""
+    },
+    D204: {
+        code: "D204",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    // authorization related
+    UNAUTHORIZED_AC: {
+        code: "D301",
+        keyword: ["Account not authorized"],
+        description: "sender is not owner neither operator of the contract",
+        subject: ""
+    },
+    NOT_IN_WHITELIST: {
+        code: "D302",
+        keyword: [""],
+        description: "account not in the whitelist",
+        subject: ""
+    },
+    // insufficient balance
+    D401: {
+        code: "D401",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    // state related
+    STATE_NOT_FOUND: {
+        code: "D501",
+        keyword: ["Account not found", "Currency not found", "Contract account not found", "Service not found"],
+        description: "",
+        subject: ""
+    },
+    D502: {
+        code: "D502",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    STATE_EXIST: {
+        code: "D503",
+        keyword: ["Account exist", "Contract account exist", "Currency exist", "State exist"],
+        description: "",
+        subject: ""
+    },
+    D504: {
+        code: "D504",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    IV_STATE_VAL: {
+        code: "D505",
+        keyword: ["Invalid state value"],
+        description: "",
+        subject: ""
+    },
+    CONTRACT_ACCOUNT: {
+        code: "D506",
+        keyword: ["Contract account not allowed"],
+        description: "",
+        subject: ""
+    },
+    D507: {
+        code: "D507",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+    D508: {
+        code: "D508",
+        keyword: [""],
+        description: "",
+        subject: ""
+    },
+};
+const assignCodeFromErrorMessage = (errorMessage) => {
+    const pcodeArr = [];
+    const dcodeArr = [];
+    for (const [_, obj] of Object.entries(PCODE)) {
+        if (obj.keyword[0] !== "" && errorMessage.includes(obj.keyword[0])) {
+            pcodeArr.push(obj.code);
+        }
     }
+    for (const [_, obj] of Object.entries(DCODE)) {
+        if (obj.keyword[0] !== "") {
+            for (const keyword of obj.keyword) {
+                if (errorMessage.includes(keyword)) {
+                    dcodeArr.push(obj.code);
+                }
+            }
+        }
+    }
+    return { pcode: pcodeArr, dcode: dcodeArr };
 };
 
 class MitumError extends Error {
@@ -494,7 +807,7 @@ const Config = {
     THRESHOLD: getRangeConfig(1, 100),
     WEIGHT: getRangeConfig(1, 100),
     ADDRESS: {
-        DEFAULT: getRangeConfig(43, 47),
+        DEFAULT: getRangeConfig(45),
         ZERO: getRangeConfig(8, 15),
         NODE: getRangeConfig(4, Number.MAX_SAFE_INTEGER),
     },
@@ -504,10 +817,6 @@ const Config = {
     OPERATIONS_IN_SEAL: getRangeConfig(1, 10),
     KEY: {
         MITUM: {
-            PRIVATE: getRangeConfig(46, 48),
-            PUBLIC: getRangeConfig(46, 48),
-        },
-        ETHER: {
             PRIVATE: getRangeConfig(67),
             PUBLIC: getRangeConfig(69),
         }
@@ -544,7 +853,6 @@ const Config = {
 var CURRENCY = {
     KEY: "mitum-currency-key",
     KEYS: "mitum-currency-keys",
-    ETH_KEYS: "mitum-currency-eth-keys",
     AMOUNT: "mitum-currency-amount",
     DESIGN: "mitum-currency-currency-design",
     POLICY: "mitum-currency-currency-policy",
@@ -853,17 +1161,12 @@ var HINT = {
 
 const KEY = {
     MITUM: {
-        PRIVATE: "mpr",
-        PUBLIC: "mpu",
+        PRIVATE: "fpr",
+        PUBLIC: "fpu",
     },
-    ETHER: {
-        PRIVATE: "epr",
-        PUBLIC: "epu",
-    }
 };
 const ADDRESS = {
-    MITUM: "mca",
-    ETHER: "eca",
+    MITUM: "fca",
     NODE: "sas",
     ZERO: "-Xmca",
 };
@@ -944,76 +1247,6 @@ class Amount {
     }
 }
 
-class BaseAddress {
-    constructor(s, type) {
-        this.s = s;
-        if (type) {
-            this.type = type;
-        }
-        else if (this.s.endsWith(SUFFIX.ADDRESS.MITUM)) {
-            this.type = "mitum";
-        }
-        else if (this.s.endsWith(SUFFIX.ADDRESS.ETHER)) {
-            this.type = "ether";
-        }
-        else if (this.s.endsWith(SUFFIX.ADDRESS.NODE)) {
-            this.type = "node";
-        }
-        else if (this.s.endsWith(SUFFIX.ADDRESS.ZERO)) {
-            this.type = "zero";
-        }
-        else {
-            throw MitumError.detail(ECODE.INVALID_ADDRESS, "address type not detected");
-        }
-    }
-    toBuffer() {
-        return Buffer.from(this.s);
-    }
-    toString() {
-        return this.s;
-    }
-}
-class Address extends BaseAddress {
-    constructor(s) {
-        super(s);
-        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS, "invalid address"))
-            .empty().not()
-            .endsWith(SUFFIX.ADDRESS.MITUM, SUFFIX.ADDRESS.ETHER)
-            .satisfyConfig(Config.ADDRESS.DEFAULT)
-            .excute();
-    }
-    static from(s) {
-        return s instanceof Address ? s : new Address(s);
-    }
-}
-class NodeAddress extends BaseAddress {
-    constructor(s) {
-        super(s, "node");
-        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS, "invalid node address"))
-            .empty().not()
-            .endsWith(SUFFIX.ADDRESS.NODE)
-            .satisfyConfig(Config.ADDRESS.NODE)
-            .excute();
-    }
-    static from(s) {
-        return s instanceof NodeAddress ? s : new NodeAddress(s);
-    }
-}
-class ZeroAddress extends BaseAddress {
-    constructor(s) {
-        super(s, "zero");
-        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS, "invalid zero address"))
-            .empty().not()
-            .endsWith(SUFFIX.ADDRESS.ZERO)
-            .satisfyConfig(Config.ADDRESS.ZERO)
-            .excute();
-        this.currency = new CurrencyID(s.substring(0, s.length - Config.SUFFIX.ZERO_ADDRESS.value));
-    }
-    static from(s) {
-        return s instanceof ZeroAddress ? s : new ZeroAddress(s);
-    }
-}
-
 const SortFunc = (a, b) => Buffer.compare(a.toBuffer(), b.toBuffer());
 
 const hasOverlappingAddress = (arr) => (new Set(arr.map(a => a instanceof Address ? a.toString() : a)).size == arr.length);
@@ -1021,720 +1254,106 @@ const hasOverlappingAddress = (arr) => (new Set(arr.map(a => a instanceof Addres
 const sha256 = (msg) => Buffer.from(sha256$1(msg));
 const sha3 = (msg) => Buffer.from(sha3_256.create().update(msg).digest());
 const keccak256 = (msg) => Buffer.from(keccak256$1.create().update(msg).digest());
-
-class Key {
-    constructor(s) {
-        StringAssert.with(s, MitumError.detail(ECODE.INVALID_KEY, "invalid key"))
-            .empty().not()
-            .chainOr(s.endsWith(SUFFIX.KEY.MITUM.PRIVATE) && Config.KEY.MITUM.PRIVATE.satisfy(s.length), s.endsWith(SUFFIX.KEY.ETHER.PRIVATE) && Config.KEY.ETHER.PRIVATE.satisfy(s.length), s.endsWith(SUFFIX.KEY.MITUM.PUBLIC) && Config.KEY.MITUM.PUBLIC.satisfy(s.length), s.endsWith(SUFFIX.KEY.ETHER.PUBLIC) && Config.KEY.ETHER.PUBLIC.satisfy(s.length))
-            .excute();
-        this.key = s.substring(0, s.length - Config.SUFFIX.DEFAULT.value);
-        this.suffix = s.substring(s.length - Config.SUFFIX.DEFAULT.value);
-        this.type = s.endsWith(SUFFIX.KEY.ETHER.PRIVATE) || s.endsWith(SUFFIX.KEY.ETHER.PUBLIC) ? "ether" : "btc";
-        this.isPriv = s.endsWith(SUFFIX.KEY.MITUM.PRIVATE) || s.endsWith(SUFFIX.KEY.ETHER.PRIVATE);
-    }
-    static from(s) {
-        return s instanceof Key ? s : new Key(s);
-    }
-    get noSuffix() {
-        return this.key;
-    }
-    toBuffer() {
-        return Buffer.from(this.toString());
-    }
-    toString() {
-        return this.key + this.suffix;
-    }
-}
-class PubKey extends Key {
-    constructor(key, weight) {
-        super(typeof key === "string" ? key : key.toString());
-        this.weight = Big.from(weight);
-        Assert.check(Config.WEIGHT.satisfy(this.weight.v), MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "weight out of range"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.weight.toBuffer("fill")
-        ]);
-    }
-    toHintedObject() {
-        return {
-            _hint: PubKey.hint.toString(),
-            weight: this.weight.v,
-            key: this.toString(),
-        };
-    }
-}
-PubKey.hint = new Hint(HINT.CURRENCY.KEY);
-class Keys {
-    constructor(keys, threshold) {
-        Assert.check(Config.KEYS_IN_ACCOUNT.satisfy(keys.length), MitumError.detail(ECODE.INVALID_KEYS, "keys length out of range"));
-        this._keys = keys.map(k => {
-            if (k instanceof PubKey) {
-                return k;
-            }
-            const [key, weight] = k;
-            return new PubKey(key instanceof Key ? key.toString() : key, weight);
-        });
-        this.threshold = threshold instanceof Big ? threshold : new Big(threshold);
-        Assert.check(Config.THRESHOLD.satisfy(this.threshold.v), MitumError.detail(ECODE.INVALID_KEYS, "threshold out of range"));
-        Assert.check(new Set(this._keys.map(k => k.toString())).size === this._keys.length, MitumError.detail(ECODE.INVALID_KEYS, "duplicate keys found in keys"));
-    }
-    get keys() {
-        return this._keys;
-    }
-    get address() {
-        return new Address(base58.encode(sha3(this.toBuffer())) + SUFFIX.ADDRESS.MITUM);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            Buffer.concat(this._keys.sort((a, b) => Buffer.compare(Buffer.from(a.toString()), Buffer.from(b.toBuffer()))).map(k => k.toBuffer())),
-            this.threshold.toBuffer("fill")
-        ]);
-    }
-    toHintedObject() {
-        return {
-            _hint: Keys.hint.toString(),
-            hash: base58.encode(sha3(this.toBuffer())),
-            keys: this._keys.sort((a, b) => Buffer.compare(Buffer.from(a.toString()), Buffer.from(b.toBuffer()))).map(k => k.toHintedObject()),
-            threshold: this.threshold.v,
-        };
-    }
-}
-Keys.hint = new Hint(HINT.CURRENCY.KEYS);
-class EtherKeys {
-    constructor(keys, threshold) {
-        Assert.check(Config.KEYS_IN_ACCOUNT.satisfy(keys.length), MitumError.detail(ECODE.INVALID_KEYS, "keys length out of range"));
-        this._keys = keys.map(k => {
-            if (k instanceof PubKey) {
-                return k;
-            }
-            const [key, weight] = k;
-            return new PubKey(key instanceof Key ? key.toString() : key, weight);
-        });
-        this.threshold = threshold instanceof Big ? threshold : new Big(threshold);
-        Assert.check(Config.THRESHOLD.satisfy(this.threshold.v), MitumError.detail(ECODE.INVALID_KEYS, "threshold out of range"));
-        Assert.check(new Set(this._keys.map(k => k.toString())).size === this._keys.length, MitumError.detail(ECODE.INVALID_KEYS, "duplicate keys found in keys"));
-    }
-    get keys() {
-        return this._keys;
-    }
-    get etherAddress() {
-        return new Address(keccak256(this.toBuffer()).subarray(12).toString('hex') + SUFFIX.ADDRESS.ETHER);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            Buffer.concat(this._keys.sort((a, b) => Buffer.compare(Buffer.from(a.toString()), Buffer.from(b.toBuffer()))).map(k => k.toBuffer())),
-            this.threshold.toBuffer("fill")
-        ]);
-    }
-    toHintedObject() {
-        const eHash = keccak256$1(this.toBuffer());
-        return {
-            _hint: EtherKeys.hint.toString(),
-            hash: eHash.slice(24),
-            keys: this._keys
-                .sort((a, b) => Buffer.compare(Buffer.from(a.toString()), Buffer.from(b.toBuffer())))
-                .map((k) => k.toHintedObject()),
-            threshold: this.threshold.v,
-        };
-    }
-}
-EtherKeys.hint = new Hint(HINT.CURRENCY.ETH_KEYS);
-
-const privateKeyToPublicKey = (privateKey) => {
-    let privateBuf;
-    if (!Buffer.isBuffer(privateKey)) {
-        if (typeof privateKey !== "string") {
-            throw new Error("Expected Buffer or string as argument");
+const getChecksum = (hex) => {
+    const hexLower = hex.toLowerCase();
+    const hash = keccak256(Buffer.from(hexLower, 'ascii')).toString('hex');
+    let checksum = '';
+    for (let i = 0; i < hexLower.length; i++) {
+        if (parseInt(hash[i], 16) > 7) {
+            checksum += hexLower[i].toUpperCase();
         }
-        privateKey =
-            privateKey.slice(0, 2) === "0x" ? privateKey.slice(2) : privateKey;
-        privateBuf = Buffer.from(privateKey, "hex");
-    }
-    else {
-        privateBuf = privateKey;
-    }
-    return getPublicKey(privateBuf, false);
-};
-const compress = (publicKey) => {
-    const xCoordinate = publicKey.slice(1, 33);
-    const yCoordinate = publicKey.slice(33);
-    const compressedPublicKey = Buffer.concat([
-        Buffer.from([0x02 + (yCoordinate[yCoordinate.length - 1] % 2)]),
-        xCoordinate,
-    ]);
-    return compressedPublicKey.toString("hex");
-};
-
-class BaseKeyPair {
-    constructor(privateKey) {
-        this.privateKey = privateKey;
-        this.signer = this.getSigner();
-        this.publicKey = this.getPub();
-        secp256k1.utils.hmacSha256Sync = (key, ...msgs) => hmac(sha256$1, key, secp256k1.utils.concatBytes(...msgs));
-        secp256k1.utils.sha256Sync = (...msgs) => sha256$1(secp256k1.utils.concatBytes(...msgs));
-    }
-    static random(option) {
-        return this.generator.random(option);
-    }
-    static fromPrivateKey(key) {
-        return this.generator.fromPrivateKey(key);
-    }
-    static fromSeed(seed, option) {
-        return this.generator.fromSeed(seed, option);
-    }
-    btcSign(msg) {
-        return Buffer.from(secp256k1.signSync(sha256(sha256(msg)), this.signer));
-    }
-    ethSign(msg) {
-        const ec$1 = new ec("secp256k1");
-        const key = ec$1.keyFromPrivate(this.privateKey.noSuffix, "hex");
-        const msgHash = crypto.createHash("sha256").update(msg).digest();
-        const signature = key.sign(msgHash);
-        const r = Buffer.from(signature.r.toArray());
-        const s = Buffer.from(signature.s.toArray());
-        const sigLength = 4 + r.length + s.length;
-        const sigBuffer = Buffer.alloc(sigLength);
-        sigBuffer.writeUInt32LE(r.length, 0);
-        sigBuffer.set(r, 4);
-        sigBuffer.set(s, 4 + r.length);
-        return sigBuffer;
-    }
-    btcVerify(sig, msg) {
-        if (typeof sig === "string") {
-            sig = Buffer.from(base58.decode(sig));
+        else {
+            checksum += hexLower[i];
         }
-        return secp256k1.verify(sig, sha256(sha256(msg)), secp256k1.getPublicKey(this.signer));
     }
-    ethVerify(sig, msg) {
-        if (typeof sig === "string") {
-            sig = Buffer.from(base58.decode(sig));
-        }
-        const rlen = new Big(sig.subarray(0, 4).reverse());
-        const r = Buffer.alloc(rlen.v);
-        const rb = new Big(sig.subarray(4, 4 + rlen.v));
-        rb.toBuffer().copy(r, rlen.v - rb.byteLen());
-        const s = sig.subarray(4 + rlen.v);
-        const slen = new Big(s.length);
-        const base = Buffer.from([48, sig.length, 2]);
-        const buf = Buffer.alloc(sig.length + 2);
-        base.copy(buf, 0, 0, 4);
-        rlen.toBuffer().copy(buf, 3);
-        r.copy(buf, 4);
-        Buffer.from([2]).copy(buf, 4 + rlen.v);
-        slen.toBuffer().copy(buf, 5 + rlen.v);
-        s.copy(buf, 6 + rlen.v);
-        return secp256k1.verify(buf, sha256(msg), secp256k1.getPublicKey(this.signer, true));
-    }
-    static K(seed) {
-        seed = Buffer.from(base58.encode(sha3(Buffer.from(seed))));
-        Assert.check(40 <= seed.length, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"));
-        seed = seed.subarray(0, 40);
-        const N = secp256k1.CURVE.n - BigInt(1);
-        let k = new Big(seed).big;
-        k %= N;
-        k += BigInt(1);
-        return k;
-    }
-}
-class KeyPair extends BaseKeyPair {
-    constructor(privateKey) {
-        super(Key.from(privateKey));
-    }
-    getSigner() {
-        if (this.privateKey.type === "btc") {
-            return Buffer.from(base58.decode(this.privateKey.noSuffix));
-        }
-        return Buffer.from(this.privateKey.noSuffix, "hex");
-    }
-    getPub() {
-        if (this.privateKey.type === "btc") {
-            return new Key(base58.encode(getPublicCompressed(Buffer.from(this.signer))) + SUFFIX.KEY.MITUM.PUBLIC);
-        }
-        const publickeyBuffer = privateKeyToPublicKey("0x" + this.privateKey.noSuffix);
-        return new Key(compress(publickeyBuffer) + SUFFIX.KEY.ETHER.PUBLIC);
-    }
-    sign(msg) {
-        if (this.privateKey.type === "btc") {
-            return this.btcSign(msg);
-        }
-        return this.ethSign(msg);
-    }
-    verify(sig, msg) {
-        if (this.privateKey.type === "btc") {
-            return this.btcVerify(sig, msg);
-        }
-        return this.ethVerify(sig, msg);
-    }
-}
-KeyPair.generator = {
-    random(option) {
-        option = option ?? "btc";
-        if (option === "btc") {
-            const safeRandomArray = () => {
-                while (true) {
-                    const randomArray = secureRandom(32, { type: "Uint8Array" });
-                    if (randomArray[0] !== 0) {
-                        return randomArray;
-                    }
-                }
-            };
-            return new KeyPair(base58.encode(Buffer.from(safeRandomArray())) + SUFFIX.KEY.MITUM.PRIVATE);
-        }
-        //return new KeyPair(ethWallet.generate().getPrivateKeyString().substring(2) + SUFFIX.KEY.ETHER.PRIVATE)
-        return new KeyPair(Wallet.createRandom().privateKey.substring(2) + SUFFIX.KEY.ETHER.PRIVATE);
-    },
-    fromPrivateKey(key) {
-        return new KeyPair(key);
-    },
-    fromSeed(seed, option) {
-        option = option ?? "btc";
-        StringAssert.with(seed, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"))
-            .satisfyConfig(Config.SEED)
-            .excute();
-        if (option === "btc") {
-            return new KeyPair(base58.encode(secp256k1.utils.hexToBytes(BaseKeyPair.K(seed).toString(16))) + SUFFIX.KEY.MITUM.PRIVATE);
-        }
-        return new KeyPair(BaseKeyPair.K(seed).toString(16) + SUFFIX.KEY.ETHER.PRIVATE);
-    }
+    return checksum;
 };
 
-function getRandomN(n, f) {
-    Assert.get(Config.KEYS_IN_ACCOUNT.satisfy(n)).excute();
-    n = Math.floor(n);
-    let weight = Math.floor(Config.THRESHOLD.max / n);
-    if (Config.THRESHOLD.max % n) {
-        weight += 1;
-    }
-    const ks = [];
-    const kps = [];
-    for (let i = 0; i < n; i++) {
-        kps.push(f());
-        ks.push(new PubKey(kps[i].publicKey, weight));
-    }
-    return {
-        keys: new Keys(ks, Config.THRESHOLD.max),
-        keypairs: kps,
-    };
-}
-const randomN = (n, option) => {
-    return getRandomN(n, () => KeyPair.random(option));
-};
-
-class KeyG extends Generator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    key(seed) {
-        if (!seed) {
-            const kp = KeyPair.random();
-            return {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: this.address(kp.publicKey.toString()),
-            };
-        }
-        const kp = KeyPair.fromSeed(seed);
-        return {
-            privatekey: kp.privateKey.toString(),
-            publickey: kp.publicKey.toString(),
-            address: this.address(kp.publicKey.toString()),
-        };
-    }
-    keys(n) {
-        return randomN(n).keypairs.map((kp) => {
-            return {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: this.address(kp.publicKey.toString()),
-            };
-        });
-    }
-    fromPrivateKey(key) {
-        const kp = KeyPair.fromPrivateKey(key);
-        if (kp.privateKey.type == "btc") {
-            return {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: this.address(kp.publicKey),
-            };
-        }
-        return {
-            privatekey: kp.privateKey.toString(),
-            publickey: kp.publicKey.toString(),
-            address: this.etherAddress(kp.publicKey),
-        };
-    }
-    etherKey(seed) {
-        if (!seed) {
-            const kp = KeyPair.random("ether");
-            return {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: this.etherAddress(kp.publicKey),
-            };
-        }
-        const kp = KeyPair.fromSeed(seed, "ether");
-        return {
-            privatekey: kp.privateKey.toString(),
-            publickey: kp.publicKey.toString(),
-            address: this.etherAddress(kp.publicKey),
-        };
-    }
-    etherKeys(n) {
-        return randomN(n, "ether").keypairs.map(kp => {
-            return {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: this.etherAddress(kp.publicKey),
-            };
-        });
-    }
-    address(key) {
-        const suffix = key.toString().slice(-3);
-        Assert.check(suffix === "mpu", MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid pubkey format"));
-        return new Keys([new PubKey(key, 100)], 100).address.toString();
-    }
-    etherAddress(key) {
-        const suffix = key.toString().slice(-3);
-        Assert.check(suffix === "epu", MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid pubkey format"));
-        return new EtherKeys([new PubKey(key, 100)], 100).etherAddress.toString();
-    }
-    addressForMultiSig(keys, threshold) {
-        return new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold).address.toString();
-    }
-    etherAddressForMultiSig(keys, threshold) {
-        return new EtherKeys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold).etherAddress.toString();
-    }
-}
-
-const delegateUri$b = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getAccount(api, address, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/account/${Address.from(address).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$b(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getAccountByPublicKey(api, publicKey, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/accounts?publickey=${Key.from(publicKey).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$b(delegateIP) + encodeURIComponent(apiPath));
-}
-var account = {
-    getAccount,
-    getAccountByPublicKey,
-};
-
-const delegateUri$a = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getBlocks(api, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/manifests`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$a(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getBlockByHeight(api, height, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/${Big.from(height).toString()}/manifest`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$a(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getBlockByHash(api, hash, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/${hash}/manifest`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$a(delegateIP) + encodeURIComponent(apiPath));
-}
-var block = {
-    getBlocks,
-    getBlockByHeight,
-    getBlockByHash,
-};
-
-const delegateUri$9 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getNode(api, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$9(delegateIP) + encodeURIComponent(apiPath));
-}
-var node = {
-    getNode,
-};
-
-const delegateUri$8 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getOperations(api, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/operations`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$8(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getOperation(api, hash, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/operation/${hash}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$8(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getBlockOperationsByHeight(api, height, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/${Big.from(height).toString()}/operations`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$8(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getBlockOperationsByHash(api, hash, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/${hash}/operations`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$8(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getAccountOperations(api, address, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/account/${Address.from(address).toString()}/operations`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$8(delegateIP) + encodeURIComponent(apiPath));
-}
-async function send(api, operation, delegateIP, config) {
-    const apiPath = `${IP.from(api).toString()}/builder/send`;
-    return !delegateIP
-        ? await axios.post(apiPath, JSON.stringify(operation), config)
-        : await axios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
-}
-var api$1 = {
-    getOperations,
-    getOperation,
-    getBlockOperationsByHeight,
-    getBlockOperationsByHash,
-    getAccountOperations,
-    send
-};
-
-const delegateUri$7 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getCurrencies(api, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/currency`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$7(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCurrency(api, currency, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/currency/${CurrencyID.from(currency).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$7(delegateIP) + encodeURIComponent(apiPath));
-}
-var currency$1 = {
-    getCurrencies,
-    getCurrency,
-};
-
-const url$6 = (api, contract) => `${IP.from(api).toString()}/nft/${Address.from(contract).toString()}`;
-const delegateUri$6 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getNFT(api, contract, nftID, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/${nftID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$6(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getNFTs(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/nfts`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$6(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCollection(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/collection`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$6(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getAccountOperators(api, contract, account, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/account/${Address.from(account).toString()}/operators`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$6(delegateIP) + encodeURIComponent(apiPath));
-}
-var nft = {
-    getNFT,
-    getNFTs,
-    getCollection,
-    getAccountOperators,
-};
-
-const url$5 = (api, contract) => `${IP.from(api).toString()}/did/${Address.from(contract).toString()}`;
-const delegateUri$5 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getService$3(api, contract, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/service`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$5(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredential(api, contract, templateID, credentialID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}/credential/${credentialID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$5(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getTemplate(api, contract, templateID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$5(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredentials(api, contract, templateID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}/credentials`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$5(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredentialByHolder(api, contract, holder, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/holder/${Address.from(holder).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$5(delegateIP) + encodeURIComponent(apiPath));
-}
-var credential = {
-    getService: getService$3,
-    getCredential,
-    getTemplate,
-    getCredentials,
-    getCredentialByHolder,
-};
-
-const url$4 = (api, contract) => `${IP.from(api).toString()}/dao/${Address.from(contract).toString()}`;
-const delegateUri$4 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getService$2(api, contract, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/service`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$4(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getProposal(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$4(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getDelegator(api, contract, proposalID, delegator, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/delegator/${Address.from(delegator).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$4(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getVoter(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/voter`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$4(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getVotingResult(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/votingpower`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$4(delegateIP) + encodeURIComponent(apiPath));
-}
-var dao = {
-    getService: getService$2,
-    getProposal,
-    getDelegator,
-    getVoter,
-    getVotingResult,
-};
-
-var kyc = {};
-
-const url$3 = (api, contract) => `${IP.from(api).toString()}/sto/${Address.from(contract).toString()}`;
-const delegateUri$3 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getService$1(api, contract, delegateIP) {
-    const apiPath = `${url$3(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$3(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getPartitions(api, contract, holder, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$3(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getBalanceByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$3(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getOperatorsByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$3(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getPartitionBalance(api, contract, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/partition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$3(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getAuthorized(api, contract, operator, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$3(delegateIP) + encodeURIComponent(apiPath));
-}
-var sto = {
-    getService: getService$1,
-    getPartitions,
-    getBalanceByHolder,
-    getOperatorsByHolder,
-    getPartitionBalance,
-    getAuthorized,
-};
-
-const url$2 = (api, contract) => `${IP.from(api).toString()}/timestamp/${Address.from(contract).toString()}`;
-const delegateUri$2 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getService(api, contract, delegateIP) {
-    const apiPath = `${url$2(api, contract)}/service`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$2(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getTimeStamp(api, contract, projectID, tid, delegateIP) {
-    const apiPath = `${url$2(api, contract)}/project/${projectID}/id/${Big.from(tid).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$2(delegateIP) + encodeURIComponent(apiPath));
-}
-var timestamp = {
-    getService,
-    getTimeStamp,
-};
-
-const url$1 = (api, contract) => `${IP.from(api).toString()}/token/${Address.from(contract).toString()}`;
-const delegateUri$1 = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getToken(api, contract, delegateIP) {
-    const apiPath = `${url$1(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$1(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getTokenBalance(api, contract, account, delegateIP) {
-    const apiPath = `${url$1(api, contract)}/account/${Address.from(account).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri$1(delegateIP) + encodeURIComponent(apiPath));
-}
-var token = {
-    getToken,
-    getTokenBalance,
-};
-
-const url = (api, contract) => `${IP.from(api).toString()}/point/${Address.from(contract).toString()}`;
 const delegateUri = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
-async function getPoint(api, contract, delegateIP) {
-    const apiPath = `${url(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getPointBalance(api, contract, account, delegateIP) {
-    const apiPath = `${url(api, contract)}/account/${Address.from(account).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var point = {
-    getPoint,
-    getPointBalance,
+const validatePositiveInteger = (val, name) => {
+    if (!Number.isSafeInteger(val) || val < 0) {
+        throw new Error(`${name} must be a integer >= 0`);
+    }
 };
-
-var models = {
-    currency: currency$1,
-    contract: {
-        nft,
-        credential,
-        dao,
-        kyc,
-        sto,
-        timestamp,
-        token,
-        point,
-    },
+const isNumberTuple = (arr) => {
+    return Array.isArray(arr) && arr.length === 2 && typeof arr[0] === 'number' && typeof arr[1] === 'number';
 };
-
-const currency = models.currency;
-const contract = models.contract;
-var api = {
-    account,
-    block,
-    node,
-    operation: api$1,
-    currency,
-    contract,
+const apiPathWithParams = (apiPath, limit, offset, reverse) => {
+    let query1;
+    let query2;
+    let query3;
+    if (limit !== undefined) {
+        validatePositiveInteger(limit, "limit");
+        query1 = `limit=${limit}`;
+    }
+    if (offset !== undefined) {
+        validatePositiveInteger(offset, "offset");
+        query2 = `offset=${offset}`;
+    }
+    if (reverse !== undefined) {
+        if (reverse !== true) {
+            throw new Error("reverse must be true(bool)");
+        }
+        query3 = `reverse=1`;
+    }
+    const query = [query1, query2, query3].filter(str => str !== undefined).join("&");
+    return query == "" ? apiPath : apiPath + "?" + query;
 };
-async function getAPIData(f) {
-    const res = await f();
-    if (res.status !== 200) {
-        return null;
+const apiPathWithHashParams = (apiPath, factHash, limit, offset, reverse) => {
+    let hash;
+    let query1;
+    let query2;
+    let query3;
+    if (factHash !== undefined) {
+        if (typeof (factHash) !== "string") {
+            {
+                throw new Error("factHash must be a string");
+            }
+        }
+        hash = `facthash=${factHash}`;
     }
-    return res.data;
-}
-
-class Node extends Generator {
-    constructor(api, delegateIP) {
-        super("", api, delegateIP);
+    if (limit !== undefined) {
+        validatePositiveInteger(limit, "limit");
+        query1 = `limit=${limit}`;
     }
-    async getNodeInfo() {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
-        return await node.getNode(this.api, this.delegateIP);
+    if (offset !== undefined) {
+        validatePositiveInteger(offset, "offset");
+        query2 = `offset=${offset}`;
     }
-}
-class Block extends Generator {
-    constructor(api, delegateIP) {
-        super("", api, delegateIP);
+    if (reverse !== undefined) {
+        if (reverse !== true) {
+            throw new Error("reverse must be true(bool)");
+        }
+        query3 = `reverse=1`;
     }
-    async getAllBlocks() {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
-        return await block.getBlocks(this.api, this.delegateIP);
+    const query = [hash, query1, query2, query3].filter(str => str !== undefined).join("&");
+    return query == "" ? apiPath : apiPath + "?" + query;
+};
+const apiPathWithParamsExt = (apiPath, limit, offset, reverse) => {
+    let query1;
+    let query2;
+    let query3;
+    if (limit !== undefined) {
+        validatePositiveInteger(limit, "limit");
+        query1 = `limit=${limit}`;
     }
-    async getBlockByHash(hash) {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
-        return await block.getBlockByHash(this.api, hash, this.delegateIP);
+    if (offset !== undefined) {
+        if (!isNumberTuple(offset)) {
+            throw new Error("offset must be a tuple with number");
+        }
+        validatePositiveInteger(offset[0], "offset element");
+        validatePositiveInteger(offset[1], "offset element");
+        query2 = `offset=${offset[0]},${offset[1]}`;
     }
-    async getBlockByHeight(height) {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
-        return await block.getBlockByHeight(this.api, height, this.delegateIP);
+    if (reverse !== undefined) {
+        if (reverse !== true) {
+            throw new Error("reverse must be true(bool)");
+        }
+        query3 = `reverse=1`;
     }
-    async getOperationsByHash(hash) {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
-        return await api$1.getBlockOperationsByHash(this.api, hash, this.delegateIP);
-    }
-    async getOperationsByHeight(height) {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
-        return await api$1.getBlockOperationsByHeight(this.api, height, this.delegateIP);
-    }
-}
+    const query = [query1, query2, query3].filter(str => str !== undefined).join("&");
+    return query == "" ? apiPath : apiPath + "?" + query;
+};
 
 class Item {
     constructor(hint) {
@@ -1911,13 +1530,6 @@ let Operation$1 = class Operation {
             signs: factSigns.map(fs => fs.toHintedObject())
         };
     }
-    export(filePath) {
-        writeFile(filePath, JSON.stringify(this.toHintedObject(), null, 4), (e) => {
-            if (e) {
-                throw MitumError.detail(ECODE.FAIL_FILE_CREATION, "fs write-file failed");
-            }
-        });
-    }
 };
 
 // import { Address } from "../../key"
@@ -1955,7 +1567,8 @@ class OperationFact extends Fact {
         super(hint, token);
         this.sender = Address.from(sender);
         Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length));
-        Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"));
+        hint !== "mitum-nft-mint-operation-fact" ? Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"))
+            : null;
         this.items = items;
         this._hash = this.hashing();
     }
@@ -2005,13 +1618,900 @@ class NodeFact extends Fact {
     }
 }
 
+const isOpFact = (operation) => {
+    return operation instanceof Operation$1;
+};
+const isHintedObject = (object) => {
+    return '_hint' in object && 'fact' in object && 'hash' in object;
+};
+const isSuccessResponse = (response) => {
+    return 'data' in response;
+};
+
+class BaseAddress {
+    constructor(s, type) {
+        this.s = s;
+        if (type) {
+            this.type = type;
+        }
+        else if (this.s.endsWith(SUFFIX.ADDRESS.MITUM)) {
+            this.type = "mitum";
+        }
+        else if (this.s.endsWith(SUFFIX.ADDRESS.NODE)) {
+            this.type = "node";
+        }
+        else if (this.s.endsWith(SUFFIX.ADDRESS.ZERO)) {
+            this.type = "zero";
+        }
+        else {
+            throw MitumError.detail(ECODE.INVALID_ADDRESS, "address type not detected");
+        }
+    }
+    toBuffer() {
+        return Buffer.from(this.s);
+    }
+    toString() {
+        return this.s;
+    }
+}
+class Address extends BaseAddress {
+    constructor(s) {
+        super(s);
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS_TYPE, "The address must be starting with '0x' and ending with 'mca'"))
+            .startsWith('0x')
+            .endsWith(SUFFIX.ADDRESS.MITUM)
+            .excute();
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS, "The address must be a 45-character string"))
+            .empty().not()
+            .satisfyConfig(Config.ADDRESS.DEFAULT)
+            .excute();
+        Assert.check(/^[0-9a-fA-F]+$/.test(s.slice(2, 42)), MitumError.detail(ECODE.INVALID_ADDRESS, `${s.slice(2, 42)} is not a hexadecimal number`));
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS_CHECKSUM, "bad address checksum"))
+            .equal('0x' + getChecksum(s.slice(2, 42)) + SUFFIX.ADDRESS.MITUM)
+            .excute();
+    }
+    static from(s) {
+        return s instanceof Address ? s : new Address(s);
+    }
+}
+class NodeAddress extends BaseAddress {
+    constructor(s) {
+        super(s, "node");
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS, "invalid node address"))
+            .empty().not()
+            .endsWith(SUFFIX.ADDRESS.NODE)
+            .satisfyConfig(Config.ADDRESS.NODE)
+            .excute();
+    }
+    static from(s) {
+        return s instanceof NodeAddress ? s : new NodeAddress(s);
+    }
+}
+class ZeroAddress extends BaseAddress {
+    constructor(s) {
+        super(s, "zero");
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS, "invalid zero address"))
+            .empty().not()
+            .endsWith(SUFFIX.ADDRESS.ZERO)
+            .satisfyConfig(Config.ADDRESS.ZERO)
+            .excute();
+        this.currency = new CurrencyID(s.substring(0, s.length - Config.SUFFIX.ZERO_ADDRESS.value));
+    }
+    static from(s) {
+        return s instanceof ZeroAddress ? s : new ZeroAddress(s);
+    }
+}
+
+class Key {
+    constructor(s) {
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_KEY, "invalid key"))
+            .empty().not()
+            .chainOr(s.endsWith(SUFFIX.KEY.MITUM.PRIVATE), s.endsWith(SUFFIX.KEY.MITUM.PUBLIC))
+            .excute();
+        if (s.endsWith(SUFFIX.KEY.MITUM.PRIVATE)) {
+            StringAssert.with(s, MitumError.detail(ECODE.INVALID_PRIVATE_KEY, "invalid private key"))
+                .chainAnd(s.endsWith(SUFFIX.KEY.MITUM.PRIVATE) && Config.KEY.MITUM.PRIVATE.satisfy(s.length), /^[0-9a-f]+$/.test(s.substring(0, s.length - Config.SUFFIX.DEFAULT.value)))
+                .excute();
+        }
+        else {
+            StringAssert.with(s, MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid public key"))
+                .chainAnd(s.endsWith(SUFFIX.KEY.MITUM.PUBLIC) && Config.KEY.MITUM.PUBLIC.satisfy(s.length), /^[0-9a-f]+$/.test(s.substring(0, s.length - Config.SUFFIX.DEFAULT.value)))
+                .excute();
+        }
+        this.key = s.substring(0, s.length - Config.SUFFIX.DEFAULT.value);
+        this.suffix = s.substring(s.length - Config.SUFFIX.DEFAULT.value);
+        this.type = "mitum";
+        this.isPriv = s.endsWith(SUFFIX.KEY.MITUM.PRIVATE);
+    }
+    static from(s) {
+        return s instanceof Key ? s : new Key(s);
+    }
+    get noSuffix() {
+        return this.key;
+    }
+    toBuffer() {
+        return Buffer.from(this.toString());
+    }
+    toString() {
+        return this.key + this.suffix;
+    }
+}
+class PubKey extends Key {
+    constructor(key, weight) {
+        super(typeof key === "string" ? key : key.toString());
+        this.weight = Big.from(weight);
+        Assert.check(Config.WEIGHT.satisfy(this.weight.v), MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "weight out of range"));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.weight.toBuffer("fill")
+        ]);
+    }
+    toHintedObject() {
+        return {
+            _hint: PubKey.hint.toString(),
+            weight: this.weight.v,
+            key: this.toString(),
+        };
+    }
+}
+PubKey.hint = new Hint(HINT.CURRENCY.KEY);
+class Keys {
+    constructor(keys, threshold) {
+        Assert.check(Config.KEYS_IN_ACCOUNT.satisfy(keys.length), MitumError.detail(ECODE.INVALID_KEYS, "keys length out of range"));
+        this._keys = keys.map(k => {
+            if (k instanceof PubKey) {
+                return k;
+            }
+            const [key, weight] = k;
+            return new PubKey(key instanceof Key ? key.toString() : key, weight);
+        });
+        this.threshold = threshold instanceof Big ? threshold : new Big(threshold);
+        Assert.check(Config.THRESHOLD.satisfy(this.threshold.v), MitumError.detail(ECODE.INVALID_KEYS, "threshold out of range"));
+        Assert.check(new Set(this._keys.map(k => k.toString())).size === this._keys.length, MitumError.detail(ECODE.INVALID_KEYS, "duplicate keys found in keys"));
+    }
+    get keys() {
+        return this._keys;
+    }
+    get checksum() {
+        const address = keccak256(this.toBuffer()).subarray(12).toString('hex');
+        const hash = keccak256(Buffer.from(address, 'ascii')).toString('hex');
+        let checksumAddress = '0x';
+        for (let i = 0; i < address.length; i++) {
+            if (parseInt(hash[i], 16) > 7) {
+                checksumAddress += address[i].toUpperCase();
+            }
+            else {
+                checksumAddress += address[i];
+            }
+        }
+        // use mitum SUFFIX temporarily
+        return new Address(checksumAddress + SUFFIX.ADDRESS.MITUM);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            Buffer.concat(this._keys.sort((a, b) => Buffer.compare(Buffer.from(a.toString()), Buffer.from(b.toBuffer()))).map(k => k.toBuffer())),
+            this.threshold.toBuffer("fill")
+        ]);
+    }
+    toHintedObject() {
+        const eHash = keccak256$1(this.toBuffer());
+        return {
+            _hint: Keys.hint.toString(),
+            hash: eHash.slice(24),
+            keys: this._keys
+                .sort((a, b) => Buffer.compare(Buffer.from(a.toString()), Buffer.from(b.toBuffer())))
+                .map((k) => k.toHintedObject()),
+            threshold: this.threshold.v,
+        };
+    }
+}
+Keys.hint = new Hint(HINT.CURRENCY.KEYS);
+
+const privateKeyToPublicKey = (privateKey) => {
+    let privateBuf;
+    if (!Buffer.isBuffer(privateKey)) {
+        if (typeof privateKey !== "string") {
+            throw new Error("Expected Buffer or string as argument");
+        }
+        privateKey =
+            privateKey.slice(0, 2) === "0x" ? privateKey.slice(2) : privateKey;
+        privateBuf = Buffer.from(privateKey, "hex");
+    }
+    else {
+        privateBuf = privateKey;
+    }
+    return getPublicKey(privateBuf, false);
+};
+const compress = (publicKey) => {
+    const xCoordinate = publicKey.slice(1, 33);
+    const yCoordinate = publicKey.slice(33);
+    const compressedPublicKey = Buffer.concat([
+        Buffer.from([0x02 + (yCoordinate[yCoordinate.length - 1] % 2)]),
+        xCoordinate,
+    ]);
+    return compressedPublicKey.toString("hex");
+};
+
+class BaseKeyPair {
+    constructor(privateKey) {
+        this.privateKey = privateKey;
+        this.signer = this.getSigner();
+        this.publicKey = this.getPub();
+        secp256k1.utils.hmacSha256Sync = (key, ...msgs) => hmac(sha256$1, key, secp256k1.utils.concatBytes(...msgs));
+        secp256k1.utils.sha256Sync = (...msgs) => sha256$1(secp256k1.utils.concatBytes(...msgs));
+    }
+    static random(option) {
+        return this.generator.random(option);
+    }
+    static fromPrivateKey(key) {
+        return this.generator.fromPrivateKey(key);
+    }
+    static fromSeed(seed, option) {
+        return this.generator.fromSeed(seed, option);
+    }
+    ethSign(msg) {
+        const ec$1 = new ec("secp256k1");
+        const key = ec$1.keyFromPrivate(this.privateKey.noSuffix, "hex");
+        const msgHash = crypto.createHash("sha256").update(msg).digest();
+        const signature = key.sign(msgHash);
+        const r = Buffer.from(signature.r.toArray());
+        const s = Buffer.from(signature.s.toArray());
+        const sigLength = 4 + r.length + s.length;
+        const sigBuffer = Buffer.alloc(sigLength);
+        sigBuffer.writeUInt32LE(r.length, 0);
+        sigBuffer.set(r, 4);
+        sigBuffer.set(s, 4 + r.length);
+        return sigBuffer;
+    }
+    ethVerify(sig, msg) {
+        if (typeof sig === "string") {
+            sig = Buffer.from(base58.decode(sig));
+        }
+        const rlen = new Big(sig.subarray(0, 4).reverse());
+        const r = Buffer.alloc(rlen.v);
+        const rb = new Big(sig.subarray(4, 4 + rlen.v));
+        rb.toBuffer().copy(r, rlen.v - rb.byteLen());
+        const s = sig.subarray(4 + rlen.v);
+        const slen = new Big(s.length);
+        const base = Buffer.from([48, sig.length, 2]);
+        const buf = Buffer.alloc(sig.length + 2);
+        base.copy(buf, 0, 0, 4);
+        rlen.toBuffer().copy(buf, 3);
+        r.copy(buf, 4);
+        Buffer.from([2]).copy(buf, 4 + rlen.v);
+        slen.toBuffer().copy(buf, 5 + rlen.v);
+        s.copy(buf, 6 + rlen.v);
+        return secp256k1.verify(buf, sha256(msg), secp256k1.getPublicKey(this.signer, true));
+    }
+    static K(seed) {
+        seed = Buffer.from(base58.encode(sha3(Buffer.from(seed))));
+        Assert.check(40 <= seed.length, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"));
+        seed = seed.subarray(0, 40);
+        const N = secp256k1.CURVE.n - BigInt(1);
+        let k = new Big(seed).big;
+        k %= N;
+        k += BigInt(1);
+        return k;
+    }
+}
+class KeyPair extends BaseKeyPair {
+    constructor(privateKey) {
+        super(Key.from(privateKey));
+    }
+    getSigner() {
+        return Buffer.from(this.privateKey.noSuffix, "hex");
+    }
+    getPub() {
+        const publickeyBuffer = privateKeyToPublicKey("0x" + this.privateKey.noSuffix);
+        return new Key(compress(publickeyBuffer) + SUFFIX.KEY.MITUM.PUBLIC);
+    }
+    sign(msg) {
+        return this.ethSign(msg);
+    }
+    verify(sig, msg) {
+        return this.ethVerify(sig, msg);
+    }
+}
+KeyPair.generator = {
+    random() {
+        return new KeyPair(Wallet.createRandom().privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
+    },
+    fromPrivateKey(key) {
+        return new KeyPair(key);
+    },
+    fromSeed(seed) {
+        StringAssert.with(seed, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"))
+            .satisfyConfig(Config.SEED)
+            .excute();
+        return new KeyPair(BaseKeyPair.K(seed).toString(16) + SUFFIX.KEY.MITUM.PRIVATE);
+    }
+};
+
+function getRandomN(n, f) {
+    Assert.check(Config.KEYS_IN_ACCOUNT.satisfy(n), MitumError.detail(ECODE.INVALID_KEYS, `${n} is out of range`));
+    n = Math.floor(n);
+    let weight = Math.floor(Config.THRESHOLD.max / n);
+    if (Config.THRESHOLD.max % n) {
+        weight += 1;
+    }
+    const ks = [];
+    const kps = [];
+    for (let i = 0; i < n; i++) {
+        kps.push(f());
+        ks.push(new PubKey(kps[i].publicKey, weight));
+    }
+    return {
+        keys: new Keys(ks, Config.THRESHOLD.max),
+        keypairs: kps,
+    };
+}
+const randomN = (n, option) => {
+    return getRandomN(n, () => KeyPair.random(option));
+};
+
+class KeyG extends Generator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    /**
+     * Generate a key pair randomly or from the given seed phrase.
+     * @param {string} [seed] - (Optional) The seed for deterministic key generation. If not provided, a random key pair will be generated.
+     * @returns An `Account` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     */
+    key(seed) {
+        if (!seed) {
+            const kp = KeyPair.random("mitum");
+            return {
+                privatekey: kp.privateKey.toString(),
+                publickey: kp.publicKey.toString(),
+                address: this.address(kp.publicKey),
+            };
+        }
+        const kp = KeyPair.fromSeed(seed, "mitum");
+        return {
+            privatekey: kp.privateKey.toString(),
+            publickey: kp.publicKey.toString(),
+            address: this.address(kp.publicKey),
+        };
+    }
+    /**
+     * Generate `n` length of array with randomly generated key pairs.
+     * @param {number} [n] - The number of accounts to generate.
+     * @returns An array of `Account` objects.
+     * Properties of `Account`:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     */
+    keys(n) {
+        return randomN(n, "mitum").keypairs.map(kp => {
+            return {
+                privatekey: kp.privateKey.toString(),
+                publickey: kp.publicKey.toString(),
+                address: this.address(kp.publicKey),
+            };
+        });
+    }
+    /**
+     * Generate a key pair from the given private key.
+     * @param {string | Key} [key] - The private key.
+     * @returns An `Account` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     */
+    fromPrivateKey(key) {
+        const kp = KeyPair.fromPrivateKey(key);
+        return {
+            privatekey: kp.privateKey.toString(),
+            publickey: kp.publicKey.toString(),
+            address: this.address(kp.publicKey),
+        };
+    }
+    /**
+     * Generate an address from the given public key.
+     * @param {string | Key} [key] - The public key.
+     * @returns The address.
+     */
+    address(key) {
+        const suffix = key.toString().slice(-3);
+        Assert.check(suffix === "fpu", MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid pubkey format"));
+        return new Keys([new PubKey(key, 100)], 100).checksum.toString();
+    }
+    /**
+     * Returns a checksummed address for given address string. For invalid address, an error is returned.
+     * @param {string} [address] - An address.
+     * @returns A checksummed address.
+     */
+    checksummedAddress(address) {
+        try {
+            const valid_address = new Address(address);
+            return valid_address.toString();
+        }
+        catch (error) {
+            if (error.code === 'EC_INVALID_ADDRESS_CHECKSUM') {
+                return '0x' + getChecksum(address.slice(2, 42)) + SUFFIX.ADDRESS.MITUM;
+            }
+            else {
+                throw error;
+            }
+        }
+    }
+    /**
+     * Generate a multi-signature address from the given keys.
+     * @param {keysType} [keys] - An array of object {`key`: publickey, `weight`: weight for the key}
+     * @param {string | number | Big} [threshold] - The threshold for the multi-signature.
+     * @returns The multi-signature address.
+     * @example
+     * const pubkey01 = {
+     *     key: "02cb1d73c49d638d98092e35603414b575f3f5b5ce01162cdd80ab68ab77e50e14fpu",
+     *     weight: 50
+     * };
+     * const pubkey02 = {
+     *     key: "0377241675aabafca6b1a49f3bc08a581beb0daa330a4ac2008464d63ed7635a22fpu",
+     *     weight: 50
+     * };
+     * const mutiSigAddress = mitum.account.addressForMultiSig([pubkey01, pubkey02], 100);
+     */
+    addressForMultiSig(keys, threshold) {
+        return new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold).checksum.toString();
+    }
+}
+
+async function getAccount(api, address, delegateIP) {
+    const apiPath = `${IP.from(api).toString()}/account/${Address.from(address).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getAccountByPublicKey(api, publicKey, delegateIP) {
+    const apiPath = `${IP.from(api).toString()}/accounts?publickey=${Key.from(publicKey).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var account = {
+    getAccount,
+    getAccountByPublicKey,
+};
+
+async function getBlocks(api, delegateIP, limit, offset, reverse) {
+    const apiPath = apiPathWithParams(`${IP.from(api).toString()}/block/manifests`, limit, offset, reverse);
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getBlockByHeight(api, height, delegateIP) {
+    const apiPath = `${IP.from(api).toString()}/block/${Big.from(height).toString()}/manifest`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getBlockByHash(api, hash, delegateIP) {
+    const apiPath = `${IP.from(api).toString()}/block/${hash}/manifest`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var block = {
+    getBlocks,
+    getBlockByHeight,
+    getBlockByHash,
+};
+
+async function getNode(api, delegateIP) {
+    const apiPath = `${IP.from(api).toString()}/`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var node = {
+    getNode,
+};
+
+async function getOperations(api, delegateIP, limit, offset, reverse) {
+    const apiPath = apiPathWithParamsExt(`${IP.from(api).toString()}/block/operations`, limit, offset, reverse);
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getOperation(api, hash, delegateIP) {
+    const apiPath = `${IP.from(api).toString()}/block/operation/${hash}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getBlockOperationsByHeight(api, height, delegateIP, limit, offset, reverse) {
+    const apiPath = apiPathWithParams(`${IP.from(api).toString()}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+// async function getBlockOperationsByHash(api: string | IP, hash: string, delegateIP: string | IP) {
+//     const apiPath = `${IP.from(api).toString()}/block/${hash}/operations`;
+//     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))  
+// }
+async function getAccountOperations(api, address, delegateIP, limit, offset, reverse) {
+    const apiPath = apiPathWithParamsExt(`${IP.from(api).toString()}/account/${Address.from(address).toString()}/operations`, limit, offset, reverse);
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function send(api, operation, delegateIP, config) {
+    const apiPath = `${IP.from(api).toString()}/builder/send`;
+    return !delegateIP
+        ? await axios.post(apiPath, JSON.stringify(operation), config)
+        : await axios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
+}
+var api$1 = {
+    getOperations,
+    getOperation,
+    getBlockOperationsByHeight,
+    // getBlockOperationsByHash,
+    getAccountOperations,
+    send
+};
+
+async function getCurrencies(api, delegateIP) {
+    const apiPath = `${IP.from(api).toString()}/currency`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getCurrency(api, currency, delegateIP) {
+    const apiPath = `${IP.from(api).toString()}/currency/${CurrencyID.from(currency).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var currency$1 = {
+    getCurrencies,
+    getCurrency,
+};
+
+const url$6 = (api, contract) => `${IP.from(api).toString()}/nft/${Address.from(contract).toString()}`;
+async function getNFT(api, contract, nftID, delegateIP) {
+    const apiPath = `${url$6(api, contract)}/${nftID}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getNFTs(api, contract, delegateIP, factHash, limit, offset, reverse) {
+    const apiPath = apiPathWithHashParams(`${url$6(api, contract)}/nfts`, factHash, limit, offset, reverse);
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getNFTCount(api, contract, delegateIP) {
+    const apiPath = `${url$6(api, contract)}/count`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getCollection(api, contract, delegateIP) {
+    const apiPath = `${url$6(api, contract)}/collection`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getAccountOperators(api, contract, account, delegateIP) {
+    const apiPath = `${url$6(api, contract)}/account/${Address.from(account).toString()}/operators`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var nft = {
+    getNFT,
+    getNFTs,
+    getNFTCount,
+    getCollection,
+    getAccountOperators,
+};
+
+const url$5 = (api, contract) => `${IP.from(api).toString()}/did/${Address.from(contract).toString()}`;
+async function getService$3(api, contract, delegateIP) {
+    const apiPath = `${url$5(api, contract)}/service`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getCredential(api, contract, templateID, credentialID, delegateIP) {
+    const apiPath = `${url$5(api, contract)}/template/${templateID}/credential/${credentialID}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getTemplate(api, contract, templateID, delegateIP) {
+    const apiPath = `${url$5(api, contract)}/template/${templateID}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getCredentials(api, contract, templateID, delegateIP) {
+    const apiPath = `${url$5(api, contract)}/template/${templateID}/credentials`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getCredentialByHolder(api, contract, holder, delegateIP) {
+    const apiPath = `${url$5(api, contract)}/holder/${Address.from(holder).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var credential = {
+    getService: getService$3,
+    getCredential,
+    getTemplate,
+    getCredentials,
+    getCredentialByHolder,
+};
+
+const url$4 = (api, contract) => `${IP.from(api).toString()}/dao/${Address.from(contract).toString()}`;
+async function getService$2(api, contract, delegateIP) {
+    const apiPath = `${url$4(api, contract)}/service`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getProposal(api, contract, proposalID, delegateIP) {
+    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getDelegator(api, contract, proposalID, delegator, delegateIP) {
+    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/delegator/${Address.from(delegator).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getVoter(api, contract, proposalID, delegateIP) {
+    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/voter`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getVotingResult(api, contract, proposalID, delegateIP) {
+    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/votingpower`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var dao = {
+    getService: getService$2,
+    getProposal,
+    getDelegator,
+    getVoter,
+    getVotingResult,
+};
+
+var kyc = {};
+
+const url$3 = (api, contract) => `${IP.from(api).toString()}/sto/${Address.from(contract).toString()}`;
+async function getService$1(api, contract, delegateIP) {
+    const apiPath = `${url$3(api, contract)}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getPartitions(api, contract, holder, delegateIP) {
+    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getBalanceByHolder(api, contract, holder, partition, delegateIP) {
+    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getOperatorsByHolder(api, contract, holder, partition, delegateIP) {
+    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getPartitionBalance(api, contract, partition, delegateIP) {
+    const apiPath = `${url$3(api, contract)}/partition/${partition}/balance`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getAuthorized(api, contract, operator, delegateIP) {
+    const apiPath = `${url$3(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var sto = {
+    getService: getService$1,
+    getPartitions,
+    getBalanceByHolder,
+    getOperatorsByHolder,
+    getPartitionBalance,
+    getAuthorized,
+};
+
+const url$2 = (api, contract) => `${IP.from(api).toString()}/timestamp/${Address.from(contract).toString()}`;
+async function getService(api, contract, delegateIP) {
+    const apiPath = `${url$2(api, contract)}/service`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getTimeStamp(api, contract, projectID, tid, delegateIP) {
+    const apiPath = `${url$2(api, contract)}/project/${projectID}/id/${Big.from(tid).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var timestamp = {
+    getService,
+    getTimeStamp,
+};
+
+const url$1 = (api, contract) => `${IP.from(api).toString()}/token/${Address.from(contract).toString()}`;
+async function getToken(api, contract, delegateIP) {
+    const apiPath = `${url$1(api, contract)}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getTokenBalance(api, contract, account, delegateIP) {
+    const apiPath = `${url$1(api, contract)}/account/${Address.from(account).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var token = {
+    getToken,
+    getTokenBalance,
+};
+
+const url = (api, contract) => `${IP.from(api).toString()}/point/${Address.from(contract).toString()}`;
+async function getPoint(api, contract, delegateIP) {
+    const apiPath = `${url(api, contract)}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getPointBalance(api, contract, account, delegateIP) {
+    const apiPath = `${url(api, contract)}/account/${Address.from(account).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var point = {
+    getPoint,
+    getPointBalance,
+};
+
+var models = {
+    currency: currency$1,
+    contract: {
+        nft,
+        credential,
+        dao,
+        kyc,
+        sto,
+        timestamp,
+        token,
+        point,
+    },
+};
+
+const currency = models.currency;
+const contract = models.contract;
+var api = {
+    account,
+    block,
+    node,
+    operation: api$1,
+    currency,
+    contract,
+};
+async function getAPIData(f, _links) {
+    try {
+        const res = await f();
+        const parsedResponse = {
+            status: res.status,
+            method: res.config.method,
+            url: res.config.url,
+            request_body: res.config.data,
+            data: _links ? { _embedded: res.data._embedded, _links: res.data._links } : res.data._embedded,
+        };
+        return parsedResponse;
+    }
+    catch (error) {
+        if (error.response) {
+            const { response } = error;
+            const parsedError = {
+                status: response.status,
+                method: response.config.method,
+                url: response.config.url,
+                error_code: response.data ? assignCodeFromErrorMessage(response.data) : { pcode: [], dcode: [] },
+                request_body: response.config.data,
+                error_message: response.data,
+            };
+            return parsedError;
+        }
+        else if (error.code) {
+            const parsedError = {
+                status: 500,
+                method: error.config.method,
+                url: error.config.url,
+                error_code: { pcode: [], dcode: [] },
+                request_body: error.config.data,
+                error_message: error.code,
+            };
+            return parsedError;
+        }
+        else {
+            throw new Error(`Unknown error orccur!\n${error}`);
+        }
+    }
+}
+
+class Node extends Generator {
+    constructor(api, delegateIP) {
+        super("", api, delegateIP);
+    }
+    /**
+     * Get information about the nodes in the network.
+     * @async
+     * @returns The `data` of `SuccessResponse` represents an array of information of nodes:
+     * - `network_id`: The ID of the network to which the node belongs.
+     * - `last_manifest`: Information about the most recently created block.
+     * - `network_policy`: Policy information of the network.
+     * - `local`: Information about the local node.
+     * - `consensus`: Status of consensus on the node.
+     * - `_hint`: Indicates that the data represents node information.
+     */
+    async getNodeInfo() {
+        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        return await getAPIData(() => node.getNode(this.api, this.delegateIP));
+    }
+}
+class Block extends Generator {
+    constructor(api, delegateIP) {
+        super("", api, delegateIP);
+    }
+    /**
+     * Get the account information for the given public key.
+     * @async
+     * @param {number} [limit] - (Optional) The maximum number of items to retrieve.
+     * @param {number} [offset] - (Optional) The number of items skip before starting to return data.
+     * @param {boolean} [reverse] - (Optional) Whether to return the items in reverse newest order.
+     * @returns The `data` of `SuccessResponse` is a array with block manifest info object:
+     * - `_hint`: Indicates mitum engine version,
+     * - `_embedded`:
+     * - - `Manifest`: manifest info includes `proposed_at`, `states_tree`, `hash`, `previous`, `proposal`, `operations_tree`, `suffrage`, `_hint`, `height`. </div/>
+     * - - `operations`: number of operations included in the block,
+     * - - `confirmed_at`: timestamp,
+     * - - `proposer`: node name of proposer,
+     * - - `round`: number of round to manifest,
+     * - `_links`: links to get additional information
+     */
+    async getAllBlocks(limit, offset, reverse) {
+        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        return await getAPIData(() => block.getBlocks(this.api, this.delegateIP, limit, offset, reverse));
+    }
+    /**
+     * Get information of a block by hash.
+     * @async
+     * @param {string} [hash] - The hash value of the block to retrieve.
+     * @returns The `data` of `SuccessResponse` represents a block manifest:
+     * - `Manifest`:
+     * - - `proposed_at`: Timestamp when the block was proposed,
+     * - - `states_tree`: Hash for state tree,
+     * - - `hash`: Hash for the block,
+     * - - `previous`: Hash for the previous block,
+     * - - `proposal`: Hash for the proposal,
+     * - - `operations_tree`: Hash for the operation tree,
+     * - - `suffrage`: Hash for the suffrage,
+     * - - `_hint`: Hint for the manifest,
+     * - - `height`: Block height
+     * - `operations`: The number of operations included in the block,
+     * - `confirmed_at`: Timestamp when the block was confirmed,
+     * - `proposer`: The node name of proposer,
+     * - `round`: The number of round to manifest
+     */
+    async getBlockByHash(hash) {
+        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        return await getAPIData(() => block.getBlockByHash(this.api, hash, this.delegateIP));
+    }
+    /**
+     * Get information of a block by height.
+     * @async
+     * @param {number | string} [height] - The height of the block to retrieve.
+     * @returns The `data` of `SuccessResponse` represents a block manifest:
+     * - `Manifest`:
+     * - - `proposed_at`: Timestamp when the block was proposed,
+     * - - `states_tree`: Hash for state tree,
+     * - - `hash`: Hash for the block,
+     * - - `previous`: Hash for the previous block,
+     * - - `proposal`: Hash for the proposal,
+     * - - `operations_tree`: Hash for the operation tree,
+     * - - `suffrage`: Hash for the suffrage,
+     * - - `_hint`: Hint for the manifest,
+     * - - `height`: Block height
+     * - `operations`: The number of operations included in the block,
+     * - `confirmed_at`: Timestamp when the block was confirmed,
+     * - `proposer`: The node name of proposer,
+     * - `round`: The number of round to manifest
+     */
+    async getBlockByHeight(height) {
+        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        return await getAPIData(() => block.getBlockByHeight(this.api, height, this.delegateIP));
+    }
+    // async getOperationsByHash(hash: string) {
+    //     Assert.check(
+    //         this.api !== undefined || this.api !== null,
+    //         MitumError.detail(ECODE.NO_API, "no api"),
+    //     )
+    //     return await getAPIData(() => operation.getBlockOperationsByHash(this.api, hash, this.delegateIP))
+    // }
+    /**
+     * Get all operations contained in a block of given height.
+     * @async
+     * @param {number | string} [height] - The height of the block to retrieve operations from.
+     * @param {number} [limit] - (Optional) The maximum number of items to retrieve.
+     * @param {number} [offset] - (Optional) The number of items skip before starting to return data.
+     * @param {boolean} [reverse] - (Optional) Whether to return the items in reverse newest order.
+     * @returns The `data` of `SuccessResponse` represents an array of all operations in the block:
+     * - `_hint`: Indicates mitum engine version,
+     * - `_embedded`:
+     * - - `_hint`: Hint for the operation,
+     * - - `hash`: Hash for the fact,
+     * - - `operation`: Information of the operation includes `hash`, `fact`, `signs`, `_hint`,
+     * - - `height`: Block height containing the operation,
+     * - - `confirmed_at`: Timestamp when the block was confirmed,
+     * - - `reason`: Reason for operation failure,
+     * - - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - - `index`: Index of the operation in the block
+     * - `_links`: Links to get additional information
+     */
+    async getOperationsByHeight(height, limit, offset, reverse) {
+        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        return await getAPIData(() => api$1.getBlockOperationsByHeight(this.api, height, this.delegateIP, limit, offset, reverse));
+    }
+}
+
 class CurrencyItem extends Item {
-    constructor(hint, amounts, addressType) {
+    constructor(hint, amounts) {
         super(hint);
         Assert.check(Config.AMOUNTS_IN_ITEM.satisfy(amounts.length), MitumError.detail(ECODE.INVALID_AMOUNTS, "amounts length out of range"));
         Assert.check(new Set(amounts.map(am => am.currency.toString())).size === amounts.length, MitumError.detail(ECODE.INVALID_AMOUNTS, "duplicate amounts found in amounts"));
         this.amounts = amounts;
-        this.addressType = addressType ?? "";
     }
     toHintedObject() {
         return {
@@ -2022,20 +2522,13 @@ class CurrencyItem extends Item {
 }
 
 class CreateAccountItem extends CurrencyItem {
-    constructor(keys, amounts, addressType) {
-        super(HINT.CURRENCY.CREATE_ACCOUNT.ITEM, amounts, addressType);
+    constructor(keys, amounts) {
+        super(HINT.CURRENCY.CREATE_ACCOUNT.ITEM, amounts);
         this.keys = keys;
-        if (addressType === "mitum") {
-            this.addressSuffix = SUFFIX.ADDRESS.MITUM;
-        }
-        else {
-            this.addressSuffix = SUFFIX.ADDRESS.ETHER;
-        }
     }
     toBuffer() {
         return Buffer.concat([
             this.keys.toBuffer(),
-            Buffer.from(this.addressSuffix),
             Buffer.concat(this.amounts.sort(SortFunc).map(am => am.toBuffer())),
         ]);
     }
@@ -2043,7 +2536,6 @@ class CreateAccountItem extends CurrencyItem {
         return {
             ...super.toHintedObject(),
             keys: this.keys.toHintedObject(),
-            addrtype: this.addressSuffix
         };
     }
     toString() {
@@ -2137,20 +2629,13 @@ let TransferFact$3 = class TransferFact extends OperationFact {
 };
 
 class CreateContractAccountItem extends CurrencyItem {
-    constructor(keys, amounts, addressType) {
-        super(HINT.CURRENCY.CREATE_CONTRACT_ACCOUNT.ITEM, amounts, addressType);
+    constructor(keys, amounts) {
+        super(HINT.CURRENCY.CREATE_CONTRACT_ACCOUNT.ITEM, amounts);
         this.keys = keys;
-        if (addressType === "mitum") {
-            this.addressSuffix = SUFFIX.ADDRESS.MITUM;
-        }
-        else {
-            this.addressSuffix = SUFFIX.ADDRESS.ETHER;
-        }
     }
     toBuffer() {
         return Buffer.concat([
             this.keys.toBuffer(),
-            Buffer.from(this.addressSuffix),
             Buffer.concat(this.amounts.sort(SortFunc).map(am => am.toBuffer())),
         ]);
     }
@@ -2158,7 +2643,6 @@ class CreateContractAccountItem extends CurrencyItem {
         return {
             ...super.toHintedObject(),
             keys: this.keys.toHintedObject(),
-            addrtype: this.addressSuffix
         };
     }
     toString() {
@@ -2215,6 +2699,7 @@ class UpdateOperatorFact extends Fact {
         this.currency = CurrencyID.from(currency);
         this.operators = operators.map(a => Address.from(a));
         this._hash = this.hashing();
+        Assert.check(hasOverlappingAddress(this.operators), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in operators"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -2470,6 +2955,12 @@ class Currency extends Generator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate a `register-currency` operation for registering a new currency.
+     * **Signature of nodes** is required, not a general account signature.
+     * @param {currencyPolicyData} [data] - The currency policy data.
+     * @returns `register-currency` operation.
+     */
     registerCurrency(data) {
         const keysToCheck = ['currency', 'genesisAddress', 'totalSupply', 'minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
@@ -2479,6 +2970,12 @@ class Currency extends Generator {
         const design = new CurrencyDesign(amount, data.genesisAddress, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee));
         return new Operation$1(this.networkID, new RegisterCurrencyFact(TimeStamp$1.new().UTC(), design));
     }
+    /**
+     * Generate an `update-currency` operation for updating an existing Mitum currency.
+     * **Signature of nodes** is required, not a general account signature.
+     * @param {currencyPolicyData} [data] - The currency policy data.
+     * @returns `update-currency` operation.
+     */
     updateCurrency(data) {
         const keysToCheck = ['currency', 'genesisAddress', 'totalSupply', 'minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
@@ -2502,188 +2999,449 @@ class Currency extends Generator {
                 throw MitumError.detail(ECODE.CURRENCY.INVALID_CURRENCY_FEEER, "invalid fee type");
         }
     }
+    /**
+     * Generate a `transfer` operation for transferring currency between accounts.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The amount to transfer.
+     * @returns `transfer` operation.
+     */
     transfer(sender, receiver, currency, amount) {
         return new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, [
             new TransferItem$1(receiver, [new Amount(currency, amount)])
         ]));
     }
+    /**
+     * Generate a `transfer` operation for transferring currency to multiple accounts at once.
+     * The length of receivers and amounts must be the same.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | Address[]} [receivers] - An array of addresses of receivers.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string[] | number[] | Big[]} [amounts] - An array of amounts to transfer.
+     * @returns `transfer` operation.
+     */
+    batchTransfer(sender, receivers, currency, amounts) {
+        Assert.check(receivers.length !== 0 && amounts.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
+        Assert.check(receivers.length === amounts.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the receivers and amounts must be the same."));
+        return new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, receivers.map((receiver, idx) => new TransferItem$1(receiver, [new Amount(currency, amounts[idx])]))));
+    }
+    /**
+     * Generate a `withdraw`operation for withdrawing currency from an contract account.
+     * Only the owner account of the contract can execute the operation.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [target] - The target contract account's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The withdrawal amount.
+     * @returns `withdraw`operation
+     */
     withdraw(sender, target, currency, amount) {
         return new Operation$1(this.networkID, new WithdrawFact(TimeStamp$1.new().UTC(), sender, [
             new WithdrawItem(target, [new Amount(currency, amount)])
         ]));
     }
+    /**
+     * Generate a `mint` operation for minting currency and allocating it to a receiver.
+     * **Signature of nodes** is required, not a general account signature.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {number} [amount] - The amount to mint.
+     * @returns `mint` operation.
+     */
     mint(receiver, currency, amount) {
         return new Operation$1(this.networkID, new MintFact$3(TimeStamp$1.new().UTC(), [
             new MintItem$1(receiver, new Amount(currency, amount))
         ]));
     }
+    /**
+     * Get a list of all currency in the blockchain network.
+     * @async
+     * @returns `data` of `SuccessResponse` is a array with currency id.
+     */
     async getAllCurrencies() {
-        const datas = await getAPIData(() => api.currency.getCurrencies(this.api, this.delegateIP));
-        return datas
-            ? Object.keys(datas._links).filter(c => !(c === "self" || c === "currency:{currencyid}")).map(c => c)
-            : null;
+        const response = await getAPIData(() => api.currency.getCurrencies(this.api, this.delegateIP), true);
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data._links ?
+                Object.keys(response.data._links)
+                    .filter(c => !(c === "self" || c === "currency:{currencyid}"))
+                    .map(c => c)
+                : null;
+        }
+        return response;
     }
+    /**
+     * Get currency information abount given currency ID.
+     * @async
+     * @param {string | CurrencyID} [currencyID] - The currency ID.
+     * @returns `data` of `SuccessResponse` is currency information:
+     * - `_hint`: Hint for currency design
+     * - `amount`: [Amount]
+     * - `genesis_account`: Initial account for the currency.
+     * - `policy`: Currency policy information including `new_account_min_balance`, `feeer`
+     * - `aggregate`: Aggregate amount of the currency.
+     */
     async getCurrency(currencyID) {
-        const data = await getAPIData(() => api.currency.getCurrency(this.api, currencyID, this.delegateIP));
-        return data ? data._embedded : null;
+        return await getAPIData(() => api.currency.getCurrency(this.api, currencyID, this.delegateIP));
     }
 }
 class Account extends KeyG {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate a key pair and the corresponding `transfer` operation to create a single-sig account.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @param {string} [seed] - (Optional) The seed for deterministic key generation. If not provided, a random key pair will be generated.
+     * @param {string | number | Big} [weight] - (Optional) The weight for the public key. If not provided, the default value is 100.
+     * @returns An object containing the wallet(key pair) and the `transfer` operation.
+     */
     createWallet(sender, currency, amount, seed, weight) {
-        const kp = seed ? KeyPair.fromSeed(seed) : KeyPair.random();
+        const kp = seed ? KeyPair.fromSeed(seed, "mitum") : KeyPair.random("mitum");
         const ks = new Keys([new PubKey(kp.publicKey, weight ?? 100)], weight ?? 100);
         return {
             wallet: {
                 privatekey: kp.privateKey.toString(),
                 publickey: kp.publicKey.toString(),
-                address: ks.address.toString(),
+                address: ks.checksum.toString()
             },
-            operation: new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, [
-                new CreateAccountItem(ks, [new Amount(currency, amount)], "mitum")
+            operation: new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, [
+                new TransferItem$1(ks.checksum, [new Amount(currency, amount)])
             ])),
         };
     }
-    createEtherWallet(sender, currency, amount, seed, weight) {
-        const kp = seed ? KeyPair.fromSeed(seed, "ether") : KeyPair.random("ether");
-        const ks = new EtherKeys([new PubKey(kp.publicKey, weight ?? 100)], weight ?? 100);
-        return {
-            wallet: {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: ks.etherAddress.toString()
-            },
-            operation: new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, [
-                new CreateAccountItem(ks, [new Amount(currency, amount)], "ether")
-            ])),
-        };
-    }
+    /**
+     * Generate `n` number of key pairs and the corresponding `transfer` operation to create single-sig accounts.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {number} [n] - The number of account to create.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @returns An object containing the wallet (key pairs) and the `transfer` operation.
+     */
     createBatchWallet(sender, n, currency, amount) {
         const keyArray = this.keys(n);
-        const ksArray = keyArray.map((key) => new Keys([new PubKey(key.publickey, 100)], 100));
-        const items = ksArray.map((ks) => new CreateAccountItem(ks, [new Amount(currency, amount)], "mitum"));
+        const items = keyArray.map((ks) => new TransferItem$1(ks.address, [new Amount(currency, amount)]));
         return {
             wallet: keyArray,
-            operation: new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, items)),
+            operation: new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, items)),
         };
     }
+    /**
+     * Generate a `transfer` operation for the given public key.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Key | PubKey} [key] - The public key or key object.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @returns `transfer` operation.
+     */
     createAccount(sender, key, currency, amount) {
-        return new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateAccountItem(new Keys([new PubKey(key, 100)], 100), [new Amount(currency, amount)], "mitum")
+        const ks = new Keys([new PubKey(key, 100)], 100);
+        return new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, [
+            new TransferItem$1(ks.checksum, [new Amount(currency, amount)])
         ]));
     }
-    createEtherAccount(sender, key, currency, amount) {
-        return new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateAccountItem(new EtherKeys([new PubKey(key, 100)], 100), [new Amount(currency, amount)], "ether")
-        ]));
-    }
+    /**
+     * Generate a `create-account` operation for the multi-signature account.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {keysType} [keys] - An array of object {`key`: publickey, `weight`: weight for the key}
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @param {string | number | Big} [threshold] - The threshold for the multi-signature.
+     * @returns `create-account` operation.
+     * @example
+     * // Example of parameter keys
+     * const pubkey01 = {
+     *     key: "02cb1d73c49d638d98092e35603414b575f3f5b5ce01162cdd80ab68ab77e50e14fpu",
+     *     weight: 50
+     * };
+     * const pubkey02 = {
+     *     key: "0377241675aabafca6b1a49f3bc08a581beb0daa330a4ac2008464d63ed7635a22fpu",
+     *     weight: 50
+     * };
+     * const keysArray = [pubkey01, pubkey02];
+     */
     createMultiSig(sender, keys, currency, amount, threshold) {
         return new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)], "mitum")
+            new CreateAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)])
         ]));
     }
-    createEtherMultiSig(sender, keys, currency, amount, threshold) {
-        return new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateAccountItem(new EtherKeys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)], "ether")
-        ]));
-    }
+    /**
+     * @deprecated This function is deprecated, use updateMultiSig instead.
+     */
     update(target, newKey, currency) {
-        const suffix = target.toString().slice(-3);
-        if (suffix === "mca") {
-            return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new Keys([new PubKey(newKey, 100)], 100), currency));
-        }
-        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new EtherKeys([new PubKey(newKey, 100)], 100), currency));
+        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new Keys([new PubKey(newKey, 100)], 100), currency));
     }
+    /**
+     * Generate an `update-key` operation for replace the public keys involved in given address.
+     * @param {string | Address} [target] - The target account's address.
+     * @param {keysType} [newKeys] - An array of object {`key`: publickey, `weight`: weight for the key}
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `update-key` operation.
+     * @example
+     * // Example of parameter keys
+     * const pubkey01 = {
+     *     key: "02a2e69d8b819e25ac4931523b62995bf3361304093dc24f15658d88e72644d853fpu",
+     *     weight: 50
+     * };
+     * const pubkey02 = {
+     *     key: "03410a28d1d44974f3af2b12f6d23733a17ea30e2ecfbc413055a4543b28f16f45fpu",
+     *     weight: 50
+     * };
+     * const keysArray = [pubkey01, pubkey02];
+     */
     updateMultiSig(target, newKeys, currency, threshold) {
-        const suffix = target.toString().slice(-3);
-        if (suffix === "mca") {
-            return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new Keys(newKeys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), currency));
-        }
-        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new EtherKeys(newKeys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), currency));
+        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new Keys(newKeys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), currency));
     }
+    /**
+     * Sign and send the `transfer` operation to blockchain network to create single-sig account.
+     * @async
+     * @param {string | Key} [privatekey] - The private key used for signing.
+     * @param {Object} [wallet] - The object with properties `wallet` and `operation`. (return value of `createWallet`)
+     * @returns A Promise resolving to a `OperationResponse`. `.wait()` can be used like `operation.send`.
+     *
+     * Properties of `OperationResponse`:
+     * - response: <SuccessResponse | ErrorResponse>
+     * - _api: API URL
+     * - _delegateIP: IP address for delegation
+     * @example
+     * // Send operation and check response and receipt:
+     * const wallet = mitum.account.createWallet(...);
+     * const touchOperation = async () => {
+     *   const data = await mitum.account.touch(privatekey, wallet);
+     *   console.log(data.response);
+     *   const receipt = await data.wait();
+     *   console.log(receipt);
+     * };
+     * touchOperation();
+     */
     async touch(privatekey, wallet) {
         const op = wallet.operation;
         op.sign(privatekey);
-        return await getAPIData(() => api.operation.send(this.api, op.toHintedObject(), this.delegateIP));
+        return await new Operation(this.networkID, this.api, this.delegateIP).send(op);
     }
+    /**
+     * Get account information for the given address.
+     * @async
+     * @param {string | Address} [address] - The account address to retrieve.
+     * @returns `data` of `SuccessResponse` is *null* or account information:
+     * - `_hint`: Hint for the account
+     * - `hash`: Hash for the account state,
+     * - `address`: Address of the account,
+     * - `keys`: Object for keys,
+     * - `balance`: Array with balance information,
+     * - `height`: Latest block height associated with the account,
+     * - `contract_account_status`: Object to indicate contract account status and related details
+     *
+     * **null means that the account has not yet been recorded in the block.**
+     */
     async getAccountInfo(address) {
-        const data = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
-        return data._embedded ? data._embedded : null;
+        Address.from(address);
+        const response = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
+        if (isSuccessResponse(response)) {
+            response.data = response.data ? response.data : null;
+        }
+        return response;
     }
-    async getOperations(address) {
-        const data = await getAPIData(() => api.operation.getAccountOperations(this.api, address, this.delegateIP));
-        return data._embedded ? data._embedded : null;
+    /**
+     * Get all operations corresponding the given account.
+     * @async
+     * @param {string | Address} [address] - The account address to retrieve.
+     * @param {number} [limit] - (Optional) The maximum number of items to retrieve.
+     * @param {number} [offset] - (Optional) The number of items skip before starting to return data.
+     * @param {boolean} [reverse] - (Optional) Whether to return the items in reverse newest order.
+     * @returns The `data` of `SuccessResponse` is *null* or an array of all operations corresponding the given account:
+     * - `_hint`: Indicates mitum engine version,
+     * - `_embedded`:
+     * - - `_hint`: Hint for the operation,
+     * - - `hash`: Hash for the fact,
+     * - - `operation`: Information of the operation includes `hash`, `fact`, `signs`, `_hint`,
+     * - - `height`: Block height containing the operation,
+     * - - `confirmed_at`: Timestamp when the block was confirmed,
+     * - - `reason`: Reason for operation failure,
+     * - - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - - `index`: Index of the operation in the block
+     * - `_links`: Links to get additional information
+
+     * **null means that the account has not yet been recorded in the block.**
+     */
+    async getOperations(address, limit, offset, reverse) {
+        Address.from(address);
+        const response = await getAPIData(() => api.operation.getAccountOperations(this.api, address, this.delegateIP, limit, offset, reverse));
+        if (isSuccessResponse(response)) {
+            response.data = response.data ? response.data : null;
+        }
+        return response;
     }
+    /**
+     * Get the account information for the given public key. Only accounts created through `create-account` operations can be retreived.
+     * @async
+     * @param {string | Key | PubKey} [publickey] - The public key to retrieve.
+     * @returns `data` of `SuccessResponse` is a array with account informations:
+     * - `_hint`: Indicates mitum engine version,
+     * - `_embedded`:
+     * - - `_hint`: Hint for the account
+     * - - `hash`: Hash for the account state,
+     * - - `address`: Address of the account,
+     * - - `keys`: Object for keys,
+     * - - `height`: Latest block height associated with the account,
+     * - - `contract_account_status`: Object to indicate contract account status and related details
+     * - `_links`: Links to get additional information
+     */
     async getByPublickey(publickey) {
-        const data = await getAPIData(() => api.account.getAccountByPublicKey(this.api, publickey, this.delegateIP));
-        return data ? data._embedded : null;
+        const s = typeof (publickey) === 'string' ? publickey : publickey.toString();
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid public key"))
+            .empty().not()
+            .chainAnd(s.endsWith(SUFFIX.KEY.MITUM.PUBLIC) && Config.KEY.MITUM.PUBLIC.satisfy(s.length), /^[0-9a-f]+$/.test(s.substring(0, s.length - Config.SUFFIX.DEFAULT.value)))
+            .excute();
+        return await getAPIData(() => api.account.getAccountByPublicKey(this.api, publickey, this.delegateIP));
     }
+    /**
+     * Get the currency balance of account for the given address.
+     * @async
+     * @param {string | Address} [address] - The account address to retrieve.
+     * @returns `data` of `SuccessResponse` is *null* or a array with account informations:
+     *  - `amount`: String of balance amount,
+     *  - `currency`: Currency ID,
+     *  - `_hint`: Hint for amount,
+
+     * **null means that the account has not yet been recorded in the block.**
+     */
     async balance(address) {
-        const data = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
-        return data ? data._embedded.balance : null;
+        Address.from(address);
+        const response = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.balance ? response.data.balance : null;
+        }
+        return response;
     }
 }
 class Contract extends Generator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate a key pair and the corresponding `create-contract-account` operation.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @param {string} [seed] - (Optional) The seed for deterministic key generation. If not provided, a random key pair will be generated.
+     * @param {string | number | Big} [weight] - (Optional) The weight for the public key. If not provided, the default value is 100.
+     * @returns An object containing the wallet(key pair) and the `create-contract-account` operation.
+     */
     createWallet(sender, currency, amount, seed, weight) {
-        const kp = seed ? KeyPair.fromSeed(seed) : KeyPair.random();
+        const kp = seed ? KeyPair.fromSeed(seed, "mitum") : KeyPair.random("mitum");
         const ks = new Keys([new PubKey(kp.publicKey, weight ?? 100)], weight ?? 100);
         return {
             wallet: {
                 privatekey: kp.privateKey.toString(),
                 publickey: kp.publicKey.toString(),
-                address: ks.address.toString(),
+                address: ks.checksum.toString()
             },
             operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
-                new CreateContractAccountItem(ks, [new Amount(currency, amount)], "mitum")
+                new CreateContractAccountItem(ks, [new Amount(currency, amount)])
             ])),
         };
     }
-    createEtherWallet(sender, currency, amount, seed, weight) {
-        const kp = seed ? KeyPair.fromSeed(seed, "ether") : KeyPair.random("ether");
-        const ks = new EtherKeys([new PubKey(kp.publicKey, weight ?? 100)], weight ?? 100);
-        return {
-            wallet: {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: ks.etherAddress.toString()
-            },
-            operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
-                new CreateContractAccountItem(ks, [new Amount(currency, amount)], "ether")
-            ])),
-        };
-    }
+    /**
+     * Generate a `create-contract-account` operation for the given public key.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Key | PubKey} [key] - The public key or key object.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @returns `create-contract-account` operation.
+     */
     createAccount(sender, key, currency, amount) {
         return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateContractAccountItem(new Keys([new PubKey(key, 100)], 100), [new Amount(currency, amount)], "mitum")
+            new CreateContractAccountItem(new Keys([new PubKey(key, 100)], 100), [new Amount(currency, amount)])
         ]));
     }
-    createEtherAccount(sender, key, currency, amount) {
-        return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateContractAccountItem(new EtherKeys([new PubKey(key, 100)], 100), [new Amount(currency, amount)], "ether")
-        ]));
-    }
+    /**
+     * Generate a `create-contract-account` operation for the multi-signature account.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {keysType} [keys] - An array of object {`key`: publickey, `weight`: weight for the key}
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @param {string | number | Big} [threshold] - The threshold for the multi-signature.
+     * @returns `create-contract-account` operation.
+     * @example
+     * // Example of parameter keys
+     * const pubkey01 = {
+     *     key: "02cb1d73c49d638d98092e35603414b575f3f5b5ce01162cdd80ab68ab77e50e14fpu",
+     *     weight: 50
+     * };
+     * const pubkey02 = {
+     *     key: "0377241675aabafca6b1a49f3bc08a581beb0daa330a4ac2008464d63ed7635a22fpu",
+     *     weight: 50
+     * };
+     * const keysArray = [pubkey01, pubkey02];
+     */
     createMultiSig(sender, keys, currency, amount, threshold) {
         return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateContractAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)], "mitum")
+            new CreateContractAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)])
         ]));
     }
-    createEtherMultiSig(sender, keys, currency, amount, threshold) {
-        return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateContractAccountItem(new EtherKeys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)], "ether")
-        ]));
+    /**
+     * Get contract account information for the given address.
+     * @async
+     * @param {string | Address} [address] - The contract account address to retrieve.
+     * @returns `data` of `SuccessResponse` is *null* or account information:
+     * - `_hint`: Hint for the account
+     * - `hash`: Hash for the account state,
+     * - `address`: Address of the account,
+     * - `keys`: Object for keys,
+     * - `balance`: Array with balance information,
+     * - `height`: Latest block height associated with the account,
+     * - `contract_account_status`: Object to indicate contract account status and related details
+
+     * **null means that the contract account has not yet been recorded in the block.**
+     */
+    async getContractInfo(address) {
+        Address.from(address);
+        const response = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
+        if (isSuccessResponse(response)) {
+            response.data = response.data ? response.data : null;
+        }
+        return response;
     }
+    /**
+     * Generate an `update-operator` operation to update operator of contract to given operators.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [contract] - The contract account address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {(string | Address)[]} [operators] - The array of addresses to be updated as operators.
+     * @returns `update-operator` operation.
+     */
     updateOperator(sender, contract, currency, operators) {
         return new Operation$1(this.networkID, new UpdateOperatorFact(TimeStamp$1.new().UTC(), sender, contract, currency, operators));
     }
+    /**
+     * Sign and send the `create-contract-account` operation to blockchain network.
+     * @async
+     * @param {string | Key} [privatekey] - The private key used for signing.
+     * @param {Object} [wallet] - The object with properties `wallet` and `operation`. (return value of `createWallet`)
+     * @returns A Promise resolving to a `OperationResponse`. `.wait()` can be used like `operation.send`.
+     *
+     * Properties of `OperationResponse`:
+     * - response: <SuccessResponse | ErrorResponse>
+     * - _api: API URL
+     * - _delegateIP: IP address for delegation
+     * @example
+     * // Send operation and check response and receipt:
+     * const wallet = mitum.contract.createWallet(...);
+
+     * const touchOperation = async () => {
+     *   const data = await mitum.contract.touch(privatekey, wallet);
+     *   console.log(data.response);
+     *   const receipt = await data.wait();
+     *   console.log(receipt);
+     * };
+     * touchOperation();
+     */
     async touch(privatekey, wallet) {
         const op = wallet.operation;
         op.sign(privatekey);
-        return await getAPIData(() => api.operation.send(this.api, op.toHintedObject(), this.delegateIP));
+        return await new Operation(this.networkID, this.api, this.delegateIP).send(op);
     }
 }
 
@@ -3005,6 +3763,18 @@ class NFT extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate `create-collection` operation for creating a new NFT collection on the contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
+     * - {string | LongString} `name` - The name of the NFT collection.
+     * - {string | LongString} `uri` - The uri of the NFT collection.
+     * - {string | number | Big} `royalty` - The royalty of the NFT collection.
+     * - {(string | Address)[]} `whitelist` - Accounts who have permissions to mint.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-collection` operation
+     */
     createCollection(contractAddr, sender, data, currency) {
         const keysToCheck = ['name', 'uri', 'royalty', 'whitelist'];
         keysToCheck.forEach((key) => {
@@ -3012,6 +3782,18 @@ class NFT extends ContractGenerator {
         });
         return new Operation$1(this.networkID, new CreateCollectionFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.name, data.royalty, data.uri, data.whitelist, currency));
     }
+    /**
+     * Generate `update-collection` operation for updating the policy of an existing NFT collection on the contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
+     * - {string | LongString} `name` - The name of the NFT collection.
+     * - {string | LongString} `uri` - The uri of the NFT collection.
+     * - {string | number | Big} `royalty` - The royalty of the NFT collection.
+     * - {(string | Address)[]} `whitelist` - Accounts who have permissions to mint.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `update-collection` operation.
+     */
     setPolicy(contractAddr, sender, data, currency) {
         const keysToCheck = ['name', 'uri', 'royalty', 'whitelist'];
         keysToCheck.forEach((key) => {
@@ -3019,9 +3801,49 @@ class NFT extends ContractGenerator {
         });
         return new Operation$1(this.networkID, new UpdateCollectionPolicyFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.name, data.royalty, data.uri, data.whitelist, currency));
     }
+    /**
+     * Generate `mint` operation for minting a new NFT and assigns it to a receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
+     * @param {string | LongString} [uri] - The URI of the NFT to mint.
+     * @param {string | LongString} [hash] - The hash of the NFT to mint.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
+     * @returns `mint` operation.
+     */
     mint(contractAddr, sender, receiver, uri, hash, currency, creator) {
         return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, [new MintItem(contractAddr, receiver, hash, uri, new Signers(100, [new Signer$1(creator, 100, false)]), currency)]));
     }
+    /**
+     * Generate `mint` operation with multiple item for minting N number of NFT and assigns it to a receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
+     * @param {number} [n] - The number of NFT to be minted.
+     * @param {string | LongString} [uri] - The URI of the NFT to mint.
+     * @param {string | LongString} [hash] - The hash of the NFT to mint.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
+     * @returns `mint` operation.
+     */
+    multiMint(contractAddr, sender, receiver, n, uri, hash, currency, creator) {
+        const items = Array.from({ length: n }).map(() => new MintItem(contractAddr, receiver, hash, uri, new Signers(100, [new Signer$1(creator, 100, false)]), currency));
+        return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
+     * Generate `mint` operation in case of multiple creators.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
+     * @param {string | LongString} [uri] - The URI of the NFT to mint.
+     * @param {string | LongString} [hash] - The hash of the NFT to mint.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {Creator[]} [creators] - An array of Creator object which has address of the creator of the artwork for NFT with their respective shares. The properties of `Creator` include:
+     * - {string | Address} `account` - The creator's address.
+     * - {string | number | Big} `share` - The share for the artworks. The total share can not over 100.
+     * @returns `mint` operation.
+     */
     mintForMultiCreators(contractAddr, sender, receiver, uri, hash, currency, creators) {
         const keysToCheck = ['account', 'share'];
         keysToCheck.forEach((key) => {
@@ -3033,55 +3855,198 @@ class NFT extends ContractGenerator {
             new MintItem(contractAddr, receiver, hash, uri, new Signers(creators.reduce((prev, next) => prev + Big.from(next.share).v, 0), creators.map(a => new Signer$1(a.account, a.share, false))), currency)
         ]));
     }
+    /**
+     * Generate `transfer` operation for transferring an NFT from one address to another.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [receiver] - The address of the receiver of the NFT.
+     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `transfer` operation.
+     */
     transfer(contractAddr, sender, receiver, nftID, currency) {
         const fact = new TransferFact$2(TimeStamp$1.new().UTC(), sender, [
             new TransferItem(contractAddr, receiver, nftID, currency)
         ]);
         return new Operation$1(this.networkID, fact);
     }
+    /**
+     * Generate `approve` operation to approves NFT to another account (operator).
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [owner] - The address of the owner of the NFT.
+     * @param {string | Address} [operator] - The address being granted approval to manage the NFT.
+     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `approve` operation.
+     */
     approve(contractAddr, owner, operator, nftID, currency) {
         return new Operation$1(this.networkID, new ApproveFact$2(TimeStamp$1.new().UTC(), owner, [
             new ApproveItem(contractAddr, operator, nftID, currency)
         ]));
     }
+    /**
+     * Generate `delegate` operation to sets or cancels the approval for an operator to manage all NFTs of the owner.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [owner] - The address of the owner of the NFT.
+     * @param {string | Address} [operator] - The address being granted or denied approval to manage all NFTs.
+     * @param {"allow" | "cancel"} [mode] - The mode indicating whether to allow or cancel the approval.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `delegate` operation.
+     */
     setApprovalForAll(contractAddr, owner, operator, mode, currency) {
         return new Operation$1(this.networkID, new DelegateFact(TimeStamp$1.new().UTC(), owner, [
             new DelegateItem(contractAddr, operator, mode, currency)
         ]));
     }
+    /**
+     * Generate `sign` operation to signs an NFT as creator of the artwork.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [creator] - The address of the creator signing the NFT.
+     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `sign` operation.
+     */
     sign(contractAddr, creator, nftID, currency) {
         return new Operation$1(this.networkID, new SignFact(TimeStamp$1.new().UTC(), creator, [
             new SignItem(contractAddr, nftID, currency)
         ]));
     }
+    /**
+     * Get information about an NFT collection on the contract.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information about the NFT collection:
+     * - `_hint`: Hint for NFT design,
+     * - `parent`: Address of the contract account,
+     * - `creator`: Address of the creator,
+     * - `active`: Bool represents activation,
+     * - `policy`:
+     * - - `_hint`: Hint for the NFT collection policy,
+     * - - `name`: Name of the NFT collection,
+     * - - `royalty`: Royalty of the NFT collection,
+     * - - `uri`: URI of the NFT collection,
+     * - - `whitelist`: Array of the addresses of accounts who have permissions to mint
+     */
     async getCollectionInfo(contractAddr) {
-        const data = await getAPIData(() => contract.nft.getCollection(this.api, contractAddr, this.delegateIP));
-        return data ? data._embedded : null;
+        Address.from(contractAddr);
+        return await getAPIData(() => contract.nft.getCollection(this.api, contractAddr, this.delegateIP));
     }
+    /**
+     * Get the owner of a specific NFT.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @returns `data` of `SuccessResponse` is the address of the NFT owner.
+     */
     async ownerOf(contractAddr, nftID) {
-        const data = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
-        return data ? data._embedded.owner : null;
+        Address.from(contractAddr);
+        const response = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.owner ? response.data.owner : null;
+        }
+        return response;
     }
+    /**
+     * Get the address approved to manage a specific NFT.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @returns `data` of `SuccessResponse` is an address of the approved account to manage the NFT.
+     */
     async getApproved(contractAddr, nftID) {
-        const data = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
-        return data ? data._embedded.approved : null;
+        Address.from(contractAddr);
+        const response = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.approved ? response.data.approved : null;
+        }
+        return response;
     }
+    /**
+     * Get the total supply of NFTs in a collection on the contract.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @returns `data` of `SuccessResponse` is the total supply of NFTs in the collection.
+     */
     async totalSupply(contractAddr) {
-        const data = await getAPIData(() => contract.nft.getNFTs(this.api, contractAddr, this.delegateIP));
-        return data ? data._embedded.length : null;
+        Address.from(contractAddr);
+        const response = await getAPIData(() => contract.nft.getNFTCount(this.api, contractAddr, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.nft_count ? Number(response.data.nft_count) : 0;
+        }
+        return response;
     }
+    /**
+     * Get the URI of a specific NFT.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @returns `data` of `SuccessResponse` is the URI of the NFT.
+     */
     async tokenURI(contractAddr, nftID) {
-        const data = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
-        return data ? data._embedded.uri : null;
+        Address.from(contractAddr);
+        const response = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.uri ? response.data.uri : null;
+        }
+        return response;
     }
+    /**
+     * Get the address is approved to manage all NFTs of a sepecfic owner.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [owner] - The address of the NFT owner.
+     * @returns `data` of `SuccessResponse` is approval information:
+     * - `_hint`: Hint for NFT operators book,
+     * - `operators`: Array of the addresses of accounts that have been delegated authority over all of the owner’s NFTs
+     */
     async isApprovedForAll(contractAddr, owner) {
+        Address.from(contractAddr);
+        Address.from(owner);
         return await getAPIData(() => contract.nft.getAccountOperators(this.api, contractAddr, owner, this.delegateIP));
     }
+    /**
+     * Get detailed information about a specific NFT.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @returns `data` of `SuccessResponse` is detailed information about the NFT:
+     * - `_hint`: Hint for NFT,
+     * - `id`: Index of the NFT,
+     * - `active`: Bool represents activation,
+     * - `owner`: Address of the owner,
+     * - `hash`: Hash for the NFT,
+     * - `uri`: URI for the NFT,
+     * - `approved`: Address of the approved account for the NFT,
+     * - `creators`: Creator object,
+     */
     async getNFTInfo(contractAddr, nftID) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
     }
-    async getNFTs(contractAddr) {
-        return await getAPIData(() => contract.nft.getNFTs(this.api, contractAddr, this.delegateIP));
+    /**
+     * Get information of all NFTs in a collection. If the optional parameter factHash is given, only the nft created by the operation is searched.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {number} [factHash] - (Optional) The hash of fact in the operation that minted NFT.
+     * @param {number} [limit] - (Optional) The maximum number of items to retrieve.
+     * @param {number} [offset] - (Optional) The number of items skip before starting to return data.
+     * @param {boolean} [reverse] - (Optional) Whether to return the items in reverse newest order.
+     * @returns `data` of `SuccessResponse` is an array of the information about all NFTs in the NFT collection:
+     * - `_hint`: Hint for currency,
+     * - `_embedded`:
+     * - - `_hint`: Hint for NFT,
+     * - - `id`: Index of the NFT,
+     * - - `active`: Bool represents activation,
+     * - - `owner`: Address of the owner,
+     * - - `hash`: Hash for the NFT,
+     * - - `uri`: URI for the NFT,
+     * - - `approved`: Address of the approved account for the NFT,
+     * - - `creators`: Creator object,
+     * - `_links`: Links for additional information
+     */
+    async getNFTs(contractAddr, factHash, limit, offset, reverse) {
+        Address.from(contractAddr);
+        return await getAPIData(() => contract.nft.getNFTs(this.api, contractAddr, this.delegateIP, factHash, limit, offset, reverse));
     }
 }
 
@@ -3264,9 +4229,34 @@ class Credential extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate a `create-service` operation for creating new credential service on the contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-service` operation.
+     */
     createService(contractAddr, sender, currency) {
         return new Operation$1(this.networkID, new CreateServiceFact$2(TimeStamp$1.new().UTC(), sender, contractAddr, currency));
     }
+    /**
+     * Generate an `add-template` operation for adding a new credential template to the credential service.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {templateData} [data] - The template data to be added. The properties of `templateData` include:
+     * - {string} `templateID` - The ID of the template.
+     * - {string} `templateName` - The name of the template.
+     * - {string | ShortDate} `serviceDate` - The service date.
+     * - {string | ShortDate} `expirationDate` - The expiration date.
+     * - {boolean | Bool} `templateShare` - Indicates whether the template is shareable.
+     * - {boolean | Bool} `multiAudit` - Indicates whether multi-audit is enabled.
+     * - {string} `displayName` - The display name of the template.
+     * - {string} `subjectKey` - The subject key of the template.
+     * - {string} `description` - The description of the template.
+     * - {string | Address} `creator` - The address of the creator of the template.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns An `add-template` operation.
+     */
     addTemplate(contractAddr, sender, data, currency) {
         const keysToCheck = ['templateID', 'templateName', 'serviceDate', 'expirationDate', 'templateShare', 'multiAudit', 'displayName', 'subjectKey', 'description', 'creator'];
         keysToCheck.forEach((key) => {
@@ -3276,6 +4266,21 @@ class Credential extends ContractGenerator {
         });
         return new Operation$1(this.networkID, new AddTemplateFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.templateID, data.templateName, data.serviceDate, data.expirationDate, data.templateShare, data.multiAudit, data.displayName, data.subjectKey, data.description, data.creator, currency));
     }
+    /**
+     * Generate an `assign` operation for issue credential to holder.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {issueData} [data] - The data required for issuing the credential. The properties of `issueData` include:
+     * - {string | Address} `holder` - The address of the credential holder.
+     * - {string} `templateID` - The ID of the template.
+     * - {string} `id` - The ID of the credential.
+     * - {string} `value` - The value of the credential.
+     * - {string | number | Big} `validFrom` - The timestamp for validFrom.
+     * - {string | number | Big} `validUntil` - The timestamp for validUntil.
+     * - {string} `did` - The Decentralized Identifier (DID) associated with the credential.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `assign` operation.
+     */
     issue(contractAddr, sender, data, currency) {
         const keysToCheck = ['holder', 'templateID', 'id', 'value', 'validFrom', 'validUntil', 'did'];
         keysToCheck.forEach((key) => {
@@ -3287,24 +4292,132 @@ class Credential extends ContractGenerator {
             new AssignItem(contractAddr, data.holder, data.templateID, data.id, data.value, data.validFrom, data.validUntil, data.did, currency)
         ]));
     }
+    /**
+     * Generate an `revoke` operation to revoke already issued credential.
+     * @param {string | Address} contractAddr - The contract's address.
+     * @param {string | Address} sender - The sender's address.
+     * @param {string | Address} holder - The holder's address of the credential to be revoked.
+     * @param {string} templateID - The ID of the template associated with the credential.
+     * @param {string} id - The ID of the credential to be revoked.
+     * @param {string | CurrencyID} currency - The currency ID.
+     * @returns `revoke` operation.
+     */
     revoke(contractAddr, sender, holder, templateID, id, currency) {
         return new Operation$1(this.networkID, new RevokeFact(TimeStamp$1.new().UTC(), sender, [
             new RevokeItem(contractAddr, holder, templateID, id, currency)
         ]));
     }
+    /**
+     * Get information about a credential service on the contract.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @returns `data` of `SuccessResponse` is credential service information:
+     * - `_hint`: Hint for credential design,
+     * - `policy`:
+     * - - `_hint`: Hint for credential policy,
+     * - - `templates`: Array of name of templates,
+     * - - `holders`: Array of holder object
+     * - - - `_hint`: Hint for holder,
+     * - - - `address`: Address of holder,
+     * - - - `credential_count`: The number of credential for the holder
+     * - - `credential_count`: The total number of credential
+     */
     async getServiceInfo(contractAddr) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.credential.getService(this.api, contractAddr, this.delegateIP));
     }
+    /**
+     * Get detailed information about a specific credential on the template.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [templateID] - The ID of the template associated with the credential.
+     * @param {string} [credentialID] - The unique ID of the credential.
+     * @returns `data` of `SuccessResponse` is credential information:
+     * - `credential`:
+     * - - `_hint`: Hint for credential,
+     * - - `holder`: Address of holder,
+     * - - `template_id`: The id for the template,
+     * - - `id`: The id for the credential,
+     * - - `value`: The value of credential,
+     * - - `valid_from`: The timestamp for valid_from,
+     * - - `valid_until`: The timestamp for valid_until,
+     * - - `did`: The name of the credential,
+     * - `is_active`: Indicates whether the credential is active or revoked
+     */
     async getCredentialInfo(contractAddr, templateID, credentialID) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.credential.getCredential(this.api, contractAddr, templateID, credentialID, this.delegateIP));
     }
+    /**
+     * Get information about a specific template on the credential service.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [templateID] - The ID of the template.
+     * @returns `data` of `SuccessResponse` is template information:
+     * - `_hint`: Hint for credential template,
+     * - `template_id`: The ID of the template.- `template_name`: Name for template,
+     * - `service_date`: The service date.
+     * - `expiration_date`: The expiration date.
+     * - `template_share`: Indicates whether the template is shareable.
+     * - `multi_audit`: Indicates whether multi-audit is enabled.
+     * - `display_name`: The display name of the template.
+     * - `subject_key`: The description of the template.
+     * - `description`: The description of the template.
+     * - `creator`: The address of the creator of the template.
+     */
     async getTemplate(contractAddr, templateID) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.credential.getTemplate(this.api, contractAddr, templateID, this.delegateIP));
     }
+    /**
+     * Get information about all credentials on the template.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [templateID] - The ID of the template.
+     * @returns `data` of `SuccessResponse` is array of the all credential informations of the template:
+     * - `_hint`: Hint for currency,
+     * - `_embedded`:
+     * - - `credential`:
+     * - - - `_hint`: Hint for credential,
+     * - - - `holder`: Address of holder,
+     * - - - `template_id`: The id for the template,
+     * - - - `id`: The id for the credential,
+     * - - - `value`: The value of credential,
+     * - - - `valid_from`: The timestamp for valid_from,
+     * - - - `valid_until`: The timestamp for valid_until,
+     * - - - `did`: The name of the credential,
+     * - - `is_active`: Indicates whether the credential is active or revoked,
+     * - `_links`: links to get additional information of the credential,
+     */
     async getAllCredentials(contractAddr, templateID) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.credential.getCredentials(this.api, contractAddr, templateID, this.delegateIP));
     }
+    /**
+     * Get all credentials owned by the holder in the credential service.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [holder] - The holder's address claiming the credentials.
+     * @returns `data` of `SuccessResponse` is a object with all credential information owned by the holder:
+     * - `did`: The did value of the most recently issued credential,
+     * - `credentials`: Array of all credential information owned by the holder: {
+     * - - `_hint`: Hint for currency,
+     * - - `_embedded`:
+     * - - - `credential`:
+     * - - - - `_hint`: Hint for credential,
+     * - - - - `holder`: Address of holder,
+     * - - - - `template_id`: The id for the template,
+     * - - - - `id`: The id for the credential,
+     * - - - - `value`: The value of credential,
+     * - - - - `valid_from`: The timestamp for valid_from,
+     * - - - - `valid_until`: The timestamp for valid_until,
+     * - - - - `did`: The name of the credential,
+     * - - - `is_active`: Indicates whether the credential is active or revoked,
+     * - - `_links`: links to get additional information of the credential
+     */
     async claimCredential(contractAddr, holder) {
+        Address.from(contractAddr);
+        Address.from(holder);
         return await getAPIData(() => contract.credential.getCredentialByHolder(this.api, contractAddr, holder, this.delegateIP));
     }
 }
@@ -3791,6 +4904,27 @@ class DAO extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate `create-dao` operation for creating a new DAO on the contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {daoData} [data] - Data for policy of DAO service to create. The properties of `daoData` include:
+     * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
+     * - {string | CurrencyID} `token` - The currency ID to be used when calculating voting power.
+     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold.
+     * - {string | number | Big} `fee` - The fee paid when registering a proposal.
+     * - {(string | Address)[]} `proposers` - An array of addresses for accounts who can propose the new proposals.
+     * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
+     * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
+     * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
+     * - {string | number | Big} `votingPeriod` - The duration of the voting period (in seconds).
+     * - {string | number | Big} `postSnapshotPeriod` - The duration of the post-snapshot period (in seconds).
+     * - {string | number | Big} `executionDelayPeriod` - The duration of the execution delay period (in seconds).
+     * - {string | number | Big} `turnout` - The minimum rate of attendees for a proposal to pass (in percentage)
+     * - {string | number | Big} `quorum` - The minimum rate of upvotes for a proposal to pass (in percentage)
+     * @param {string | CurrencyID} currency - The currency ID.
+     * @returns `create-dao` operation.
+     */
     createService(contractAddr, sender, data, currency) {
         const keysToCheck = ['option', 'token', 'threshold', 'fee', 'proposers', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
         keysToCheck.forEach((key) => {
@@ -3798,6 +4932,27 @@ class DAO extends ContractGenerator {
         });
         return new Operation$1(this.networkID, new CreateDAOFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.option, data.token, data.threshold, new Amount(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum, currency));
     }
+    /**
+     * Generate `update-policy` operation for updating the DAO policy on the contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {daoData} [data] - Data for policy of DAO service to update. The properties of `daoData` include:
+     * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
+     * - {string | CurrencyID} `token` - The currency ID to be used when calculating voting power.
+     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold.
+     * - {string | number | Big} `fee` - The fee paid when registering a proposal.
+     * - {(string | Address)[]} `proposers` - An array of addresses for accounts who can propose the new proposals.
+     * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
+     * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
+     * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
+     * - {string | number | Big} `votingPeriod` - The duration of the voting period (in seconds).
+     * - {string | number | Big} `postSnapshotPeriod` - The duration of the post-snapshot period (in seconds).
+     * - {string | number | Big} `executionDelayPeriod` - The duration of the execution delay period (in seconds).
+     * - {string | number | Big} `turnout` - The minimum rate of attendees for a proposal to pass (in percentage)
+     * - {string | number | Big} `quorum` - The minimum rate of upvotes for a proposal to pass (in percentage)
+     * @param {string | CurrencyID} currency - The currency ID.
+     * @returns `update-policy` operation
+     */
     updateService(contractAddr, sender, data, currency) {
         const keysToCheck = ['option', 'token', 'threshold', 'fee', 'proposers', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
         keysToCheck.forEach((key) => {
@@ -3805,9 +4960,35 @@ class DAO extends ContractGenerator {
         });
         return new Operation$1(this.networkID, new UpdatePolicyFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.option, data.token, data.threshold, new Amount(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum, currency));
     }
+    /**
+     * Create transfer calldata for the crypto proposal to transfer crypto currency.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The amount to transfer.
+     * @returns Transfer calldata.
+     */
     formTransferCalldata(sender, receiver, currency, amount) {
         return new TransferCalldata(sender, receiver, new Amount(currency, amount));
     }
+    /**
+     * Create governance calldata for the crypto proposal to update DAO policy.
+     * @param {policyData} [data] - Data for policy of DAO service to update. The properties of `policyData` include:
+     * - {string | CurrencyID} `token` - The currency ID to be used when calculating voting power.
+     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold.
+     * - {string | number | Big} `fee` - The fee paid when registering a proposal.
+     * - {(string | Address)[]} `proposers` - An array of addresses for accounts who can propose the new proposals.
+     * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
+     * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
+     * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
+     * - {string | number | Big} `votingPeriod` - The duration of the voting period (in seconds).
+     * - {string | number | Big} `postSnapshotPeriod` - The duration of the post-snapshot period (in seconds).
+     * - {string | number | Big} `executionDelayPeriod` - The duration of the execution delay period (in seconds).
+     * - {string | number | Big} `turnout` - The minimum rate of attendees for a proposal to pass (in percentage)
+     * - {string | number | Big} `quorum` - The minimum rate of upvotes for a proposal to pass (in percentage)
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns governance calldata.
+     */
     formSetPolicyCalldata(data, currency) {
         const keysToCheck = ['token', 'threshold', 'fee', 'proposers', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
         keysToCheck.forEach((key) => {
@@ -3815,47 +4996,179 @@ class DAO extends ContractGenerator {
         });
         return new GovernanceCalldata(new DAOPolicy(data.token, data.threshold, new Amount(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum));
     }
+    /**
+     * Write a crypto proposal include `TransferCalldata` or `GovernanceCalldata` .
+     * @param {string} [proposer] - The address of the proposer.
+     * @param {number} [startTime] - The time to start `proposalReviewPeriod` (in UTC timestamp).
+     * @param {TransferCalldata | GovernanceCalldata} [calldata] - Calldata for the crypto proposal.
+     * @returns Crypto proposal to be proposed.
+     */
     writeCryptoProposal(proposer, startTime, calldata) {
         return new CryptoProposal(proposer, startTime, calldata);
     }
+    /**
+     * Write a business proposal providing multiple choice voting.
+     * @param {string | Address} [proposer] - The address of the proposer.
+     * @param {string | number | Big} [startTime] - The time to start `proposalReviewPeriod` (in UTC timestamp).
+     * @param {string | LongString} [url] - The URL associated with the proposal.
+     * @param {string | LongString} [hash] - The hash associated with the proposal.
+     * @param {string | number | Big} [options] - The number of multiple choices.
+     * @returns Business proposal to be proposed.
+     */
     writeBizProposal(proposer, startTime, url, hash, options) {
         return new BizProposal(proposer, startTime, url, hash, options);
     }
+    /**
+     * Generate `propose` operation for propose a new proposal. Only the account in the whitelist can propose.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [proposalID] - The unique identifier for the proposal.
+     * @param {CryptoProposal | BizProposal} [proposal] - The proposal written by `writeBizProposal` or `writeCryptoProposal`.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `propose` operation.
+     */
     propose(contractAddr, sender, proposalID, proposal, currency) {
         new URIString(proposalID, 'proposalID');
         return new Operation$1(this.networkID, new ProposeFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, proposal, currency));
     }
+    /**
+     * Generate `register` operation to register to get voting right to the proposal. If delegator is given, delegate voting rights.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [delegator] - (Optional) The address of the delegator.
+     * @returns `register` operation
+     */
     register(contractAddr, sender, proposalID, currency, delegator) {
         return new Operation$1(this.networkID, new RegisterFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, delegator ? delegator : sender, currency));
     }
+    /**
+     * Generate `cancel-proposal` operation to cancel a DAO proposal.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [proposalID] - The unique identifier for the proposal.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `cancel-proposal` operation
+     */
     cancel(contractAddr, sender, proposalID, currency) {
         return new Operation$1(this.networkID, new CancelProposalFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, currency));
     }
+    /**
+     * Generate `pre-snap` operation to take a snapshot before the voting period.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `pre-snap` operation.
+     */
     snapBeforeVoting(contractAddr, sender, proposalID, currency) {
         return new Operation$1(this.networkID, new PreSnapFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, currency));
     }
+    /**
+     * Generate `vote` operation to cast a vote for the proposal.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @param {number} [voteOption] - The option chosen for the vote. (crypto: 0-approve, 1-disapprove, biz: choose from multiple choices)
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `vote` operation.
+     */
     castVote(contractAddr, sender, proposalID, voteOption, currency) {
         return new Operation$1(this.networkID, new VoteFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, voteOption, currency));
     }
+    /**
+     * Generate `post-snap` operation to take a snapshot after the voting period.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `post-snap` operation
+     */
     snapAfterVoting(contractAddr, sender, proposalID, currency) {
         return new Operation$1(this.networkID, new PostSnapFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, currency));
     }
+    /**
+     * Generate `execute` operation to reflect voting results.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `execute` operation
+     */
     execute(contractAddr, sender, proposalID, currency) {
         return new Operation$1(this.networkID, new ExecuteFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, currency));
     }
+    /**
+     * Get DAO service information for a specific contract address.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information of the DAO service:
+     * - `_hint`: Hint for dao design,
+     * - `option`: 'biz' or 'crypto',
+     * - `policy`: [Policy]
+     */
     async getServiceInfo(contractAddr) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.dao.getService(this.api, contractAddr, this.delegateIP));
     }
+    /**
+     * Get information about a specific DAO proposal. The `status` does not accurately reflect the current state of the proposal because it is updated only when an operation occurs.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @returns `data` of `SuccessResponse` is information about the DAO proposal:
+     * - `_hint`: Hint for the dao proposal state value,
+     * - `status`: Proposal status - Proposed (0), Canceled (1), PreSnapped (2), PostSnapped (3), Completed (4), Rejected (5), Executed (6), NilStatus (7),
+     * - `proposal`: [BizProposal] or [CryptoProposal],
+     * - `policy`: [Policy]
+     */
     async getProposalInfo(contractAddr, proposalID) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.dao.getProposal(this.api, contractAddr, proposalID, this.delegateIP));
     }
+    /**
+     * Get information about a specific delegator in a DAO proposal.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @param {string | Address} [delegator] - The address of the delegator.
+     * @returns `data` of `SuccessResponse` is delegator information:
+     * - `_hint`: Hint for dao delegator info,
+     * - `account`: Address of delegator account,
+     * - `delegatee`: Address of delegatee account,
+     */
     async getDelegatorInfo(contractAddr, proposalID, delegator) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.dao.getDelegator(this.api, contractAddr, proposalID, delegator, this.delegateIP));
     }
+    /**
+     * Get information about voters in a specific DAO proposal.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @returns `data` of `SuccessResponse` is an array of information of the voters:
+     * - `_hint`: Hint for dao voter,
+     * - `account`: Address of the voter,
+     * - `delegators`: [ Address of delegatee, Address of delegator ]
+     */
     async getVoterInfo(contractAddr, proposalID) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.dao.getVoter(this.api, contractAddr, proposalID, this.delegateIP));
     }
+    /**
+     * Get the voting result of a specific DAO proposal.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [proposalID] - The proposal ID.
+     * @returns `data` of `SuccessResponse` is information of voting power and the voting result:
+     * - `_hint`: Hint for voting power box.
+     * - `total`: Total voting power.
+     * - `voting_powers`: Object mapping registered account addresses to their corresponding voting information represents `_hint`, `account`,`voted`, `vote_for`, `voting_power`.
+     * - `result`: Object consisting of the selected option and the number of votes.
+     */
     async getVotingResult(contractAddr, proposalID) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.dao.getVotingResult(this.api, contractAddr, proposalID, this.delegateIP));
     }
 }
@@ -4159,11 +5472,30 @@ class STO extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate `authorize-operator` operation to authorize an operator for the security token in specific partition.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [operator] - The operator's address to be authorized.
+     * @param {string | Partition} [partition] - The partition ID.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `authorize-operator` operation.
+     */
     authorizeOperator(contractAddr, sender, operator, partition, currency) {
         return new Operation$1(this.networkID, new AuthorizeOperatorFact(TimeStamp$1.new().UTC(), sender, [
             new AuthorizeOperatorItem(contractAddr, operator, partition, currency)
         ]));
     }
+    /**
+     * Generate `create-security-token` operation to create new security token.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {createServiceData} [data] - Data required to create the security token. The properties of `createServiceData` include:
+     * - {string | number | Big} `granularity` - The basic unit of the token.
+     * - {string | Partition} `defaultPartition` - Capital letters with length between 3 and 10 (can include numbers)
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-security-token` operation
+     */
     createService(contractAddr, sender, data, currency) {
         const keysToCheck = ['granularity', 'defaultPartition'];
         keysToCheck.forEach((key) => {
@@ -4173,45 +5505,157 @@ class STO extends ContractGenerator {
             new CreateSecurityTokenItem(contractAddr, data.granularity, data.defaultPartition, currency)
         ]));
     }
+    /**
+     * Generate `issue` operation to issue new security token in specific partition to a specified receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | Partition} [partition] - The partition ID.
+     * @param {string | number | Big} [amount] - The amount of tokens to issue.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `issue` operation.
+     */
     issue(contractAddr, sender, receiver, partition, amount, currency) {
         return new Operation$1(this.networkID, new IssueFact(TimeStamp$1.new().UTC(), sender, [
             new IssueItem(contractAddr, receiver, amount, partition, currency)
         ]));
     }
+    /**
+     * Generate `redeem` operation to redeem(burn) a specified amount of security token in a specific partition.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [tokenHolder] - The token holder's address.
+     * @param {string | Partition} [partition] - The partition ID.
+     * @param {string | number | Big} [amount] - The amount of tokens to redeem.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `redeem` operation.
+     */
     redeem(contractAddr, sender, tokenHolder, partition, amount, currency) {
         return new Operation$1(this.networkID, new RedeemFact(TimeStamp$1.new().UTC(), sender, [
             new RedeemItem(contractAddr, tokenHolder, amount, partition, currency)
         ]));
     }
+    /**
+     * Generate `revoke` operation to revoke operator's authorization for the security token in specific partition.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [operator] - The operator's address.
+     * @param {string | Partition} [partition] - The partition ID.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `revoke` operation.
+     */
     revokeOperator(contractAddr, sender, operator, partition, currency) {
         return new Operation$1(this.networkID, new RevokeOperatorFact(TimeStamp$1.new().UTC(), sender, [
             new RevokeOperatorItem(contractAddr, operator, partition, currency)
         ]));
     }
+    /**
+     * Generate `setDocumnet` operation to set document for the security token on the contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [title] - The title of the document.
+     * @param {string} [uri] - The URI of the document.
+     * @param {string} [documentHash] - The hash value of the document.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `setDocumnet` operation.
+     */
     setDocument(contractAddr, sender, title, uri, documentHash, currency) {
         return new Operation$1(this.networkID, new SetDocumentFact(TimeStamp$1.new().UTC(), sender, contractAddr, title, uri, documentHash, currency));
     }
+    /**
+     * Generate `transfer-by-partition` operation to transfer security token in specific partitions.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [holder] - The token holder's address.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | Partition} [partition] - The partition ID.
+     * @param {string | number | Big} [amount] - The amount of tokens to transfer.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `transfer-by-partition` operation
+     */
     transferByPartition(contractAddr, sender, holder, receiver, partition, amount, currency) {
         return new Operation$1(this.networkID, new TransferByPartitionFact(TimeStamp$1.new().UTC(), sender, [
             new TransferByPartitionItem(contractAddr, holder, receiver, partition, amount, currency)
         ]));
     }
+    /**
+     * Get information about the security token on the contract.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information of the security token:
+     * - `_hint`: Hint for STO design,
+     * - `granularity`: Basic unit for the token,
+     * - `policy`: {
+     *     _hint: Hint for the STO policy,
+     *     partitions: Array of name of partition,
+     *     aggregate: Total supply amount,
+     *     documents: Array of information about documents with `_hint`, `title`, `hash`, `uri`
+     * }
+     */
     async getServiceInfo(contractAddr) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.sto.getService(this.api, contractAddr, this.delegateIP));
     }
+    /**
+     * Get partitions of given holder.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [holder] - The token holder's address.
+     * @returns `data` of `SuccessResponse` is an array of token partition names owned by the holder.
+     */
     async getPartitionsInfo(contractAddr, holder) {
+        Address.from(contractAddr);
+        Address.from(holder);
         return await getAPIData(() => contract.sto.getPartitions(this.api, contractAddr, holder, this.delegateIP));
     }
+    /**
+     * Get balance of holder for the partition.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [holder] - The token holder's address.
+     * @param {string} [partition] - The partition ID.
+     * @returns `data` of `SuccessResponse` is the balance of holder for the partition
+     */
     async getBalanceByHolder(contractAddr, holder, partition) {
+        Address.from(contractAddr);
+        Address.from(holder);
         return await getAPIData(() => contract.sto.getBalanceByHolder(this.api, contractAddr, holder, partition, this.delegateIP));
     }
+    /**
+     * Get operators of the partition who granted by the holder.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [holder] - The token holder's address.
+     * @param {string} [partition] - The partition ID.
+     * @returns `data` of `SuccessResponse` is information of the operators:
+     * - `operators`: Array of the address of operators.
+     */
     async getOperatorsByHolder(contractAddr, holder, partition) {
+        Address.from(contractAddr);
+        Address.from(holder);
         return await getAPIData(() => contract.sto.getOperatorsByHolder(this.api, contractAddr, holder, partition, this.delegateIP));
     }
+    /**
+     * Get balance for a specific partition.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [partition] - The partition ID.
+     * @returns `data` of `SuccessResponse` is the partition balance amount.
+     */
     async getPartitionBalanceInfo(contractAddr, partition) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.sto.getPartitionBalance(this.api, contractAddr, partition, this.delegateIP));
     }
+    /**
+     * Get information about the holder who granted to the operator.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [operator] - The operator's address.
+     * @returns `data` of `SuccessResponse` is information of holder:
+     * - `holders`: Array of the address of holders.
+     */
     async getAuthorizedInfo(contractAddr, operator) {
+        Address.from(contractAddr);
+        Address.from(operator);
         return await getAPIData(() => contract.sto.getAuthorized(this.api, contractAddr, operator, this.delegateIP));
     }
 }
@@ -4485,18 +5929,59 @@ class TimeStamp extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate a `create-service` operation for creating new timestamp service on the contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-service` operation.
+     */
     createService(contractAddr, sender, currency) {
         return new Operation$1(this.networkID, new CreateServiceFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency));
     }
+    /**
+     * Generate `append` operation for appending new timestamp to the project on the timestamp service.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [projectID] - The ID of the project to which data is appended.
+     * @param {string | number | Big} [requestTimeStamp] - Value of the timestamp to record.
+     * @param {string} [data] - The data to be appended.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `append` operation
+     */
     append(contractAddr, sender, projectID, requestTimeStamp, data, currency) {
         new URIString(projectID, 'projectID');
         const fact = new AppendFact(TimeStamp$1.new().UTC(), sender, contractAddr, projectID, requestTimeStamp, data, currency);
         return new Operation$1(this.networkID, fact);
     }
+    /**
+     * Get information about a timestamp service on the contract.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information about the timestamp service:
+     * - `_hint`: Hint for timestamp design,
+     * - `projects`: Array of all project's id
+     */
     async getServiceInfo(contractAddr) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.timestamp.getService(this.api, contractAddr, this.delegateIP));
     }
+    /**
+     * Get detailed information about a timestamp on the project.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string} [projectID] - The ID of the project.
+     * @param {string | number | Big} [tid] - The timestamp ID (Indicate the order of appended to the project)
+     * @returns `data` of `SuccessResponse` is information about the timestamp with certain tid on the certain project:
+     * - `_hint`: Hint for timestamp item,
+     * - `projectid`: ID of the timestamp project,
+     * - `request_timestamp`: Request timestamp entered when appending timestamp,
+     * - `response_timestamp`: Time when the timestamp was registered,
+     * - `timestampid`: A number representing the timestamp id,
+     * - `data`: Data string
+     */
     async getTimestampInfo(contractAddr, projectID, tid) {
+        Address.from(contractAddr);
         return await getAPIData(() => contract.timestamp.getTimeStamp(this.api, contractAddr, projectID, tid, this.delegateIP));
     }
 }
@@ -4524,7 +6009,7 @@ class RegisterTokenFact extends TokenFact {
         this.symbol = CurrencyID.from(symbol);
         this.name = LongString.from(name);
         this.initialSupply = Big.from(initialSupply);
-        Assert.check(this.initialSupply.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "initialSupply under zero"));
+        Assert.check(this.initialSupply.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "initialSupply under zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -4692,58 +6177,147 @@ let TransferFromFact$1 = class TransferFromFact extends TokenFact {
     }
 };
 
+const calculateAllowance = (response, owner, approved) => {
+    let amount = '0';
+    if (response.data.policy && response.data.policy.approve_list) {
+        const approveList = response.data.policy.approve_list;
+        const approval = approveList.find(item => item.account === owner);
+        if (approval) {
+            const allowance = approval.approved.find(item => item.account === approved);
+            if (allowance) {
+                amount = allowance.amount;
+            }
+        }
+        return { 'amount': amount };
+    }
+    else {
+        throw new Error(`Unknown error orccur: token policy or policy.approve_list does not exist`);
+    }
+};
+
 class Token extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate a `register-token` operation for registering a token on a contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | LongString} [name] - The name of the token to register.
+     * @param {string | CurrencyID} [symbol] - The symbol of the token to register.
+     * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the token to register. If not provided, the default value is 0.
+     * @returns `register-token` operation.
+     */
     registerToken(contractAddr, sender, currency, name, symbol, initialSupply) {
         return new Operation$1(this.networkID, new RegisterTokenFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, symbol, name, initialSupply ?? 0));
     }
+    /**
+     * Generate a `mint` operation for minting tokens and allocating them to a receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | number | Big} [amount] - The amount to mint.
+     * @returns `mint` operation.
+     */
     mint(contractAddr, sender, currency, receiver, amount) {
         return new Operation$1(this.networkID, new MintFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, amount));
     }
+    /**
+     * Generate a `burn` operation for burning tokens from a target account.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [target] - The target account's address.
+     * @param {string | number | Big} [amount] - The amount to burn.
+     * @returns `burn` operation
+     */
     burn(contractAddr, sender, currency, target, amount) {
         return new Operation$1(this.networkID, new BurnFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, target, amount));
     }
+    /**
+     * Generate an `transfer` operation for transferring tokens from the sender to a receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency - The currency ID.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | number | Big} [amount] - The amount to transfer.
+     * @returns `transfer` operation.
+     */
     transfer(contractAddr, sender, currency, receiver, amount) {
         return new Operation$1(this.networkID, new TransferFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, amount));
     }
+    /**
+     * Generate a `transfer-from` operation for transferring tokens from target account to receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | Address} [target] - The target account's address.
+     * @param {string | number | Big} [amount] - The amount to transfer.
+     * @returns `transfer-from` operation.
+     */
     transferFrom(contractAddr, sender, currency, receiver, target, amount) {
         return new Operation$1(this.networkID, new TransferFromFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, target, amount));
     }
+    /**
+     * Generate an `approve` operation for approving certain amount tokens to approved account.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [approved] - The address to approve.
+     * @param {string | number | Big} [amount] - The amount to approve.
+     * @returns `approve` operation
+     */
     approve(contractAddr, sender, currency, approved, amount) {
         return new Operation$1(this.networkID, new ApproveFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, approved, amount));
     }
+    /**
+     * Get information about the specific token on the contract.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @returns `data` of `SuccessResponse` is token information:
+     * - `_hint`: Hint for token design,
+     * - `symbol`: Symbol of the token,
+     * - `name`: Name of the token,
+     * - `policy`: Token policy object including `_hint`, `total_supply`, `approve_list`
+     */
     async getTokenInfo(contractAddr) {
-        const data = await getAPIData(() => contract.token.getToken(this.api, contractAddr, this.delegateIP));
-        return data ? data._embedded : null;
+        Address.from(contractAddr);
+        return await getAPIData(() => contract.token.getToken(this.api, contractAddr, this.delegateIP));
     }
-    async getAllowance(contractAddr, owner, spender) {
-        const data = await getAPIData(() => contract.token.getToken(this.api, contractAddr, this.delegateIP));
-        if (data) {
-            const approve_list = data._embedded.policy.approve_list;
-            let amount;
-            for (let i = 0; i < approve_list.length; i++) {
-                if (approve_list[i].account === owner) {
-                    const approved = approve_list[i].approved;
-                    for (let j = 0; j < approved.length; j++) {
-                        if (approved[j].account === spender) {
-                            amount = {
-                                'amount': approved[j].amount
-                            };
-                        }
-                    }
-                }
-            }
-            return amount;
+    /**
+     * Get the allowance information granted by the owner for a specific token.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [owner] - The token owner's address.
+     * @param {string | Address} [approved] - Address of approved account.
+     * @returns `data` of `SuccessResponse` is token allowance information:
+     * - `amount`: String of allowance amount
+     */
+    async getAllowance(contractAddr, owner, approved) {
+        Address.from(contractAddr);
+        Address.from(owner);
+        Address.from(approved);
+        const response = await getAPIData(() => contract.token.getToken(this.api, contractAddr, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = calculateAllowance(response, owner, approved);
         }
-        else {
-            return null;
-        }
+        return response;
     }
+    /**
+     * Get token balance for given account.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [owner] - The token owner's address.
+     * @returns`data` of `SuccessResponse` is token balance information:
+     * - `amount`: String of amount
+     */
     async getTokenBalance(contractAddr, owner) {
-        const data = await getAPIData(() => contract.token.getTokenBalance(this.api, contractAddr, owner, this.delegateIP));
-        return data ? data._embedded : null;
+        Address.from(contractAddr);
+        Address.from(owner);
+        return await getAPIData(() => contract.token.getTokenBalance(this.api, contractAddr, owner, this.delegateIP));
     }
 }
 
@@ -4770,7 +6344,7 @@ class RegisterPointFact extends PointFact {
         this.symbol = CurrencyID.from(symbol);
         this.name = LongString.from(name);
         this.initialSupply = Big.from(initialSupply);
-        Assert.check(this.initialSupply.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "initialSupply under zero"));
+        Assert.check(this.initialSupply.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "initialSupply under zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -4942,54 +6516,125 @@ class Point extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    /**
+     * Generate a `register-point` operation for registering a point on a contract.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | LongString} [name] - The name of the point to register.
+     * @param {string | CurrencyID} [symbol] - The symbol of the point to register.
+     * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the point to register. If not provided, the default value is 0.
+     * @returns `register-point` operation.
+     */
     registerPoint(contractAddr, sender, currency, name, symbol, initialSupply) {
         return new Operation$1(this.networkID, new RegisterPointFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, symbol, name, initialSupply ?? 0));
     }
+    /**
+     * Generate a `mint` operation for minting points and allocating them to a receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | number | Big} [amount] - The amount to mint.
+     * @returns `mint` operation.
+     */
     mint(contractAddr, sender, currency, receiver, amount) {
         return new Operation$1(this.networkID, new MintFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, amount));
     }
+    /**
+     * Generate a `burn` operation for burning points from a target account.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [target] - The target account's address.
+     * @param {string | number | Big} [amount] - The amount to burn.
+     * @returns `burn` operation
+     */
     burn(contractAddr, sender, currency, target, amount) {
         return new Operation$1(this.networkID, new BurnFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, target, amount));
     }
+    /**
+     * Generate an `transfer` operation for transferring points from the sender to a receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency - The currency ID.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | number | Big} [amount] - The amount to transfer.
+     * @returns `transfer` operation.
+     */
     transfer(contractAddr, sender, currency, receiver, amount) {
         return new Operation$1(this.networkID, new TransferFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, amount));
     }
+    /**
+     * Generate a `transfer-from` operation for transferring points from target account to receiver.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [receiver] - The receiver's address.
+     * @param {string | Address} [target] - The target account's address.
+     * @param {string | number | Big} [amount] - The amount to transfer.
+     * @returns `transfer-from` operation.
+     */
     transferFrom(contractAddr, sender, currency, receiver, target, amount) {
         return new Operation$1(this.networkID, new TransferFromFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, target, amount));
     }
+    /**
+     * Generate an `approve` operation for approving certain amount points to approved account.
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | Address} [approved] - The address to approve.
+     * @param {string | number | Big} [amount] - The amount to approve.
+     * @returns `approve` operation
+     */
     approve(contractAddr, sender, currency, approved, amount) {
         return new Operation$1(this.networkID, new ApproveFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, approved, amount));
     }
+    /**
+     * Get information about the specific point on the contract.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @returns `data` of `SuccessResponse` is point information:
+     * - `_hint`: Hint for point design,
+     * - `symbol`: Symbol of the point,
+     * - `name`: Name of the point,
+     * - `policy`: Point policy object including `_hint`, `total_supply`, `approve_list`
+     */
     async getPointInfo(contractAddr) {
-        const data = await getAPIData(() => contract.point.getPoint(this.api, contractAddr, this.delegateIP));
-        return data ? data._embedded : null;
+        Address.from(contractAddr);
+        return await getAPIData(() => contract.point.getPoint(this.api, contractAddr, this.delegateIP));
     }
-    async getAllowance(contractAddr, owner, spender) {
-        const data = await getAPIData(() => contract.point.getPoint(this.api, contractAddr, this.delegateIP));
-        if (data) {
-            const approve_list = data._embedded.policy.approve_list;
-            let amount;
-            for (let i = 0; i < approve_list.length; i++) {
-                if (approve_list[i].account === owner) {
-                    const approved = approve_list[i].approved;
-                    for (let j = 0; j < approved.length; j++) {
-                        if (approved[j].account === spender) {
-                            amount = {
-                                'amount': approved[j].amount
-                            };
-                        }
-                    }
-                }
-            }
-            return amount;
+    /**
+     * Get the allowance information granted by the owner for a specific point.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [owner] - The point owner's address.
+     * @param {string | Address} [approved] - Address of approved account.
+     * @returns `data` of `SuccessResponse` is point allowance information:
+     * - `amount`: String of allowance amount
+     */
+    async getAllowance(contractAddr, owner, approved) {
+        Address.from(contractAddr);
+        Address.from(owner);
+        Address.from(approved);
+        const response = await getAPIData(() => contract.point.getPoint(this.api, contractAddr, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = calculateAllowance(response, owner, approved);
         }
-        else {
-            return null;
-        }
+        return response;
     }
+    /**
+     * Get point balance for given account.
+     * @async
+     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [owner] - The point owner's address.
+     * @returns `data` of `SuccessResponse` is point balance information:
+     * - `amount`: String of amount
+     */
     async getPointBalance(contractAddr, owner) {
-        const data = await getAPIData(() => contract.point.getPointBalance(this.api, contractAddr, owner, this.delegateIP));
-        return data ? data._embedded : null;
+        Address.from(contractAddr);
+        Address.from(owner);
+        return await getAPIData(() => contract.point.getPointBalance(this.api, contractAddr, owner, this.delegateIP));
     }
 }
 
@@ -4997,25 +6642,35 @@ class Signer extends Generator {
     constructor(networkID, api) {
         super(networkID, api);
     }
-    sign(privatekey, json, option) {
+    /**
+     * Sign the given operation in JSON format using given private key.
+     * @param {string | Key} [privatekey] - The private key used for signing.
+     * @param {Operation<Fact> | HintedObject} [operation] - The operation to be signed.
+     * @param {SignOption} [option] - (Optional) Option for node sign.
+     * @returns The signed operation in JSON object (HintedObject).
+     */
+    sign(privatekey, operation, option) {
+        Assert.check(isOpFact(operation) || isHintedObject(operation), MitumError.detail(ECODE.INVALID_OPERATION, `input is neither in OP<Fact> nor HintedObject format`));
+        operation = isOpFact(operation) ? operation.toHintedObject() : operation;
+        Key.from(privatekey);
         const keypair = KeyPair.fromPrivateKey(privatekey);
-        return option ? this.nodeSign(keypair, json, option.node ?? "") : this.accSign(keypair, json);
+        return option ? this.nodeSign(keypair, operation, option.node ?? "") : this.accSign(keypair, operation);
     }
-    accSign(keypair, json) {
+    accSign(keypair, operation) {
         const now = TimeStamp$1.new();
         const fs = new GeneralFactSign(keypair.publicKey.toString(), keypair.sign(Buffer.concat([
             Buffer.from(this.networkID),
-            base58.decode(json.fact.hash),
+            base58.decode(operation.fact.hash),
             now.toBuffer(),
         ])), now.toString()).toHintedObject();
-        if (json.signs !== undefined) {
-            json.signs = [...json.signs, fs];
+        if (operation.signs !== undefined) {
+            operation.signs = [...operation.signs, fs];
         }
         else {
-            json.signs = [fs];
+            operation.signs = [fs];
         }
-        Assert.check(new Set(json.signs.map(fs => fs.signer.toString())).size === json.signs.length, MitumError.detail(ECODE.INVALID_FACTSIGNS, "duplicate signers found in factsigns"));
-        const factSigns = json.signs
+        Assert.check(new Set(operation.signs.map(fs => fs.signer.toString())).size === operation.signs.length, MitumError.detail(ECODE.INVALID_FACTSIGNS, "duplicate signers found in factsigns"));
+        const factSigns = operation.signs
             .map((s) => Buffer.concat([
             Buffer.from(s.signer),
             base58.decode(s.signature),
@@ -5023,28 +6678,28 @@ class Signer extends Generator {
         ]));
         //.sort((a, b) => Buffer.compare(a, b))
         const msg = Buffer.concat([
-            base58.decode(json.fact.hash),
+            base58.decode(operation.fact.hash),
             Buffer.concat(factSigns),
         ]);
-        json.hash = base58.encode(sha3(msg));
-        return json;
+        operation.hash = base58.encode(sha3(msg));
+        return operation;
     }
-    nodeSign(keypair, json, node) {
+    nodeSign(keypair, operation, node) {
         const nd = new NodeAddress(node);
         const now = TimeStamp$1.new();
         const fs = new NodeFactSign(node, keypair.publicKey.toString(), keypair.sign(Buffer.concat([
             Buffer.from(this.networkID),
             nd.toBuffer(),
-            base58.decode(json.fact.hash),
+            base58.decode(operation.fact.hash),
             now.toBuffer(),
         ])), now.toString()).toHintedObject();
-        if (json.signs) {
-            json.signs = [...json.signs, fs];
+        if (operation.signs) {
+            operation.signs = [...operation.signs, fs];
         }
         else {
-            json.signs = [fs];
+            operation.signs = [fs];
         }
-        const factSigns = json.signs
+        const factSigns = operation.signs
             .map((s) => Buffer.concat([
             Buffer.from(s.signer),
             base58.decode(s.signature),
@@ -5052,11 +6707,11 @@ class Signer extends Generator {
         ]))
             .sort((a, b) => Buffer.compare(a, b));
         const msg = Buffer.concat([
-            base58.decode(json.fact.hash),
+            base58.decode(operation.fact.hash),
             Buffer.concat(factSigns),
         ]);
-        json.hash = base58.encode(sha3(msg));
-        return json;
+        operation.hash = base58.encode(sha3(msg));
+        return operation;
     }
 }
 
@@ -5064,19 +6719,172 @@ class Operation extends Generator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
-    async getAllOperations() {
-        return await api$1.getOperations(this.api, this.delegateIP);
+    /**
+     * Get all operations of the network.
+     * @async
+     * @param {number} [limit] - (Optional) The maximum number of items to retrieve.
+     * @param {number} [offset] - (Optional) The number of items skip before starting to return data.
+     * @param {boolean} [reverse] - (Optional) Whether to return the items in reverse newest order.
+     * @returns The `data` of `SuccessResponse` represents an array of all operations in the network:
+     * - `_hint`: Indicates mitum engine version,
+     * - `_embedded`:
+     * - - `_hint`: Hint for the operation,
+     * - - `hash`: Hash for the fact,
+     * - - `operation`: Information of the operation includes `hash`, `fact`, `signs`, `_hint`,
+     * - - `height`: Block height containing the operation,
+     * - - `confirmed_at`: Timestamp when the block was confirmed,
+     * - - `reason`: Reason for operation failure,
+     * - - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - - `index`: Index of the operation in the block
+     * - `_links`: Links to get additional information
+     */
+    async getAllOperations(limit, offset, reverse) {
+        return await getAPIData(() => api$1.getOperations(this.api, this.delegateIP, limit, offset, reverse));
     }
+    /**
+     * Get a operation by fact hash.
+     * @async
+     * @param {string} [hash] - The hash value of the fact included in the operation to retrieve
+     * @returns The `data` of `SuccessResponse` is *null* or infomation of the operation:
+     * - `_hint`: Hint for the operation,
+     * - `hash`: Hash for the fact,
+     * - `operation`:
+     * - - `hash`: Hash fot the operation,
+     * - - `fact`: Object for fact,
+     * - - `signs`: Array for sign,
+     * - - `_hint`: Hint for operation type,
+     * - `height`: Block height containing the operation,
+     * - `confirmed_at`: Timestamp when the block was confirmed,
+     * - `reason`: Reason for operation failure,
+     * - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - `index`: Index of the operation in the block
+     *
+     * ***null* means that the account has not yet been recorded in the block.**
+     */
     async getOperation(hash) {
-        return await api$1.getOperation(this.api, hash, this.delegateIP);
+        const response = await getAPIData(() => api$1.getOperation(this.api, hash, this.delegateIP));
+        if (isSuccessResponse(response)) {
+            response.data = response.data ? response.data : null;
+        }
+        return response;
     }
+    /**
+     * Sign the given operation using the provided private key or key pair.
+     * @param {string | Key | KeyPair} [privatekey] - The private key or key pair for signing.
+     * @param {OP<Fact>} [operation] - The operation to sign.
+     * @param {SignOption} [option] - (Optional) Option for node sign.
+     * @returns The signed operation.
+     */
     sign(privatekey, operation, option) {
         const op = operation;
         op.sign(privatekey instanceof KeyPair ? privatekey.privateKey : privatekey, option);
         return op;
     }
+    /**
+     * Send the given singed operation to blockchain network.
+     * @async
+     * @param { Operation<Fact> | HintedObject} [operation] - The operation to send.
+     * @param {{[i: string]: any} | undefined} [headers] - (Optional) Additional headers for the request.
+     * @returns Properties of `OperationResponse`:
+     * - response: <SuccessResponse | ErrorResponse>
+     * - _api: API URL
+     * - _delegateIP: IP address for delegation
+     * @example
+     * // Send operation and check response and receipt:
+     * const sendOperation = async () => {
+     *   const data = await mitum.operation.send(signedOperation);
+     *   console.log(data.response);
+     *   const receipt = await data.wait();
+     *   console.log(receipt);
+     * };
+     * sendOperation();
+     */
     async send(operation, headers) {
-        return await api$1.send(this.api, operation, this.delegateIP, headers);
+        Assert.check(isOpFact(operation) || isHintedObject(operation), MitumError.detail(ECODE.INVALID_OPERATION, `input is neither in OP<Fact> nor HintedObject format`));
+        operation = isOpFact(operation) ? operation.toHintedObject() : operation;
+        Assert.check(operation.signs.length !== 0, MitumError.detail(ECODE.EMPTY_SIGN, `signature is required before sending the operation`));
+        const sendResponse = await getAPIData(() => api$1.send(this.api, operation, this.delegateIP, headers));
+        return new OperationResponse(sendResponse, this.api, this.delegateIP);
+    }
+}
+class OperationResponse {
+    constructor(response, api, delegateIP) {
+        this.response = response;
+        this._api = api;
+        this._delegateIP = delegateIP;
+    }
+    /**
+     * Get receipt when a sent operation is recorded in a block by polling the blockchain network for a certain time.
+     * @async
+     * @param {number | undefined} [timeout=10000] - (Optional) Timeout for polling in milliseconds. Default is 10000ms.
+     * @param {number | undefined} [interval=1000] - (Optional) Interval for polling in milliseconds. Default is 1000ms. (interval < timeout)
+     * @returns The `data` property of `SuccessResponse` contains information about the operation:
+     * - `_hint`: Hint for the operation,
+     * - `hash`: Hash for the fact,
+     * - `operation`:
+     * - - `hash`: Hash fot the operation,
+     * - - `fact`: Object for fact,
+     * - - `signs`: Array for sign,
+     * - - `_hint`: Hint for operation type,
+     * - `height`: Block height containing the operation,
+     * - `confirmed_at`: Timestamp when the block was confirmed,
+     * - `reason`: Reason for operation failure,
+     * - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - `index`: Index of the operation in the block
+     *
+     * **If `in_state` is `false`, the operation failed, and the `reason` property provides the failure reason.**
+     */
+    async wait(timeout, interval) {
+        Assert.check(this.response.status === 200, MitumError.detail(ECODE.TRANSACTION_REVERTED, `transaction reverted by the network, check error message`));
+        let elapsedTime = 0;
+        const maxTimeout = timeout ?? 10000;
+        const timeoutInterval = interval ?? 1000;
+        const validatePositiveInteger = (val, name) => {
+            if (!Number.isSafeInteger(val) || val <= 0) {
+                throw new Error(`${name} must be a positive integer`);
+            }
+        };
+        validatePositiveInteger(maxTimeout, "timeout");
+        validatePositiveInteger(timeoutInterval, "interval");
+        if (maxTimeout <= timeoutInterval) {
+            if (interval === undefined) {
+                throw new Error("default interval is 1000, so timeout must be greater than that.");
+            }
+            else if (timeout === undefined) {
+                throw new Error("default timeout is 10000, so interval must be less than that.");
+            }
+            else {
+                throw new Error("timeout must be larger than interval.");
+            }
+        }
+        let stop = false;
+        while (!stop && elapsedTime < maxTimeout) {
+            try {
+                const receipt = await getAPIData(() => api$1.getOperation(this._api, this.response.data.fact.hash, this._delegateIP));
+                if (isSuccessResponse(receipt) && receipt.data !== undefined) {
+                    if (receipt.data.in_state) {
+                        console.log('\x1b[34m%s\x1b[0m', `operation in_state is true`);
+                        return receipt;
+                    }
+                    else {
+                        console.log('\x1b[31m%s\x1b[0m', `operation in_state is false. reason: ${receipt.data.reason}`);
+                        return receipt;
+                    }
+                }
+                else {
+                    console.log('\x1b[33m%s\x1b[0m', "polling...");
+                }
+            }
+            catch (error) {
+                stop = true;
+                throw (error);
+            }
+            elapsedTime += timeoutInterval;
+            await new Promise(resolve => setTimeout(resolve, timeoutInterval));
+        }
+        const apiPath = `${IP.from(this._api).toString()}/block/operation/${this.response.data.fact.hash}`;
+        const url = !this._delegateIP ? apiPath : delegateUri(this._delegateIP) + encodeURIComponent(apiPath);
+        Assert.check(stop, MitumError.detail(ECODE.TIME_OUT, `timeout reached (${maxTimeout / 1000} seconds).\nurl: ${url}`));
     }
 }
 
@@ -5160,24 +6968,46 @@ class Mitum extends Generator {
     get point() {
         return this._point;
     }
+    /**
+     * Set the API URL to interact with Mitum network.
+     * @param {string | IP} [api] - The API URL to set
+     */
     setAPI(api) {
         super.setAPI(api);
         this.refresh();
     }
+    /**
+     * Set the delegate IP address.
+     * @param {string | IP} [delegateIP] - The delegate IP address to set.
+     */
     setDelegate(delegateIP) {
         super.setDelegate(delegateIP);
         this.refresh();
     }
+    /**
+     * Set the blockchain network ID (chain). The default value is configured to 'mitum'.
+     * @param {string} [networkID] - The network ID to set.
+     */
     setNetworkID(networkID) {
         super.setNetworkID(networkID);
         this.refresh();
     }
+    /**Get the API URL in use.
+     * @returns {string} The API URL.
+    */
     getAPI() {
         return this.api.toString();
     }
+    /**
+     * Get the delegate IP in use.
+     * @returns {string} The delegate IP address.
+     */
     getDelegate() {
         return this.delegateIP.toString();
     }
+    /**Get the network ID in use.
+     * @returns {string} The network ID (chain).
+    */
     getNetworkID() {
         return this.networkID;
     }

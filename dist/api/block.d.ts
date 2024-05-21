@@ -1,5 +1,5 @@
 import { Big, IP } from "../types";
-declare function getBlocks(api: string | IP, delegateIP: string | IP): Promise<import("axios").AxiosResponse<any, any>>;
+declare function getBlocks(api: string | IP, delegateIP: string | IP, limit?: number, offset?: number, reverse?: true): Promise<import("axios").AxiosResponse<any, any>>;
 declare function getBlockByHeight(api: string | IP, height: string | number | Big, delegateIP: string | IP): Promise<import("axios").AxiosResponse<any, any>>;
 declare function getBlockByHash(api: string | IP, hash: string, delegateIP: string | IP): Promise<import("axios").AxiosResponse<any, any>>;
 declare const _default: {

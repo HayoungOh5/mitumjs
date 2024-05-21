@@ -34,10 +34,6 @@ export declare const Config: {
             PRIVATE: RangeConfig;
             PUBLIC: RangeConfig;
         };
-        ETHER: {
-            PRIVATE: RangeConfig;
-            PUBLIC: RangeConfig;
-        };
     };
     NFT: {
         ROYALTY: RangeConfig;

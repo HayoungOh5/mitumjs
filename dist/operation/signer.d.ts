@@ -1,10 +1,16 @@
-import { OperationJson } from "./base";
+import { OperationJson, SignOption, Operation as OP, Fact } from "./base";
 import { Key } from "../key";
 import { Generator, HintedObject, IP } from "../types";
-import { SignOption } from "./base/types";
 export declare class Signer extends Generator {
     constructor(networkID: string, api?: string | IP);
-    sign(privatekey: string | Key, json: HintedObject, option?: SignOption): OperationJson;
+    /**
+     * Sign the given operation in JSON format using given private key.
+     * @param {string | Key} [privatekey] - The private key used for signing.
+     * @param {Operation<Fact> | HintedObject} [operation] - The operation to be signed.
+     * @param {SignOption} [option] - (Optional) Option for node sign.
+     * @returns The signed operation in JSON object (HintedObject).
+     */
+    sign(privatekey: string | Key, operation: OP<Fact> | HintedObject, option?: SignOption): OperationJson;
     private accSign;
     private nodeSign;
 }

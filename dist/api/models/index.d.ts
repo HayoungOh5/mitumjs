@@ -6,7 +6,8 @@ declare const _default: {
     contract: {
         nft: {
             getNFT: (api: string | import("../../types").IP, contract: string | import("../../key").Address, nftID: string | number | import("../../types").Big, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
-            getNFTs: (api: string | import("../../types").IP, contract: string | import("../../key").Address, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
+            getNFTs: (api: string | import("../../types").IP, contract: string | import("../../key").Address, delegateIP: string | import("../../types").IP, factHash?: string | undefined, limit?: number | undefined, offset?: number | undefined, reverse?: true | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
+            getNFTCount: (api: string | import("../../types").IP, contract: string | import("../../key").Address, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
             getCollection: (api: string | import("../../types").IP, contract: string | import("../../key").Address, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
             getAccountOperators: (api: string | import("../../types").IP, contract: string | import("../../key").Address, account: string | import("../../key").Address, delegateIP: string | import("../../types").IP) => Promise<import("axios").AxiosResponse<any, any>>;
         };

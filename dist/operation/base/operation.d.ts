@@ -25,6 +25,5 @@ export declare class Operation<T extends Fact> implements IBuffer, IHintedObject
     private signWithSigType;
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
-    export(filePath: string): void;
 }
 export {};

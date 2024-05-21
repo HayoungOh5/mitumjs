@@ -4,14 +4,9 @@ declare const _default: {
             PRIVATE: string;
             PUBLIC: string;
         };
-        ETHER: {
-            PRIVATE: string;
-            PUBLIC: string;
-        };
     };
     ADDRESS: {
         MITUM: string;
-        ETHER: string;
         NODE: string;
         ZERO: string;
     };

@@ -3,11 +3,10 @@ import { CurrencyItem } from "./item";
 import { OperationFact } from "../base";
 import { Amount } from "../../common";
 import { HintedObject } from "../../types";
-import { Keys, EtherKeys, Address, AddressType } from "../../key";
+import { Keys, Address } from "../../key";
 export declare class CreateAccountItem extends CurrencyItem {
-    readonly keys: Keys | EtherKeys;
-    private addressSuffix;
-    constructor(keys: Keys | EtherKeys, amounts: Amount[], addressType: AddressType);
+    readonly keys: Keys;
+    constructor(keys: Keys, amounts: Amount[]);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
     toString(): string;

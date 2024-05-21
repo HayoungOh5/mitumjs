@@ -19,17 +19,15 @@ export declare abstract class BaseKeyPair {
     static random<T extends BaseKeyPair>(option?: KeyPairType): T;
     static fromPrivateKey<T extends BaseKeyPair>(key: string | Key): T;
     static fromSeed<T extends BaseKeyPair>(seed: string | Buffer | Uint8Array, option?: KeyPairType): T;
-    protected btcSign(msg: string | Buffer): Buffer;
     protected ethSign(msg: string | Buffer): Buffer;
-    protected btcVerify(sig: string | Buffer, msg: string | Buffer): boolean;
     protected ethVerify(sig: string | Buffer, msg: string | Buffer): boolean;
     protected static K(seed: string | Buffer | Uint8Array): bigint;
 }
 export declare class KeyPair extends BaseKeyPair {
     static generator: {
-        random(option?: KeyPairType): KeyPair;
+        random(): KeyPair;
         fromPrivateKey(key: string | Key): KeyPair;
-        fromSeed(seed: string, option?: KeyPairType): KeyPair;
+        fromSeed(seed: string): KeyPair;
     };
     private constructor();
     protected getSigner(): Uint8Array;
