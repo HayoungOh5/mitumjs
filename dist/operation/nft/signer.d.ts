@@ -13,9 +13,8 @@ export declare class Signer implements IBuffer, IHintedObject {
 }
 export declare class Signers implements IBuffer, IHintedObject {
     readonly hint: Hint;
-    readonly total: Big;
     readonly signers: Signer[];
-    constructor(total: string | number | Big, signers: Signer[]);
+    constructor(signers: Signer[]);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
 }

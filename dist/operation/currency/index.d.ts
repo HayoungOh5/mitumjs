@@ -12,9 +12,6 @@ import { CurrencyID } from "../../common";
 import { Big, Generator, IP } from "../../types";
 import { Address, Key, PubKey, Account as AccountType, KeyG } from "../../key";
 type currencyPolicyData = {
-    currency: string | CurrencyID;
-    genesisAddress: string | Address;
-    totalSupply: string | number | Big;
     minBalance: string | number | Big;
     feeType: "nil" | "fixed" | "ratio";
     feeReceiver: string | Address;
@@ -35,17 +32,21 @@ export declare class Currency extends Generator {
     /**
      * Generate a `register-currency` operation for registering a new currency.
      * **Signature of nodes** is required, not a general account signature.
+     * @param {string | Address} [genesisAddress] - genesis account's address.
+     * @param {string | number | Big} [totalSupply] - total supply amount.
+     * @param {string | CurrencyID} [currency] - currency ID to resgister.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `register-currency` operation.
      */
-    registerCurrency(data: currencyPolicyData): Operation<RegisterCurrencyFact>;
+    registerCurrency(genesisAddress: string | Address, totalSupply: string | number | Big, currency: string | CurrencyID, data: currencyPolicyData): Operation<RegisterCurrencyFact>;
     /**
      * Generate an `update-currency` operation for updating an existing Mitum currency.
      * **Signature of nodes** is required, not a general account signature.
+     * @param {string | CurrencyID} [currency] - The currency ID to want to updated.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `update-currency` operation.
      */
-    updateCurrency(data: currencyPolicyData): Operation<UpdateCurrencyFact>;
+    updateCurrency(currency: string | CurrencyID, data: currencyPolicyData): Operation<UpdateCurrencyFact>;
     private buildPolicy;
     /**
      * Generate a `transfer` operation for transferring currency between accounts.

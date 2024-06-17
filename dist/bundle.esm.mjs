@@ -73,6 +73,7 @@ const ECODE = {
         INVALID_PARTITION: "EC_INVALID_PARTITION",
     },
     DAO: {
+        INVALID_POLICY: "EC_INVALID_POLICY",
         INVALID_WHITELIST: "EC_INVALID_WHITELIST",
         UNMATCHED_SENDER: "EC_UNMATCHED_SENDER"
     },
@@ -84,19 +85,19 @@ const PCODE = {
     AMBIGUOUS: {
         code: "P0A",
         keyword: [""],
-        description: "AMBIGUOUS",
+        description: "Ambiguous error",
         subject: "",
     },
     MITUM_CORE: {
         code: "P0M",
         keyword: [""],
-        description: "MITUM CORE",
+        description: "Error from Mitum core",
         subject: "",
     },
     UNDEFINED: {
         code: "P00",
         keyword: [""],
-        description: "UNDEFINED",
+        description: "Undefined error",
         subject: "",
     },
     IV_BASE_OP: {
@@ -152,222 +153,138 @@ const DCODE = {
     AMBIGUOUS: {
         code: "D00A",
         keyword: [""],
-        description: "AMBIGUOUS",
+        description: "Ambiguous error",
         subject: "",
     },
     COMPLEX: {
         code: "D00C",
         keyword: [""],
-        description: "COMPLEX",
+        description: "Complex error with multiple DCODE",
         subject: "",
     },
     OP_DEP: {
         code: "D00D",
         keyword: [""],
-        description: "Operation dependent",
+        description: "Operation dependent error",
         subject: "",
     },
     UNDEFINED: {
         code: "D000",
         keyword: [""],
-        description: "UNDEFINED",
+        description: "Undefined error",
         subject: ""
     },
-    // data validation
+    // Related to data validation
     EMPTY: {
         code: "D101",
-        keyword: ["Operation has empty token"],
-        description: "EMPTY or NULL data",
+        keyword: [""],
+        description: "Empty or null data",
         subject: ""
     },
-    IV_LENGTH: {
+    IV_LEN: {
         code: "D102",
         keyword: ["Array length"],
-        description: "length of array",
+        description: "The provided array exceeds the allowed length.",
         subject: ""
     },
     IV_RANGE: {
         code: "D103",
-        keyword: ["Value out of range", "Operation token size too large"],
-        description: "Out of range",
+        keyword: ["Value out of range"],
+        description: "The variable exceeds the allowed range.",
         subject: ""
     },
-    IV_TYPE: {
+    IV_VAL: {
         code: "D104",
-        keyword: ["Type mismatch", "Invalid account type", "Invalid value"],
-        description: "Invalid type",
+        keyword: ["Invalid value"],
+        description: "Invalid string, Insufficient balance, Invalid state change etc.",
         subject: ""
     },
-    DUPLICATED_VAL: {
+    IV_DUP: {
         code: "D105",
         keyword: ["Duplicated value"],
-        description: "Duplicated value",
+        description: "The item contains duplicate values.",
         subject: ""
     },
-    D106: {
+    SELF_TARGET: {
         code: "D106",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    IV_CHAR: {
-        code: "D107",
-        keyword: [""],
-        description: "Special characters",
-        subject: ""
-    },
-    DECODE_FACT: {
-        code: "D108",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    DECODE_ITEM: {
-        code: "D109",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    DECODE_OP: {
-        code: "D110",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    UNMARSHAL_ITEM: {
-        code: "D111",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    UNMARSHAL_FACT: {
-        code: "D112",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    SELF_TARGETED: {
-        code: "D113",
         keyword: ["Self targeted"],
-        description: "",
+        description: "Duplicate account addresses provided in an invalid manner. (sender=receiver, sender=contract, etc.)",
         subject: ""
     },
-    D114: {
-        code: "D114",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    D115: {
-        code: "D115",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    D116: {
-        code: "D116",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    D117: {
-        code: "D117",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    // signature related
+    // Related to signature
     IV_SIGN: {
         code: "D201",
         keyword: ["Invalid signing"],
-        description: "",
+        description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold",
         subject: ""
     },
-    D202: {
-        code: "D202",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    LACK_OF_SIGN: {
-        code: "D203",
-        keyword: ["Not enough signs"],
-        description: "",
-        subject: ""
-    },
-    D204: {
-        code: "D204",
-        keyword: [""],
-        description: "",
-        subject: ""
-    },
-    // authorization related
-    UNAUTHORIZED_AC: {
+    // Related to authorization
+    NO_AUTH: {
         code: "D301",
         keyword: ["Account not authorized"],
-        description: "sender is not owner neither operator of the contract",
+        description: "The sender account does not have permission to execute the operation.",
         subject: ""
     },
-    NOT_IN_WHITELIST: {
+    CA_DISALLOW: {
         code: "D302",
-        keyword: [""],
-        description: "account not in the whitelist",
+        keyword: ["Contract account not allowed"],
+        description: "A contract account cannot be used as sender, receiver etc.",
         subject: ""
     },
-    // insufficient balance
-    D401: {
+    // Insufficient balance
+    INSUFF_BAL: {
         code: "D401",
         keyword: [""],
-        description: "",
+        description: "Insufficient token or point balance.",
         subject: ""
     },
-    // state related
-    STATE_NOT_FOUND: {
+    // Related to state
+    NF_CUR: {
         code: "D501",
-        keyword: ["Account not found", "Currency not found", "Contract account not found", "Service not found"],
-        description: "",
+        keyword: ["Currency not found"],
+        description: "The currency cannot be found on the blockchain.",
         subject: ""
     },
-    D502: {
+    NF_ACC: {
         code: "D502",
-        keyword: [""],
-        description: "",
+        keyword: ["Account not found", "Contract account not found"],
+        description: "The account or contract account cannot be found on the blockchain.",
         subject: ""
     },
-    STATE_EXIST: {
+    NF_SERVICE: {
         code: "D503",
-        keyword: ["Account exist", "Contract account exist", "Currency exist", "State exist"],
-        description: "",
+        keyword: ["Service not found"],
+        description: "The service cannot be found in the given contract.",
         subject: ""
     },
-    D504: {
+    NF_STATE: {
         code: "D504",
-        keyword: [""],
-        description: "",
+        keyword: ["State not found"],
+        description: "The state cannot be found on the blockchain.",
         subject: ""
     },
-    IV_STATE_VAL: {
+    EXIST_CUR: {
         code: "D505",
-        keyword: ["Invalid state value"],
-        description: "",
+        keyword: ["Currency exist"],
+        description: "The currency already exists on the blockchain.",
         subject: ""
     },
-    CONTRACT_ACCOUNT: {
+    EXIST_ACC: {
         code: "D506",
-        keyword: ["Contract account not allowed"],
-        description: "",
+        keyword: ["Account exist", "Contract account exist"],
+        description: "The account or contract account already exists on the blockchain.",
         subject: ""
     },
-    D507: {
+    EXIST_SERVICE: {
         code: "D507",
-        keyword: [""],
-        description: "",
+        keyword: ["Service exist"],
+        description: "The contract already contains the service.",
         subject: ""
     },
-    D508: {
+    EXSIT_STATE: {
         code: "D508",
-        keyword: [""],
-        description: "",
+        keyword: ["State exist"],
+        description: "The state already exists on the blockchain.",
         subject: ""
     },
 };
@@ -385,10 +302,25 @@ const assignCodeFromErrorMessage = (errorMessage) => {
                 if (errorMessage.includes(keyword)) {
                     dcodeArr.push(obj.code);
                 }
+                if (obj.code === "D302") {
+                    break;
+                }
             }
         }
+        if (obj.code === "D302") {
+            break;
+        }
     }
-    return { pcode: pcodeArr, dcode: dcodeArr };
+    pcodeArr.length === 0 ?? pcodeArr.push(PCODE.UNDEFINED.code);
+    if (dcodeArr.length > 1) {
+        return pcodeArr.slice(-1) + DCODE.COMPLEX.code;
+    }
+    else if (dcodeArr.length == 1) {
+        return pcodeArr.slice(-1) + dcodeArr[0];
+    }
+    else {
+        return pcodeArr.slice(-1) + DCODE.UNDEFINED.code;
+    }
 };
 
 class MitumError extends Error {
@@ -524,7 +456,7 @@ class IP extends LongString {
 }
 class URIString {
     constructor(s, name) {
-        Assert.check(/^[A-Za-z0-9$\-_.!*'()]+$/.test(s), MitumError.detail(ECODE.INVALID_CHARACTER, `${name} must not contain: space / : ? # [ ] @`));
+        Assert.check((/^[^\s:/?#\[\]@]*$/.test(s)), MitumError.detail(ECODE.INVALID_CHARACTER, `${name} must not contain: space / : ? # [ ] @`));
     }
 }
 
@@ -616,8 +548,8 @@ class Big {
     toString() {
         return this.big.toString();
     }
-    isZero() {
-        return this.big < 1;
+    overZero() {
+        return this.big > 0;
     }
     compare(n) {
         n = Big.from(n);
@@ -845,7 +777,7 @@ const Config = {
     },
     DAO: {
         ADDRESS_IN_WHITELIST: getRangeConfig(0, 10),
-        QUORUM: getRangeConfig(0, 100),
+        QUORUM: getRangeConfig(1, 100),
         VOTE: getRangeConfig(0, 255),
     }
 };
@@ -1230,7 +1162,28 @@ class Amount {
         this.hint = new Hint(HINT.CURRENCY.AMOUNT);
         this.currency = CurrencyID.from(currency);
         this.big = Big.from(big);
-        Assert.check(0 < this.big.big, MitumError.detail(ECODE.INVALID_AMOUNT, "zero big"));
+        Assert.check(this.big.big > 0, MitumError.detail(ECODE.INVALID_AMOUNT, "amount must be over zero"));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.big.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            _hint: this.hint.toString(),
+            currency: this.currency.toString(),
+            amount: this.big.toString(),
+        };
+    }
+}
+class Fee {
+    constructor(currency, big) {
+        this.hint = new Hint(HINT.CURRENCY.AMOUNT);
+        this.currency = CurrencyID.from(currency);
+        this.big = Big.from(big);
+        Assert.check(0 <= this.big.big, MitumError.detail(ECODE.INVALID_FACT, "fee must not be under zero"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -1566,7 +1519,7 @@ class OperationFact extends Fact {
     constructor(hint, token, sender, items) {
         super(hint, token);
         this.sender = Address.from(sender);
-        Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length));
+        Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length), MitumError.detail(ECODE.INVALID_ITEMS, "length of items is out of range"));
         hint !== "mitum-nft-mint-operation-fact" ? Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"))
             : null;
         this.items = items;
@@ -1657,7 +1610,7 @@ class BaseAddress {
 class Address extends BaseAddress {
     constructor(s) {
         super(s);
-        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS_TYPE, "The address must be starting with '0x' and ending with 'mca'"))
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_ADDRESS_TYPE, `The address must be starting with '0x' and ending with '${SUFFIX.ADDRESS.MITUM}'`))
             .startsWith('0x')
             .endsWith(SUFFIX.ADDRESS.MITUM)
             .excute();
@@ -1768,6 +1721,8 @@ class Keys {
             return new PubKey(key instanceof Key ? key.toString() : key, weight);
         });
         this.threshold = threshold instanceof Big ? threshold : new Big(threshold);
+        const _sum = this._keys.reduce((total, key) => total + key.weight.v, 0);
+        Assert.check(this.threshold.v <= _sum, MitumError.detail(ECODE.INVALID_KEYS, `sum of weights under threshold, ${_sum} < ${this.threshold.v}`));
         Assert.check(Config.THRESHOLD.satisfy(this.threshold.v), MitumError.detail(ECODE.INVALID_KEYS, "threshold out of range"));
         Assert.check(new Set(this._keys.map(k => k.toString())).size === this._keys.length, MitumError.detail(ECODE.INVALID_KEYS, "duplicate keys found in keys"));
     }
@@ -2330,14 +2285,14 @@ var models = {
 };
 
 const currency = models.currency;
-const contract = models.contract;
+const contractApi = models.contract;
 var api = {
     account,
     block,
     node,
     operation: api$1,
     currency,
-    contract,
+    contractApi,
 };
 async function getAPIData(f, _links) {
     try {
@@ -2358,7 +2313,7 @@ async function getAPIData(f, _links) {
                 status: response.status,
                 method: response.config.method,
                 url: response.config.url,
-                error_code: response.data ? assignCodeFromErrorMessage(response.data) : { pcode: [], dcode: [] },
+                error_code: response.data ? assignCodeFromErrorMessage(response.data) : "",
                 request_body: response.config.data,
                 error_message: response.data,
             };
@@ -2369,7 +2324,7 @@ async function getAPIData(f, _links) {
                 status: 500,
                 method: error.config.method,
                 url: error.config.url,
-                error_code: { pcode: [], dcode: [] },
+                error_code: "",
                 request_body: error.config.data,
                 error_message: error.code,
             };
@@ -2699,6 +2654,7 @@ class UpdateOperatorFact extends Fact {
         this.currency = CurrencyID.from(currency);
         this.operators = operators.map(a => Address.from(a));
         this._hash = this.hashing();
+        Assert.check((this.operators.length !== 0), MitumError.detail(ECODE.INVALID_FACT, "empty operators"));
         Assert.check(hasOverlappingAddress(this.operators), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in operators"));
     }
     toBuffer() {
@@ -2958,32 +2914,38 @@ class Currency extends Generator {
     /**
      * Generate a `register-currency` operation for registering a new currency.
      * **Signature of nodes** is required, not a general account signature.
+     * @param {string | Address} [genesisAddress] - genesis account's address.
+     * @param {string | number | Big} [totalSupply] - total supply amount.
+     * @param {string | CurrencyID} [currency] - currency ID to resgister.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `register-currency` operation.
      */
-    registerCurrency(data) {
-        const keysToCheck = ['currency', 'genesisAddress', 'totalSupply', 'minBalance', 'feeType', 'feeReceiver'];
+    registerCurrency(genesisAddress, totalSupply, currency, data) {
+        Address.from(genesisAddress);
+        const keysToCheck = ['minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the createData structure`));
+            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the currencyPolicyData structure`));
         });
-        const amount = new Amount(data.currency, data.totalSupply);
-        const design = new CurrencyDesign(amount, data.genesisAddress, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee));
+        const amount = new Amount(currency, totalSupply);
+        const design = new CurrencyDesign(amount, genesisAddress, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee));
         return new Operation$1(this.networkID, new RegisterCurrencyFact(TimeStamp$1.new().UTC(), design));
     }
     /**
      * Generate an `update-currency` operation for updating an existing Mitum currency.
      * **Signature of nodes** is required, not a general account signature.
+     * @param {string | CurrencyID} [currency] - The currency ID to want to updated.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `update-currency` operation.
      */
-    updateCurrency(data) {
-        const keysToCheck = ['currency', 'genesisAddress', 'totalSupply', 'minBalance', 'feeType', 'feeReceiver'];
+    updateCurrency(currency, data) {
+        const keysToCheck = ['minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the createData structure`));
+            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the currencyPolicyData structure`));
         });
-        return new Operation$1(this.networkID, new UpdateCurrencyFact(TimeStamp$1.new().UTC(), data.currency, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee)));
+        return new Operation$1(this.networkID, new UpdateCurrencyFact(TimeStamp$1.new().UTC(), currency, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee)));
     }
     buildPolicy(feeType, minBalance, receiver, fee, ratio, min, max) {
+        Address.from(receiver);
         switch (feeType) {
             case "nil":
                 return new CurrencyPolicy(minBalance, new NilFeeer());
@@ -3455,7 +3417,7 @@ class CreateCollectionFact extends ContractFact {
         Assert.check(Config.NFT.ROYALTY.satisfy(this.royalty.v), MitumError.detail(ECODE.INVALID_FACT, "royalty out of range"));
         Assert.check(Config.NFT.ADDRESS_IN_WHITELIST.satisfy(this.whitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
         Assert.check(hasOverlappingAddress(this.whitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
-        this.whitelist.forEach(a => Assert.check(this.contract.toString() !== a.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
+        this.whitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -3491,6 +3453,8 @@ class UpdateCollectionPolicyFact extends ContractFact {
         this.whitelist = whitelist ? whitelist.map(w => Address.from(w)) : [];
         Assert.check(Config.NFT.ROYALTY.satisfy(this.royalty.v), MitumError.detail(ECODE.INVALID_FACT, "royalty out of range"));
         Assert.check(Config.NFT.ADDRESS_IN_WHITELIST.satisfy(this.whitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
+        Assert.check(hasOverlappingAddress(this.whitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
+        this.whitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -3569,7 +3533,13 @@ class MintItem extends NFTItem {
 let MintFact$2 = class MintFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.NFT.MINT.FACT, token, sender, items);
-        this.items.forEach(it => Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address")));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.receiver.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "receiver is same with contract address"));
+            it.creators.signers.forEach(signer => {
+                Assert.check(signer.account.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "creator is same with contract address"));
+            });
+        });
     }
     get operationHint() {
         return HINT.NFT.MINT.OPERATION;
@@ -3605,7 +3575,10 @@ let ApproveFact$2 = class ApproveFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.NFT.APPROVE.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate approve found in items"));
-        this.items.forEach(it => Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address")));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.approved.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "operator is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.NFT.APPROVE.OPERATION;
@@ -3641,7 +3614,11 @@ class DelegateFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.NFT.DELEGATE.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate operator found in items"));
-        this.items.forEach(it => Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address")));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.operator.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "operator is same with contract address"));
+            Assert.check(this.sender.toString() != it.operator.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with operator address"));
+        });
     }
     get operationHint() {
         return HINT.NFT.DELEGATE.OPERATION;
@@ -3677,7 +3654,10 @@ let TransferFact$2 = class TransferFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.NFT.TRANSFER.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate nft found in items"));
-        this.items.forEach(it => Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address")));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.receiver.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "receiver is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.NFT.TRANSFER.OPERATION;
@@ -3738,22 +3718,21 @@ let Signer$1 = class Signer {
     }
 };
 class Signers {
-    constructor(total, signers) {
+    constructor(signers) {
         this.hint = new Hint(HINT.NFT.SIGNERS);
-        this.total = Big.from(total);
         this.signers = signers;
+        const total = this.signers.reduce((prev, next) => prev + Big.from(next.share).v, 0);
+        Assert.check(total <= 100, MitumError.detail(ECODE.NFT.INVALID_NFT_SIGNERS, `total share over max, ${total} > 100`));
         Assert.check(Config.NFT.SIGNERS_IN_SIGNERS.satisfy(this.signers.length), MitumError.detail(ECODE.NFT.INVALID_NFT_SIGNERS, "signers length out of range"));
     }
     toBuffer() {
         return Buffer.concat([
-            this.total.toBuffer("fill"),
             Buffer.concat(this.signers.sort(SortFunc).map(s => s.toBuffer())),
         ]);
     }
     toHintedObject() {
         return {
             _hint: this.hint.toString(),
-            total: this.total.v,
             signers: this.signers.sort(SortFunc).map(s => s.toHintedObject()),
         };
     }
@@ -3765,26 +3744,26 @@ class NFT extends ContractGenerator {
     }
     /**
      * Generate `create-collection` operation for creating a new NFT collection on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
      * - {string | LongString} `name` - The name of the NFT collection.
      * - {string | LongString} `uri` - The uri of the NFT collection.
      * - {string | number | Big} `royalty` - The royalty of the NFT collection.
-     * - {(string | Address)[]} `whitelist` - Accounts who have permissions to mint.
+     * - {(string | Address)[]} `whitelist` - Accounts who have permissions to mint. If it's empty, anyone can mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-collection` operation
      */
-    createCollection(contractAddr, sender, data, currency) {
+    createCollection(contract, sender, data, currency) {
         const keysToCheck = ['name', 'uri', 'royalty', 'whitelist'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the collectionData structure`));
         });
-        return new Operation$1(this.networkID, new CreateCollectionFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.name, data.royalty, data.uri, data.whitelist, currency));
+        return new Operation$1(this.networkID, new CreateCollectionFact(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.whitelist, currency));
     }
     /**
      * Generate `update-collection` operation for updating the policy of an existing NFT collection on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
      * - {string | LongString} `name` - The name of the NFT collection.
@@ -3794,16 +3773,16 @@ class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `update-collection` operation.
      */
-    setPolicy(contractAddr, sender, data, currency) {
+    setPolicy(contract, sender, data, currency) {
         const keysToCheck = ['name', 'uri', 'royalty', 'whitelist'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the collectionData structure`));
         });
-        return new Operation$1(this.networkID, new UpdateCollectionPolicyFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.name, data.royalty, data.uri, data.whitelist, currency));
+        return new Operation$1(this.networkID, new UpdateCollectionPolicyFact(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.whitelist, currency));
     }
     /**
      * Generate `mint` operation for minting a new NFT and assigns it to a receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
      * @param {string | LongString} [uri] - The URI of the NFT to mint.
@@ -3812,12 +3791,12 @@ class NFT extends ContractGenerator {
      * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
      * @returns `mint` operation.
      */
-    mint(contractAddr, sender, receiver, uri, hash, currency, creator) {
-        return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, [new MintItem(contractAddr, receiver, hash, uri, new Signers(100, [new Signer$1(creator, 100, false)]), currency)]));
+    mint(contract, sender, receiver, uri, hash, currency, creator) {
+        return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, [new MintItem(contract, receiver, hash, uri, new Signers([new Signer$1(creator, 100, false)]), currency)]));
     }
     /**
      * Generate `mint` operation with multiple item for minting N number of NFT and assigns it to a receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
      * @param {number} [n] - The number of NFT to be minted.
@@ -3827,13 +3806,14 @@ class NFT extends ContractGenerator {
      * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
      * @returns `mint` operation.
      */
-    multiMint(contractAddr, sender, receiver, n, uri, hash, currency, creator) {
-        const items = Array.from({ length: n }).map(() => new MintItem(contractAddr, receiver, hash, uri, new Signers(100, [new Signer$1(creator, 100, false)]), currency));
+    multiMint(contract, sender, receiver, n, uri, hash, currency, creator) {
+        Assert.check(n !== 0, MitumError.detail(ECODE.INVALID_ITEMS, "n should over 0"));
+        const items = Array.from({ length: n }).map(() => new MintItem(contract, receiver, hash, uri, new Signers([new Signer$1(creator, 100, false)]), currency));
         return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, items));
     }
     /**
      * Generate `mint` operation in case of multiple creators.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
      * @param {string | LongString} [uri] - The URI of the NFT to mint.
@@ -3844,7 +3824,7 @@ class NFT extends ContractGenerator {
      * - {string | number | Big} `share` - The share for the artworks. The total share can not over 100.
      * @returns `mint` operation.
      */
-    mintForMultiCreators(contractAddr, sender, receiver, uri, hash, currency, creators) {
+    mintForMultiCreators(contract, sender, receiver, uri, hash, currency, creators) {
         const keysToCheck = ['account', 'share'];
         keysToCheck.forEach((key) => {
             creators.forEach((creator) => {
@@ -3852,69 +3832,69 @@ class NFT extends ContractGenerator {
             });
         });
         return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, [
-            new MintItem(contractAddr, receiver, hash, uri, new Signers(creators.reduce((prev, next) => prev + Big.from(next.share).v, 0), creators.map(a => new Signer$1(a.account, a.share, false))), currency)
+            new MintItem(contract, receiver, hash, uri, new Signers(creators.map(a => new Signer$1(a.account, a.share, false))), currency)
         ]));
     }
     /**
      * Generate `transfer` operation for transferring an NFT from one address to another.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receiver] - The address of the receiver of the NFT.
      * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `transfer` operation.
      */
-    transfer(contractAddr, sender, receiver, nftID, currency) {
+    transfer(contract, sender, receiver, nftID, currency) {
         const fact = new TransferFact$2(TimeStamp$1.new().UTC(), sender, [
-            new TransferItem(contractAddr, receiver, nftID, currency)
+            new TransferItem(contract, receiver, nftID, currency)
         ]);
         return new Operation$1(this.networkID, fact);
     }
     /**
      * Generate `approve` operation to approves NFT to another account (operator).
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [owner] - The address of the owner of the NFT.
      * @param {string | Address} [operator] - The address being granted approval to manage the NFT.
      * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `approve` operation.
      */
-    approve(contractAddr, owner, operator, nftID, currency) {
+    approve(contract, owner, operator, nftID, currency) {
         return new Operation$1(this.networkID, new ApproveFact$2(TimeStamp$1.new().UTC(), owner, [
-            new ApproveItem(contractAddr, operator, nftID, currency)
+            new ApproveItem(contract, operator, nftID, currency)
         ]));
     }
     /**
      * Generate `delegate` operation to sets or cancels the approval for an operator to manage all NFTs of the owner.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [owner] - The address of the owner of the NFT.
      * @param {string | Address} [operator] - The address being granted or denied approval to manage all NFTs.
      * @param {"allow" | "cancel"} [mode] - The mode indicating whether to allow or cancel the approval.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `delegate` operation.
      */
-    setApprovalForAll(contractAddr, owner, operator, mode, currency) {
+    setApprovalForAll(contract, owner, operator, mode, currency) {
         return new Operation$1(this.networkID, new DelegateFact(TimeStamp$1.new().UTC(), owner, [
-            new DelegateItem(contractAddr, operator, mode, currency)
+            new DelegateItem(contract, operator, mode, currency)
         ]));
     }
     /**
      * Generate `sign` operation to signs an NFT as creator of the artwork.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [creator] - The address of the creator signing the NFT.
      * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `sign` operation.
      */
-    sign(contractAddr, creator, nftID, currency) {
+    sign(contract, creator, nftID, currency) {
         return new Operation$1(this.networkID, new SignFact(TimeStamp$1.new().UTC(), creator, [
-            new SignItem(contractAddr, nftID, currency)
+            new SignItem(contract, nftID, currency)
         ]));
     }
     /**
      * Get information about an NFT collection on the contract.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information about the NFT collection:
      * - `_hint`: Hint for NFT design,
      * - `parent`: Address of the contract account,
@@ -3927,20 +3907,20 @@ class NFT extends ContractGenerator {
      * - - `uri`: URI of the NFT collection,
      * - - `whitelist`: Array of the addresses of accounts who have permissions to mint
      */
-    async getCollectionInfo(contractAddr) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.nft.getCollection(this.api, contractAddr, this.delegateIP));
+    async getCollectionInfo(contract) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.nft.getCollection(this.api, contract, this.delegateIP));
     }
     /**
      * Get the owner of a specific NFT.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is the address of the NFT owner.
      */
-    async ownerOf(contractAddr, nftID) {
-        Address.from(contractAddr);
-        const response = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
+    async ownerOf(contract, nftID) {
+        Address.from(contract);
+        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftID, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data.owner ? response.data.owner : null;
         }
@@ -3949,13 +3929,13 @@ class NFT extends ContractGenerator {
     /**
      * Get the address approved to manage a specific NFT.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is an address of the approved account to manage the NFT.
      */
-    async getApproved(contractAddr, nftID) {
-        Address.from(contractAddr);
-        const response = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
+    async getApproved(contract, nftID) {
+        Address.from(contract);
+        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftID, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data.approved ? response.data.approved : null;
         }
@@ -3964,12 +3944,12 @@ class NFT extends ContractGenerator {
     /**
      * Get the total supply of NFTs in a collection on the contract.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is the total supply of NFTs in the collection.
      */
-    async totalSupply(contractAddr) {
-        Address.from(contractAddr);
-        const response = await getAPIData(() => contract.nft.getNFTCount(this.api, contractAddr, this.delegateIP));
+    async totalSupply(contract) {
+        Address.from(contract);
+        const response = await getAPIData(() => contractApi.nft.getNFTCount(this.api, contract, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data.nft_count ? Number(response.data.nft_count) : 0;
         }
@@ -3978,13 +3958,13 @@ class NFT extends ContractGenerator {
     /**
      * Get the URI of a specific NFT.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is the URI of the NFT.
      */
-    async tokenURI(contractAddr, nftID) {
-        Address.from(contractAddr);
-        const response = await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
+    async tokenURI(contract, nftID) {
+        Address.from(contract);
+        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftID, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data.uri ? response.data.uri : null;
         }
@@ -3993,21 +3973,21 @@ class NFT extends ContractGenerator {
     /**
      * Get the address is approved to manage all NFTs of a sepecfic owner.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [owner] - The address of the NFT owner.
      * @returns `data` of `SuccessResponse` is approval information:
      * - `_hint`: Hint for NFT operators book,
      * - `operators`: Array of the addresses of accounts that have been delegated authority over all of the owner’s NFTs
      */
-    async isApprovedForAll(contractAddr, owner) {
-        Address.from(contractAddr);
+    async isApprovedForAll(contract, owner) {
+        Address.from(contract);
         Address.from(owner);
-        return await getAPIData(() => contract.nft.getAccountOperators(this.api, contractAddr, owner, this.delegateIP));
+        return await getAPIData(() => contractApi.nft.getAccountOperators(this.api, contract, owner, this.delegateIP));
     }
     /**
      * Get detailed information about a specific NFT.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is detailed information about the NFT:
      * - `_hint`: Hint for NFT,
@@ -4019,14 +3999,14 @@ class NFT extends ContractGenerator {
      * - `approved`: Address of the approved account for the NFT,
      * - `creators`: Creator object,
      */
-    async getNFTInfo(contractAddr, nftID) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.nft.getNFT(this.api, contractAddr, nftID, this.delegateIP));
+    async getNFTInfo(contract, nftID) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftID, this.delegateIP));
     }
     /**
      * Get information of all NFTs in a collection. If the optional parameter factHash is given, only the nft created by the operation is searched.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {number} [factHash] - (Optional) The hash of fact in the operation that minted NFT.
      * @param {number} [limit] - (Optional) The maximum number of items to retrieve.
      * @param {number} [offset] - (Optional) The number of items skip before starting to return data.
@@ -4044,9 +4024,9 @@ class NFT extends ContractGenerator {
      * - - `creators`: Creator object,
      * - `_links`: Links for additional information
      */
-    async getNFTs(contractAddr, factHash, limit, offset, reverse) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.nft.getNFTs(this.api, contractAddr, this.delegateIP, factHash, limit, offset, reverse));
+    async getNFTs(contract, factHash, limit, offset, reverse) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.nft.getNFTs(this.api, contract, this.delegateIP, factHash, limit, offset, reverse));
     }
 }
 
@@ -4079,6 +4059,8 @@ class AddTemplateFact extends ContractFact {
         this.subjectKey = subjectKey;
         this.description = description;
         this.creator = Address.from(creator);
+        Assert.check(contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        Assert.check(contract.toString() !== creator.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "creator is same with contract address"));
         Assert.check(Config.CREDENTIAL.TEMPLATE_ID.satisfy(templateID.length), MitumError.detail(ECODE.INVALID_FACT, "template id length out of range"));
         Assert.check(Config.CREDENTIAL.TEMPLATE_NAME.satisfy(templateName.length), MitumError.detail(ECODE.INVALID_FACT, "template name length out of range"));
         Assert.check(Config.CREDENTIAL.DISPLAY_NAME.satisfy(displayName.length), MitumError.detail(ECODE.INVALID_FACT, "display name length out of range"));
@@ -4133,7 +4115,7 @@ class CredentialItem extends Item {
         this.currency = CurrencyID.from(currency);
         Assert.check(Config.CREDENTIAL.TEMPLATE_ID.satisfy(templateID.length), MitumError.detail(ECODE.INVALID_ITEM, "template id length out of range"));
         Assert.check(Config.CREDENTIAL.ID.satisfy(id.length), MitumError.detail(ECODE.INVALID_ITEM, "credential id length out of range"));
-        Assert.check(this.contract.toString() !== this.holder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with holder address"));
+        Assert.check(this.contract.toString() !== this.holder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "holder is same with contract address"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -4195,6 +4177,9 @@ class AssignFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.CREDENTIAL.ASSIGN.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate credential id found in items"));
+        items.forEach(item => {
+            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.CREDENTIAL.ASSIGN.OPERATION;
@@ -4219,6 +4204,9 @@ class RevokeFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.CREDENTIAL.REVOKE.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate credential id found in items"));
+        items.forEach(item => {
+            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.CREDENTIAL.REVOKE.OPERATION;
@@ -4231,17 +4219,17 @@ class Credential extends ContractGenerator {
     }
     /**
      * Generate a `create-service` operation for creating new credential service on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-service` operation.
      */
-    createService(contractAddr, sender, currency) {
-        return new Operation$1(this.networkID, new CreateServiceFact$2(TimeStamp$1.new().UTC(), sender, contractAddr, currency));
+    createService(contract, sender, currency) {
+        return new Operation$1(this.networkID, new CreateServiceFact$2(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     /**
      * Generate an `add-template` operation for adding a new credential template to the credential service.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {templateData} [data] - The template data to be added. The properties of `templateData` include:
      * - {string} `templateID` - The ID of the template.
@@ -4257,18 +4245,18 @@ class Credential extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns An `add-template` operation.
      */
-    addTemplate(contractAddr, sender, data, currency) {
+    addTemplate(contract, sender, data, currency) {
         const keysToCheck = ['templateID', 'templateName', 'serviceDate', 'expirationDate', 'templateShare', 'multiAudit', 'displayName', 'subjectKey', 'description', 'creator'];
         keysToCheck.forEach((key) => {
             const s = data[key];
             Assert.check(s !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the templateData structure`));
-            s === 'templateID' ? new URIString(s, 'templateID') : null;
         });
-        return new Operation$1(this.networkID, new AddTemplateFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.templateID, data.templateName, data.serviceDate, data.expirationDate, data.templateShare, data.multiAudit, data.displayName, data.subjectKey, data.description, data.creator, currency));
+        new URIString(data['templateID'], 'templateID');
+        return new Operation$1(this.networkID, new AddTemplateFact(TimeStamp$1.new().UTC(), sender, contract, data.templateID, data.templateName, data.serviceDate, data.expirationDate, data.templateShare, data.multiAudit, data.displayName, data.subjectKey, data.description, data.creator, currency));
     }
     /**
      * Generate an `assign` operation for issue credential to holder.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {issueData} [data] - The data required for issuing the credential. The properties of `issueData` include:
      * - {string | Address} `holder` - The address of the credential holder.
@@ -4281,20 +4269,21 @@ class Credential extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `assign` operation.
      */
-    issue(contractAddr, sender, data, currency) {
+    issue(contract, sender, data, currency) {
         const keysToCheck = ['holder', 'templateID', 'id', 'value', 'validFrom', 'validUntil', 'did'];
         keysToCheck.forEach((key) => {
             const s = data[key];
             Assert.check(s !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the templateData structure`));
-            s === 'id' ? new URIString(s, 'id') : null;
         });
+        new URIString(data['templateID'], 'templateID');
+        new URIString(data['id'], 'id');
         return new Operation$1(this.networkID, new AssignFact(TimeStamp$1.new().UTC(), sender, [
-            new AssignItem(contractAddr, data.holder, data.templateID, data.id, data.value, data.validFrom, data.validUntil, data.did, currency)
+            new AssignItem(contract, data.holder, data.templateID, data.id, data.value, data.validFrom, data.validUntil, data.did, currency)
         ]));
     }
     /**
      * Generate an `revoke` operation to revoke already issued credential.
-     * @param {string | Address} contractAddr - The contract's address.
+     * @param {string | Address} contract - The contract's address.
      * @param {string | Address} sender - The sender's address.
      * @param {string | Address} holder - The holder's address of the credential to be revoked.
      * @param {string} templateID - The ID of the template associated with the credential.
@@ -4302,15 +4291,17 @@ class Credential extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `revoke` operation.
      */
-    revoke(contractAddr, sender, holder, templateID, id, currency) {
+    revoke(contract, sender, holder, templateID, id, currency) {
+        new URIString(templateID, 'templateID');
+        new URIString(id, 'id');
         return new Operation$1(this.networkID, new RevokeFact(TimeStamp$1.new().UTC(), sender, [
-            new RevokeItem(contractAddr, holder, templateID, id, currency)
+            new RevokeItem(contract, holder, templateID, id, currency)
         ]));
     }
     /**
      * Get information about a credential service on the contract.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is credential service information:
      * - `_hint`: Hint for credential design,
      * - `policy`:
@@ -4322,14 +4313,14 @@ class Credential extends ContractGenerator {
      * - - - `credential_count`: The number of credential for the holder
      * - - `credential_count`: The total number of credential
      */
-    async getServiceInfo(contractAddr) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.credential.getService(this.api, contractAddr, this.delegateIP));
+    async getServiceInfo(contract) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.credential.getService(this.api, contract, this.delegateIP));
     }
     /**
      * Get detailed information about a specific credential on the template.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [templateID] - The ID of the template associated with the credential.
      * @param {string} [credentialID] - The unique ID of the credential.
      * @returns `data` of `SuccessResponse` is credential information:
@@ -4344,14 +4335,16 @@ class Credential extends ContractGenerator {
      * - - `did`: The name of the credential,
      * - `is_active`: Indicates whether the credential is active or revoked
      */
-    async getCredentialInfo(contractAddr, templateID, credentialID) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.credential.getCredential(this.api, contractAddr, templateID, credentialID, this.delegateIP));
+    async getCredentialInfo(contract, templateID, credentialID) {
+        Address.from(contract);
+        new URIString(templateID, 'templateID');
+        new URIString(credentialID, 'credentialID');
+        return await getAPIData(() => contractApi.credential.getCredential(this.api, contract, templateID, credentialID, this.delegateIP));
     }
     /**
      * Get information about a specific template on the credential service.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [templateID] - The ID of the template.
      * @returns `data` of `SuccessResponse` is template information:
      * - `_hint`: Hint for credential template,
@@ -4365,14 +4358,15 @@ class Credential extends ContractGenerator {
      * - `description`: The description of the template.
      * - `creator`: The address of the creator of the template.
      */
-    async getTemplate(contractAddr, templateID) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.credential.getTemplate(this.api, contractAddr, templateID, this.delegateIP));
+    async getTemplate(contract, templateID) {
+        Address.from(contract);
+        new URIString(templateID, 'templateID');
+        return await getAPIData(() => contractApi.credential.getTemplate(this.api, contract, templateID, this.delegateIP));
     }
     /**
      * Get information about all credentials on the template.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [templateID] - The ID of the template.
      * @returns `data` of `SuccessResponse` is array of the all credential informations of the template:
      * - `_hint`: Hint for currency,
@@ -4389,14 +4383,15 @@ class Credential extends ContractGenerator {
      * - - `is_active`: Indicates whether the credential is active or revoked,
      * - `_links`: links to get additional information of the credential,
      */
-    async getAllCredentials(contractAddr, templateID) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.credential.getCredentials(this.api, contractAddr, templateID, this.delegateIP));
+    async getAllCredentials(contract, templateID) {
+        Address.from(contract);
+        new URIString(templateID, 'templateID');
+        return await getAPIData(() => contractApi.credential.getCredentials(this.api, contract, templateID, this.delegateIP));
     }
     /**
      * Get all credentials owned by the holder in the credential service.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [holder] - The holder's address claiming the credentials.
      * @returns `data` of `SuccessResponse` is a object with all credential information owned by the holder:
      * - `did`: The did value of the most recently issued credential,
@@ -4415,50 +4410,26 @@ class Credential extends ContractGenerator {
      * - - - `is_active`: Indicates whether the credential is active or revoked,
      * - - `_links`: links to get additional information of the credential
      */
-    async claimCredential(contractAddr, holder) {
-        Address.from(contractAddr);
+    async claimCredential(contract, holder) {
+        Address.from(contract);
         Address.from(holder);
-        return await getAPIData(() => contract.credential.getCredentialByHolder(this.api, contractAddr, holder, this.delegateIP));
+        return await getAPIData(() => contractApi.credential.getCredentialByHolder(this.api, contract, holder, this.delegateIP));
     }
 }
 
 class CreateDAOFact extends ContractFact {
-    constructor(token, sender, contract, option, votingPowerToken, threshold, fee, whitelist, proposalReviewPeriod, registrationPeriod, preSnapshotPeriod, votingPeriod, postSnapshotPeriod, executionDelayPeriod, turnout, quorum, currency) {
+    constructor(token, sender, contract, option, policy, currency) {
         super(HINT.DAO.CREATE_DAO.FACT, token, sender, contract, currency);
         this.option = option;
-        this.votingPowerToken = CurrencyID.from(votingPowerToken);
-        this.threshold = Big.from(threshold);
-        this.fee = fee;
-        this.whitelist = whitelist;
-        this.proposalReviewPeriod = Big.from(proposalReviewPeriod);
-        this.registrationPeriod = Big.from(registrationPeriod);
-        this.preSnapshotPeriod = Big.from(preSnapshotPeriod);
-        this.votingPeriod = Big.from(votingPeriod);
-        this.postSnapshotPeriod = Big.from(postSnapshotPeriod);
-        this.executionDelayPeriod = Big.from(executionDelayPeriod);
-        this.turnout = Big.from(turnout);
-        this.quorum = Big.from(quorum);
-        Assert.check(Config.DAO.QUORUM.satisfy(this.turnout.v), MitumError.detail(ECODE.INVALID_FACT, "turnout out of range"));
-        Assert.check(Config.DAO.QUORUM.satisfy(this.quorum.v), MitumError.detail(ECODE.INVALID_FACT, "quorum out of range"));
-        this.whitelist.accounts.forEach(a => Assert.check(this.contract.toString() !== a.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
+        this.policy = policy;
+        this.policy.whitelist.accounts.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             Buffer.from(this.option),
-            this.votingPowerToken.toBuffer(),
-            this.threshold.toBuffer(),
-            this.fee.toBuffer(),
-            this.whitelist.toBuffer(),
-            this.proposalReviewPeriod.toBuffer("fill"),
-            this.registrationPeriod.toBuffer("fill"),
-            this.preSnapshotPeriod.toBuffer("fill"),
-            this.votingPeriod.toBuffer("fill"),
-            this.postSnapshotPeriod.toBuffer("fill"),
-            this.executionDelayPeriod.toBuffer("fill"),
-            this.turnout.toBuffer(),
-            this.quorum.toBuffer(),
+            this.policy.toBuffer(),
             this.currency.toBuffer(),
         ]);
     }
@@ -4466,18 +4437,8 @@ class CreateDAOFact extends ContractFact {
         return {
             ...super.toHintedObject(),
             option: this.option,
-            voting_power_token: this.votingPowerToken.toString(),
-            threshold: this.threshold.toString(),
-            fee: this.fee.toHintedObject(),
-            whitelist: this.whitelist.toHintedObject(),
-            proposal_review_period: this.proposalReviewPeriod.v,
-            registration_period: this.registrationPeriod.v,
-            pre_snapshot_period: this.preSnapshotPeriod.v,
-            voting_period: this.votingPeriod.v,
-            post_snapshot_period: this.postSnapshotPeriod.v,
-            execution_delay_period: this.executionDelayPeriod.v,
-            turnout: this.turnout.v,
-            quorum: this.quorum.v,
+            ...this.policy.toHintedObject(),
+            _hint: new Hint(HINT.DAO.CREATE_DAO.FACT).toString()
         };
     }
     get operationHint() {
@@ -4488,6 +4449,7 @@ class CreateDAOFact extends ContractFact {
 class DAOFact extends ContractFact {
     constructor(hint, token, sender, contract, proposalID, currency) {
         super(hint, token, sender, contract, currency);
+        new URIString(proposalID, 'proposalID');
         this.proposalID = proposalID;
         Assert.check(this.proposalID !== "", MitumError.detail(ECODE.INVALID_FACT, "empty proposal id"));
         // this._hash = this.hashing()
@@ -4646,9 +4608,9 @@ class ExecuteFact extends DAOFact {
 }
 
 class DAOPolicy {
-    constructor(token, threshold, fee, whitelist, proposalReviewPeriod, registrationPeriod, preSnapshotPeriod, votingPeriod, postSnapshotPeriod, executionDelayPeriod, turnout, quorum) {
+    constructor(votingPowerToken, threshold, fee, whitelist, proposalReviewPeriod, registrationPeriod, preSnapshotPeriod, votingPeriod, postSnapshotPeriod, executionDelayPeriod, turnout, quorum) {
         this.hint = new Hint(HINT.DAO.POLICY);
-        this.token = CurrencyID.from(token);
+        this.votingPowerToken = CurrencyID.from(votingPowerToken);
         this.threshold = Big.from(threshold);
         this.fee = fee,
             this.whitelist = whitelist;
@@ -4660,10 +4622,15 @@ class DAOPolicy {
         this.executionDelayPeriod = Big.from(executionDelayPeriod);
         this.turnout = Big.from(turnout);
         this.quorum = Big.from(quorum);
+        Assert.check(0 < this.proposalReviewPeriod.big && 0 < this.registrationPeriod.big && 0 < this.preSnapshotPeriod.big
+            && 0 < this.votingPeriod.big && 0 < this.postSnapshotPeriod.big && 0 < this.executionDelayPeriod.big, MitumError.detail(ECODE.DAO.INVALID_POLICY, "period must not be set to 0 or below"));
+        Assert.check(0 < this.threshold.big, MitumError.detail(ECODE.DAO.INVALID_POLICY, "threhold must be over zero"));
+        Assert.check(Config.DAO.QUORUM.satisfy(this.turnout.v), MitumError.detail(ECODE.DAO.INVALID_POLICY, "turnout out of range"));
+        Assert.check(Config.DAO.QUORUM.satisfy(this.quorum.v), MitumError.detail(ECODE.DAO.INVALID_POLICY, "quorum out of range"));
     }
     toBuffer() {
         return Buffer.concat([
-            this.token.toBuffer(),
+            this.votingPowerToken.toBuffer(),
             this.threshold.toBuffer(),
             this.fee.toBuffer(),
             this.whitelist.toBuffer(),
@@ -4680,7 +4647,7 @@ class DAOPolicy {
     toHintedObject() {
         return {
             _hint: this.hint.toString(),
-            token: this.token.toString(),
+            voting_power_token: this.votingPowerToken.toString(),
             threshold: this.threshold.toString(),
             fee: this.fee.toHintedObject(),
             whitelist: this.whitelist.toHintedObject(),
@@ -4818,6 +4785,7 @@ class BizProposal extends Proposal {
         this.url = LongString.from(url);
         this.hash = LongString.from(hash);
         this.options = Big.from(options);
+        Assert.check(Config.DAO.VOTE.satisfy(Number(this.options)), MitumError.detail(ECODE.INVALID_FACT, "vote option out of range"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -4838,42 +4806,18 @@ class BizProposal extends Proposal {
 }
 
 class UpdatePolicyFact extends ContractFact {
-    constructor(token, sender, contract, option, votingPowerToken, threshold, fee, whitelist, proposalReviewPeriod, registrationPeriod, preSnapshotPeriod, votingPeriod, postSnapshotPeriod, executionDelayPeriod, turnout, quorum, currency) {
+    constructor(token, sender, contract, option, policy, currency) {
         super(HINT.DAO.UPDATE_POLICY.FACT, token, sender, contract, currency);
         this.option = option;
-        this.votingPowerToken = CurrencyID.from(votingPowerToken);
-        this.threshold = Big.from(threshold);
-        this.fee = fee;
-        this.whitelist = whitelist;
-        this.proposalReviewPeriod = Big.from(proposalReviewPeriod);
-        this.registrationPeriod = Big.from(registrationPeriod);
-        this.preSnapshotPeriod = Big.from(preSnapshotPeriod);
-        this.votingPeriod = Big.from(votingPeriod);
-        this.postSnapshotPeriod = Big.from(postSnapshotPeriod);
-        this.executionDelayPeriod = Big.from(executionDelayPeriod);
-        this.turnout = Big.from(turnout);
-        this.quorum = Big.from(quorum);
-        Assert.check(Config.DAO.QUORUM.satisfy(this.turnout.v), MitumError.detail(ECODE.INVALID_FACT, "turnout out of range"));
-        Assert.check(Config.DAO.QUORUM.satisfy(this.quorum.v), MitumError.detail(ECODE.INVALID_FACT, "quorum out of range"));
-        this.whitelist.accounts.forEach(a => Assert.check(this.contract.toString() !== a.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
+        this.policy = policy;
+        this.policy.whitelist.accounts.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             Buffer.from(this.option),
-            this.votingPowerToken.toBuffer(),
-            this.threshold.toBuffer(),
-            this.fee.toBuffer(),
-            this.whitelist.toBuffer(),
-            this.proposalReviewPeriod.toBuffer("fill"),
-            this.registrationPeriod.toBuffer("fill"),
-            this.preSnapshotPeriod.toBuffer("fill"),
-            this.votingPeriod.toBuffer("fill"),
-            this.postSnapshotPeriod.toBuffer("fill"),
-            this.executionDelayPeriod.toBuffer("fill"),
-            this.turnout.toBuffer(),
-            this.quorum.toBuffer(),
+            this.policy.toBuffer(),
             this.currency.toBuffer(),
         ]);
     }
@@ -4881,18 +4825,8 @@ class UpdatePolicyFact extends ContractFact {
         return {
             ...super.toHintedObject(),
             option: this.option,
-            voting_power_token: this.votingPowerToken.toString(),
-            threshold: this.threshold.toString(),
-            fee: this.fee.toHintedObject(),
-            whitelist: this.whitelist.toHintedObject(),
-            proposal_review_period: this.proposalReviewPeriod.v,
-            registration_period: this.registrationPeriod.v,
-            pre_snapshot_period: this.preSnapshotPeriod.v,
-            voting_period: this.votingPeriod.v,
-            post_snapshot_period: this.postSnapshotPeriod.v,
-            execution_delay_period: this.executionDelayPeriod.v,
-            turnout: this.turnout.v,
-            quorum: this.quorum.v,
+            ...this.policy.toHintedObject(),
+            _hint: new Hint(HINT.DAO.UPDATE_POLICY.FACT).toString()
         };
     }
     get operationHint() {
@@ -4906,7 +4840,7 @@ class DAO extends ContractGenerator {
     }
     /**
      * Generate `create-dao` operation for creating a new DAO on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {daoData} [data] - Data for policy of DAO service to create. The properties of `daoData` include:
      * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
@@ -4925,16 +4859,16 @@ class DAO extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `create-dao` operation.
      */
-    createService(contractAddr, sender, data, currency) {
+    createService(contract, sender, data, currency) {
         const keysToCheck = ['option', 'token', 'threshold', 'fee', 'proposers', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the daoData structure`));
         });
-        return new Operation$1(this.networkID, new CreateDAOFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.option, data.token, data.threshold, new Amount(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum, currency));
+        return new Operation$1(this.networkID, new CreateDAOFact(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.token, data.threshold, new Fee(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
     }
     /**
      * Generate `update-policy` operation for updating the DAO policy on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {daoData} [data] - Data for policy of DAO service to update. The properties of `daoData` include:
      * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
@@ -4953,12 +4887,12 @@ class DAO extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `update-policy` operation
      */
-    updateService(contractAddr, sender, data, currency) {
+    updateService(contract, sender, data, currency) {
         const keysToCheck = ['option', 'token', 'threshold', 'fee', 'proposers', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the daoData structure`));
         });
-        return new Operation$1(this.networkID, new UpdatePolicyFact(TimeStamp$1.new().UTC(), sender, contractAddr, data.option, data.token, data.threshold, new Amount(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum, currency));
+        return new Operation$1(this.networkID, new UpdatePolicyFact(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.token, data.threshold, new Fee(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
     }
     /**
      * Create transfer calldata for the crypto proposal to transfer crypto currency.
@@ -4994,7 +4928,7 @@ class DAO extends ContractGenerator {
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the policyData structure`));
         });
-        return new GovernanceCalldata(new DAOPolicy(data.token, data.threshold, new Amount(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum));
+        return new GovernanceCalldata(new DAOPolicy(data.token, data.threshold, new Fee(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum));
     }
     /**
      * Write a crypto proposal include `TransferCalldata` or `GovernanceCalldata` .
@@ -5020,102 +4954,101 @@ class DAO extends ContractGenerator {
     }
     /**
      * Generate `propose` operation for propose a new proposal. Only the account in the whitelist can propose.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The unique identifier for the proposal.
      * @param {CryptoProposal | BizProposal} [proposal] - The proposal written by `writeBizProposal` or `writeCryptoProposal`.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `propose` operation.
      */
-    propose(contractAddr, sender, proposalID, proposal, currency) {
-        new URIString(proposalID, 'proposalID');
-        return new Operation$1(this.networkID, new ProposeFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, proposal, currency));
+    propose(contract, sender, proposalID, proposal, currency) {
+        return new Operation$1(this.networkID, new ProposeFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, proposal, currency));
     }
     /**
      * Generate `register` operation to register to get voting right to the proposal. If delegator is given, delegate voting rights.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [delegator] - (Optional) The address of the delegator.
      * @returns `register` operation
      */
-    register(contractAddr, sender, proposalID, currency, delegator) {
-        return new Operation$1(this.networkID, new RegisterFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, delegator ? delegator : sender, currency));
+    register(contract, sender, proposalID, currency, delegator) {
+        return new Operation$1(this.networkID, new RegisterFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, delegator ? delegator : sender, currency));
     }
     /**
      * Generate `cancel-proposal` operation to cancel a DAO proposal.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The unique identifier for the proposal.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `cancel-proposal` operation
      */
-    cancel(contractAddr, sender, proposalID, currency) {
-        return new Operation$1(this.networkID, new CancelProposalFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, currency));
+    cancel(contract, sender, proposalID, currency) {
+        return new Operation$1(this.networkID, new CancelProposalFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
     }
     /**
      * Generate `pre-snap` operation to take a snapshot before the voting period.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `pre-snap` operation.
      */
-    snapBeforeVoting(contractAddr, sender, proposalID, currency) {
-        return new Operation$1(this.networkID, new PreSnapFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, currency));
+    snapBeforeVoting(contract, sender, proposalID, currency) {
+        return new Operation$1(this.networkID, new PreSnapFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
     }
     /**
      * Generate `vote` operation to cast a vote for the proposal.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {number} [voteOption] - The option chosen for the vote. (crypto: 0-approve, 1-disapprove, biz: choose from multiple choices)
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `vote` operation.
      */
-    castVote(contractAddr, sender, proposalID, voteOption, currency) {
-        return new Operation$1(this.networkID, new VoteFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, voteOption, currency));
+    castVote(contract, sender, proposalID, voteOption, currency) {
+        return new Operation$1(this.networkID, new VoteFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, voteOption, currency));
     }
     /**
      * Generate `post-snap` operation to take a snapshot after the voting period.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `post-snap` operation
      */
-    snapAfterVoting(contractAddr, sender, proposalID, currency) {
-        return new Operation$1(this.networkID, new PostSnapFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, currency));
+    snapAfterVoting(contract, sender, proposalID, currency) {
+        return new Operation$1(this.networkID, new PostSnapFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
     }
     /**
      * Generate `execute` operation to reflect voting results.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `execute` operation
      */
-    execute(contractAddr, sender, proposalID, currency) {
-        return new Operation$1(this.networkID, new ExecuteFact(TimeStamp$1.new().UTC(), sender, contractAddr, proposalID, currency));
+    execute(contract, sender, proposalID, currency) {
+        return new Operation$1(this.networkID, new ExecuteFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
     }
     /**
      * Get DAO service information for a specific contract address.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information of the DAO service:
      * - `_hint`: Hint for dao design,
      * - `option`: 'biz' or 'crypto',
      * - `policy`: [Policy]
      */
-    async getServiceInfo(contractAddr) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.dao.getService(this.api, contractAddr, this.delegateIP));
+    async getServiceInfo(contract) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.dao.getService(this.api, contract, this.delegateIP));
     }
     /**
      * Get information about a specific DAO proposal. The `status` does not accurately reflect the current state of the proposal because it is updated only when an operation occurs.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
      * @returns `data` of `SuccessResponse` is information about the DAO proposal:
      * - `_hint`: Hint for the dao proposal state value,
@@ -5123,14 +5056,15 @@ class DAO extends ContractGenerator {
      * - `proposal`: [BizProposal] or [CryptoProposal],
      * - `policy`: [Policy]
      */
-    async getProposalInfo(contractAddr, proposalID) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.dao.getProposal(this.api, contractAddr, proposalID, this.delegateIP));
+    async getProposalInfo(contract, proposalID) {
+        Address.from(contract);
+        new URIString(proposalID, 'proposalID');
+        return await getAPIData(() => contractApi.dao.getProposal(this.api, contract, proposalID, this.delegateIP));
     }
     /**
      * Get information about a specific delegator in a DAO proposal.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | Address} [delegator] - The address of the delegator.
      * @returns `data` of `SuccessResponse` is delegator information:
@@ -5138,28 +5072,30 @@ class DAO extends ContractGenerator {
      * - `account`: Address of delegator account,
      * - `delegatee`: Address of delegatee account,
      */
-    async getDelegatorInfo(contractAddr, proposalID, delegator) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.dao.getDelegator(this.api, contractAddr, proposalID, delegator, this.delegateIP));
+    async getDelegatorInfo(contract, proposalID, delegator) {
+        Address.from(contract);
+        new URIString(proposalID, 'proposalID');
+        return await getAPIData(() => contractApi.dao.getDelegator(this.api, contract, proposalID, delegator, this.delegateIP));
     }
     /**
      * Get information about voters in a specific DAO proposal.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
      * @returns `data` of `SuccessResponse` is an array of information of the voters:
      * - `_hint`: Hint for dao voter,
      * - `account`: Address of the voter,
      * - `delegators`: [ Address of delegatee, Address of delegator ]
      */
-    async getVoterInfo(contractAddr, proposalID) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.dao.getVoter(this.api, contractAddr, proposalID, this.delegateIP));
+    async getVoterInfo(contract, proposalID) {
+        Address.from(contract);
+        new URIString(proposalID, 'proposalID');
+        return await getAPIData(() => contractApi.dao.getVoter(this.api, contract, proposalID, this.delegateIP));
     }
     /**
      * Get the voting result of a specific DAO proposal.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
      * @returns `data` of `SuccessResponse` is information of voting power and the voting result:
      * - `_hint`: Hint for voting power box.
@@ -5167,9 +5103,10 @@ class DAO extends ContractGenerator {
      * - `voting_powers`: Object mapping registered account addresses to their corresponding voting information represents `_hint`, `account`,`voted`, `vote_for`, `voting_power`.
      * - `result`: Object consisting of the selected option and the number of votes.
      */
-    async getVotingResult(contractAddr, proposalID) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.dao.getVotingResult(this.api, contractAddr, proposalID, this.delegateIP));
+    async getVotingResult(contract, proposalID) {
+        Address.from(contract);
+        new URIString(proposalID, 'proposalID');
+        return await getAPIData(() => contractApi.dao.getVotingResult(this.api, contract, proposalID, this.delegateIP));
     }
 }
 
@@ -5216,7 +5153,7 @@ class CreateSecurityTokenItem extends STOItem {
         super(HINT.STO.CREATE_SECURITY_TOKEN.ITEM, contract, currency);
         this.granularity = Big.from(granularity);
         this.defaultPartition = Partition.from(defaultPartition);
-        Assert.check(!this.granularity.isZero(), MitumError.detail(ECODE.INVALID_ITEM, "zero granularity"));
+        Assert.check(this.granularity.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "granularity must be over zero"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -5238,6 +5175,9 @@ class CreateSecurityTokenFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.STO.CREATE_SECURITY_TOKEN.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate contract found in items"));
+        items.forEach(item => {
+            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.STO.CREATE_SECURITY_TOKEN.OPERATION;
@@ -5250,8 +5190,8 @@ class IssueItem extends STOItem {
         this.receiver = Address.from(receiver);
         this.amount = Big.from(amount);
         this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with receiver address"));
-        Assert.check(!this.amount.isZero(), MitumError.detail(ECODE.INVALID_ITEM, "zero amount"));
+        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "receiver is same with contract address"));
+        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -5275,6 +5215,9 @@ class IssueFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.STO.ISSUE.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate contract found in items"));
+        items.forEach(item => {
+            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.STO.ISSUE.OPERATION;
@@ -5286,7 +5229,7 @@ class AuthorizeOperatorItem extends STOItem {
         super(HINT.STO.AUTHORIZE_OPERATOR.ITEM, contract, currency);
         this.operator = Address.from(operator);
         this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.operator.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with operator address"));
+        Assert.check(this.contract.toString() !== this.operator.toString(), MitumError.detail(ECODE.INVALID_ITEM, "operator is same with contract address"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -5311,6 +5254,10 @@ class AuthorizeOperatorFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.STO.AUTHORIZE_OPERATOR.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate operator found in items"));
+        items.forEach(item => {
+            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(item.operator.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "operator is same with sender address"));
+        });
     }
     get operationHint() {
         return HINT.STO.AUTHORIZE_OPERATOR.OPERATION;
@@ -5322,7 +5269,7 @@ class RevokeOperatorItem extends STOItem {
         super(HINT.STO.REVOKE_OPERATOR.ITEM, contract, currency);
         this.operator = Address.from(operator);
         this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.operator.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with operator address"));
+        Assert.check(this.contract.toString() !== this.operator.toString(), MitumError.detail(ECODE.INVALID_ITEM, "operator is same with contract address"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -5347,6 +5294,9 @@ class RevokeOperatorFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.STO.REVOKE_OPERATOR.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate operator found in items"));
+        items.forEach(item => {
+            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.STO.REVOKE_OPERATOR.OPERATION;
@@ -5359,8 +5309,8 @@ class RedeemItem extends STOItem {
         this.tokenHolder = Address.from(tokenHolder);
         this.amount = Big.from(amount);
         this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.tokenHolder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with token holder address"));
-        Assert.check(!this.amount.isZero(), MitumError.detail(ECODE.INVALID_ITEM, "zero amount"));
+        Assert.check(this.contract.toString() !== this.tokenHolder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with contract address"));
+        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -5387,6 +5337,9 @@ class RedeemFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.STO.REDEEM.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate token holder found in items"));
+        items.forEach(item => {
+            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.STO.REDEEM.OPERATION;
@@ -5430,10 +5383,10 @@ class TransferByPartitionItem extends STOItem {
         this.receiver = Address.from(receiver);
         this.partition = Partition.from(partition);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.tokenHolder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with token holder address"));
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with receiver address"));
-        Assert.check(this.tokenHolder.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "token holder is same with receiver address"));
-        Assert.check(!this.amount.isZero(), MitumError.detail(ECODE.INVALID_ITEM, "zero amount"));
+        Assert.check(this.contract.toString() !== this.tokenHolder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with contract address"));
+        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "receiver is same with contract address"));
+        Assert.check(this.tokenHolder.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with receiver address"));
+        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -5462,6 +5415,9 @@ class TransferByPartitionFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.STO.TRANSFER_BY_PARTITION.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate token holder-receiver-partition found in items"));
+        items.forEach(item => {
+            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
     }
     get operationHint() {
         return HINT.STO.TRANSFER_BY_PARTITION.OPERATION;
@@ -5474,21 +5430,21 @@ class STO extends ContractGenerator {
     }
     /**
      * Generate `authorize-operator` operation to authorize an operator for the security token in specific partition.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [operator] - The operator's address to be authorized.
      * @param {string | Partition} [partition] - The partition ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `authorize-operator` operation.
      */
-    authorizeOperator(contractAddr, sender, operator, partition, currency) {
+    authorizeOperator(contract, sender, operator, partition, currency) {
         return new Operation$1(this.networkID, new AuthorizeOperatorFact(TimeStamp$1.new().UTC(), sender, [
-            new AuthorizeOperatorItem(contractAddr, operator, partition, currency)
+            new AuthorizeOperatorItem(contract, operator, partition, currency)
         ]));
     }
     /**
      * Generate `create-security-token` operation to create new security token.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {createServiceData} [data] - Data required to create the security token. The properties of `createServiceData` include:
      * - {string | number | Big} `granularity` - The basic unit of the token.
@@ -5496,18 +5452,18 @@ class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-security-token` operation
      */
-    createService(contractAddr, sender, data, currency) {
+    createService(contract, sender, data, currency) {
         const keysToCheck = ['granularity', 'defaultPartition'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the createServiceData structure`));
         });
         return new Operation$1(this.networkID, new CreateSecurityTokenFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateSecurityTokenItem(contractAddr, data.granularity, data.defaultPartition, currency)
+            new CreateSecurityTokenItem(contract, data.granularity, data.defaultPartition, currency)
         ]));
     }
     /**
      * Generate `issue` operation to issue new security token in specific partition to a specified receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receiver] - The receiver's address.
      * @param {string | Partition} [partition] - The partition ID.
@@ -5515,14 +5471,14 @@ class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `issue` operation.
      */
-    issue(contractAddr, sender, receiver, partition, amount, currency) {
+    issue(contract, sender, receiver, partition, amount, currency) {
         return new Operation$1(this.networkID, new IssueFact(TimeStamp$1.new().UTC(), sender, [
-            new IssueItem(contractAddr, receiver, amount, partition, currency)
+            new IssueItem(contract, receiver, amount, partition, currency)
         ]));
     }
     /**
      * Generate `redeem` operation to redeem(burn) a specified amount of security token in a specific partition.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [tokenHolder] - The token holder's address.
      * @param {string | Partition} [partition] - The partition ID.
@@ -5530,28 +5486,28 @@ class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `redeem` operation.
      */
-    redeem(contractAddr, sender, tokenHolder, partition, amount, currency) {
+    redeem(contract, sender, tokenHolder, partition, amount, currency) {
         return new Operation$1(this.networkID, new RedeemFact(TimeStamp$1.new().UTC(), sender, [
-            new RedeemItem(contractAddr, tokenHolder, amount, partition, currency)
+            new RedeemItem(contract, tokenHolder, amount, partition, currency)
         ]));
     }
     /**
      * Generate `revoke` operation to revoke operator's authorization for the security token in specific partition.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [operator] - The operator's address.
      * @param {string | Partition} [partition] - The partition ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `revoke` operation.
      */
-    revokeOperator(contractAddr, sender, operator, partition, currency) {
+    revokeOperator(contract, sender, operator, partition, currency) {
         return new Operation$1(this.networkID, new RevokeOperatorFact(TimeStamp$1.new().UTC(), sender, [
-            new RevokeOperatorItem(contractAddr, operator, partition, currency)
+            new RevokeOperatorItem(contract, operator, partition, currency)
         ]));
     }
     /**
      * Generate `setDocumnet` operation to set document for the security token on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [title] - The title of the document.
      * @param {string} [uri] - The URI of the document.
@@ -5559,12 +5515,12 @@ class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `setDocumnet` operation.
      */
-    setDocument(contractAddr, sender, title, uri, documentHash, currency) {
-        return new Operation$1(this.networkID, new SetDocumentFact(TimeStamp$1.new().UTC(), sender, contractAddr, title, uri, documentHash, currency));
+    setDocument(contract, sender, title, uri, documentHash, currency) {
+        return new Operation$1(this.networkID, new SetDocumentFact(TimeStamp$1.new().UTC(), sender, contract, title, uri, documentHash, currency));
     }
     /**
      * Generate `transfer-by-partition` operation to transfer security token in specific partitions.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [holder] - The token holder's address.
      * @param {string | Address} [receiver] - The receiver's address.
@@ -5573,15 +5529,15 @@ class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `transfer-by-partition` operation
      */
-    transferByPartition(contractAddr, sender, holder, receiver, partition, amount, currency) {
+    transferByPartition(contract, sender, holder, receiver, partition, amount, currency) {
         return new Operation$1(this.networkID, new TransferByPartitionFact(TimeStamp$1.new().UTC(), sender, [
-            new TransferByPartitionItem(contractAddr, holder, receiver, partition, amount, currency)
+            new TransferByPartitionItem(contract, holder, receiver, partition, amount, currency)
         ]));
     }
     /**
      * Get information about the security token on the contract.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information of the security token:
      * - `_hint`: Hint for STO design,
      * - `granularity`: Basic unit for the token,
@@ -5592,71 +5548,71 @@ class STO extends ContractGenerator {
      *     documents: Array of information about documents with `_hint`, `title`, `hash`, `uri`
      * }
      */
-    async getServiceInfo(contractAddr) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.sto.getService(this.api, contractAddr, this.delegateIP));
+    async getServiceInfo(contract) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.sto.getService(this.api, contract, this.delegateIP));
     }
     /**
      * Get partitions of given holder.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [holder] - The token holder's address.
      * @returns `data` of `SuccessResponse` is an array of token partition names owned by the holder.
      */
-    async getPartitionsInfo(contractAddr, holder) {
-        Address.from(contractAddr);
+    async getPartitionsInfo(contract, holder) {
+        Address.from(contract);
         Address.from(holder);
-        return await getAPIData(() => contract.sto.getPartitions(this.api, contractAddr, holder, this.delegateIP));
+        return await getAPIData(() => contractApi.sto.getPartitions(this.api, contract, holder, this.delegateIP));
     }
     /**
      * Get balance of holder for the partition.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [holder] - The token holder's address.
      * @param {string} [partition] - The partition ID.
      * @returns `data` of `SuccessResponse` is the balance of holder for the partition
      */
-    async getBalanceByHolder(contractAddr, holder, partition) {
-        Address.from(contractAddr);
+    async getBalanceByHolder(contract, holder, partition) {
+        Address.from(contract);
         Address.from(holder);
-        return await getAPIData(() => contract.sto.getBalanceByHolder(this.api, contractAddr, holder, partition, this.delegateIP));
+        return await getAPIData(() => contractApi.sto.getBalanceByHolder(this.api, contract, holder, partition, this.delegateIP));
     }
     /**
      * Get operators of the partition who granted by the holder.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [holder] - The token holder's address.
      * @param {string} [partition] - The partition ID.
      * @returns `data` of `SuccessResponse` is information of the operators:
      * - `operators`: Array of the address of operators.
      */
-    async getOperatorsByHolder(contractAddr, holder, partition) {
-        Address.from(contractAddr);
+    async getOperatorsByHolder(contract, holder, partition) {
+        Address.from(contract);
         Address.from(holder);
-        return await getAPIData(() => contract.sto.getOperatorsByHolder(this.api, contractAddr, holder, partition, this.delegateIP));
+        return await getAPIData(() => contractApi.sto.getOperatorsByHolder(this.api, contract, holder, partition, this.delegateIP));
     }
     /**
      * Get balance for a specific partition.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [partition] - The partition ID.
      * @returns `data` of `SuccessResponse` is the partition balance amount.
      */
-    async getPartitionBalanceInfo(contractAddr, partition) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.sto.getPartitionBalance(this.api, contractAddr, partition, this.delegateIP));
+    async getPartitionBalanceInfo(contract, partition) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.sto.getPartitionBalance(this.api, contract, partition, this.delegateIP));
     }
     /**
      * Get information about the holder who granted to the operator.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [operator] - The operator's address.
      * @returns `data` of `SuccessResponse` is information of holder:
      * - `holders`: Array of the address of holders.
      */
-    async getAuthorizedInfo(contractAddr, operator) {
-        Address.from(contractAddr);
+    async getAuthorizedInfo(contract, operator) {
+        Address.from(contract);
         Address.from(operator);
-        return await getAPIData(() => contract.sto.getAuthorized(this.api, contractAddr, operator, this.delegateIP));
+        return await getAPIData(() => contractApi.sto.getAuthorized(this.api, contract, operator, this.delegateIP));
     }
 }
 
@@ -5839,53 +5795,55 @@ class KYC extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
-    createService(contractAddr, sender, currency) {
-        return new Operation$1(this.networkID, new CreateServiceFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency));
+    createService(contract, sender, currency) {
+        return new Operation$1(this.networkID, new CreateServiceFact$1(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
-    addController(contractAddr, sender, controller, currency) {
+    addController(contract, sender, controller, currency) {
         return new Operation$1(this.networkID, new AddControllerFact(TimeStamp$1.new().UTC(), sender, [
-            new AddControllerItem(contractAddr, controller, currency)
+            new AddControllerItem(contract, controller, currency)
         ]));
     }
-    addCustomer(contractAddr, sender, customer, status, currency) {
+    addCustomer(contract, sender, customer, status, currency) {
         return new Operation$1(this.networkID, new AddCustomerFact(TimeStamp$1.new().UTC(), sender, [
-            new AddCustomerItem(contractAddr, customer, status, currency)
+            new AddCustomerItem(contract, customer, status, currency)
         ]));
     }
-    removeController(contractAddr, sender, controller, currency) {
+    removeController(contract, sender, controller, currency) {
         return new Operation$1(this.networkID, new RemoveControllerFact(TimeStamp$1.new().UTC(), sender, [
-            new RemoveControllerItem(contractAddr, controller, currency)
+            new RemoveControllerItem(contract, controller, currency)
         ]));
     }
-    updateCustomer(contractAddr, sender, customer, status, currency) {
-        return new Operation$1(this.networkID, new UpdateCustomerFact(TimeStamp$1.new().UTC(), sender, [new UpdateCustomerItem(contractAddr, customer, status, currency)]));
+    updateCustomer(contract, sender, customer, status, currency) {
+        return new Operation$1(this.networkID, new UpdateCustomerFact(TimeStamp$1.new().UTC(), sender, [new UpdateCustomerItem(contract, customer, status, currency)]));
     }
 }
 
 class TimeStampFact extends ContractFact {
-    constructor(hint, token, sender, target, currency) {
-        super(hint, token, sender, target, currency);
+    constructor(hint, token, sender, contract, currency) {
+        super(hint, token, sender, contract, currency);
         // this._hash = this.hashing()
-    }
-    toHintedObject() {
-        const fact = super.toHintedObject();
-        delete fact['contract'];
-        return {
-            ...fact,
-            target: this.contract.toString(),
-        };
-    }
-}
-
-class CreateServiceFact extends TimeStampFact {
-    constructor(token, sender, target, currency) {
-        super(HINT.TIMESTAMP.CREATE_SERVICE.FACT, token, sender, target, currency);
-        this._hash = this.hashing();
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+        };
+    }
+}
+
+class CreateServiceFact extends TimeStampFact {
+    constructor(token, sender, contract, currency) {
+        super(HINT.TIMESTAMP.CREATE_SERVICE.FACT, token, sender, contract, currency);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
         ]);
     }
     get operationHint() {
@@ -5931,17 +5889,17 @@ class TimeStamp extends ContractGenerator {
     }
     /**
      * Generate a `create-service` operation for creating new timestamp service on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-service` operation.
      */
-    createService(contractAddr, sender, currency) {
-        return new Operation$1(this.networkID, new CreateServiceFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency));
+    createService(contract, sender, currency) {
+        return new Operation$1(this.networkID, new CreateServiceFact(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     /**
      * Generate `append` operation for appending new timestamp to the project on the timestamp service.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [projectID] - The ID of the project to which data is appended.
      * @param {string | number | Big} [requestTimeStamp] - Value of the timestamp to record.
@@ -5949,27 +5907,27 @@ class TimeStamp extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `append` operation
      */
-    append(contractAddr, sender, projectID, requestTimeStamp, data, currency) {
+    append(contract, sender, projectID, requestTimeStamp, data, currency) {
         new URIString(projectID, 'projectID');
-        const fact = new AppendFact(TimeStamp$1.new().UTC(), sender, contractAddr, projectID, requestTimeStamp, data, currency);
+        const fact = new AppendFact(TimeStamp$1.new().UTC(), sender, contract, projectID, requestTimeStamp, data, currency);
         return new Operation$1(this.networkID, fact);
     }
     /**
      * Get information about a timestamp service on the contract.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information about the timestamp service:
      * - `_hint`: Hint for timestamp design,
      * - `projects`: Array of all project's id
      */
-    async getServiceInfo(contractAddr) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.timestamp.getService(this.api, contractAddr, this.delegateIP));
+    async getServiceInfo(contract) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.timestamp.getService(this.api, contract, this.delegateIP));
     }
     /**
      * Get detailed information about a timestamp on the project.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [projectID] - The ID of the project.
      * @param {string | number | Big} [tid] - The timestamp ID (Indicate the order of appended to the project)
      * @returns `data` of `SuccessResponse` is information about the timestamp with certain tid on the certain project:
@@ -5980,9 +5938,10 @@ class TimeStamp extends ContractGenerator {
      * - `timestampid`: A number representing the timestamp id,
      * - `data`: Data string
      */
-    async getTimestampInfo(contractAddr, projectID, tid) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.timestamp.getTimeStamp(this.api, contractAddr, projectID, tid, this.delegateIP));
+    async getTimestampInfo(contract, projectID, tid) {
+        Address.from(contract);
+        new URIString(projectID, 'projectID');
+        return await getAPIData(() => contractApi.timestamp.getTimeStamp(this.api, contract, projectID, tid, this.delegateIP));
     }
 }
 
@@ -6038,8 +5997,8 @@ let MintFact$1 = class MintFact extends TokenFact {
         super(HINT.TOKEN.MINT.FACT, token, sender, contract, currency);
         this.receiver = Address.from(receiver);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with receiver address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "zero amount"));
+        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
+        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6062,12 +6021,15 @@ let MintFact$1 = class MintFact extends TokenFact {
 };
 
 let BurnFact$1 = class BurnFact extends TokenFact {
-    constructor(token, sender, contract, currency, target, amount) {
+    constructor(token, sender, contract, currency, amount) {
         super(HINT.TOKEN.BURN.FACT, token, sender, contract, currency);
-        this.target = Address.from(target);
+        this.target = Address.from(sender);
         this.amount = Big.from(amount);
-        Assert.check(Address.from(contract).toString() !== this.target.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with target address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "zero amount"));
+        // Assert.check(
+        //     Address.from(contract).toString() !== this.target.toString(),
+        //     MitumError.detail(ECODE.INVALID_FACT, "target is same with contract address")
+        // )
+        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6094,8 +6056,9 @@ let TransferFact$1 = class TransferFact extends TokenFact {
         super(HINT.TOKEN.TRANSFER.FACT, token, sender, contract, currency);
         this.receiver = Address.from(receiver);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with receiver address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "zero amount"));
+        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
+        Assert.check(this.receiver.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with sender address"));
+        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6122,8 +6085,8 @@ let ApproveFact$1 = class ApproveFact extends TokenFact {
         super(HINT.TOKEN.APPROVE.FACT, token, sender, contract, currency);
         this.approved = Address.from(approved);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.approved.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with approved address"));
-        Assert.check(this.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "under zero amount"));
+        Assert.check(this.contract.toString() !== this.approved.toString(), MitumError.detail(ECODE.INVALID_FACT, "approved is same with contract address"));
+        Assert.check(this.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "amount must not be under zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6151,9 +6114,11 @@ let TransferFromFact$1 = class TransferFromFact extends TokenFact {
         this.receiver = Address.from(receiver);
         this.target = Address.from(target);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with receiver address"));
-        Assert.check(this.contract.toString() !== this.target.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with target address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "zero amount"));
+        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
+        Assert.check(this.contract.toString() !== this.target.toString(), MitumError.detail(ECODE.INVALID_FACT, "target is same with contract address"));
+        Assert.check(this.target.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with target address"));
+        Assert.check(this.target.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "target is same with sender address, use 'transfer' instead"));
+        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6201,7 +6166,7 @@ class Token extends ContractGenerator {
     }
     /**
      * Generate a `register-token` operation for registering a token on a contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | LongString} [name] - The name of the token to register.
@@ -6209,48 +6174,47 @@ class Token extends ContractGenerator {
      * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the token to register. If not provided, the default value is 0.
      * @returns `register-token` operation.
      */
-    registerToken(contractAddr, sender, currency, name, symbol, initialSupply) {
-        return new Operation$1(this.networkID, new RegisterTokenFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, symbol, name, initialSupply ?? 0));
+    registerToken(contract, sender, currency, name, symbol, initialSupply) {
+        return new Operation$1(this.networkID, new RegisterTokenFact(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, initialSupply ?? 0));
     }
     /**
      * Generate a `mint` operation for minting tokens and allocating them to a receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [receiver] - The receiver's address.
      * @param {string | number | Big} [amount] - The amount to mint.
      * @returns `mint` operation.
      */
-    mint(contractAddr, sender, currency, receiver, amount) {
-        return new Operation$1(this.networkID, new MintFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, amount));
+    mint(contract, sender, currency, receiver, amount) {
+        return new Operation$1(this.networkID, new MintFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
     }
     /**
-     * Generate a `burn` operation for burning tokens from a target account.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * Generate a `burn` operation for burning tokens from sender account.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [target] - The target account's address.
      * @param {string | number | Big} [amount] - The amount to burn.
      * @returns `burn` operation
      */
-    burn(contractAddr, sender, currency, target, amount) {
-        return new Operation$1(this.networkID, new BurnFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, target, amount));
+    burn(contract, sender, currency, amount) {
+        return new Operation$1(this.networkID, new BurnFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, amount));
     }
     /**
      * Generate an `transfer` operation for transferring tokens from the sender to a receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency - The currency ID.
      * @param {string | Address} [receiver] - The receiver's address.
      * @param {string | number | Big} [amount] - The amount to transfer.
      * @returns `transfer` operation.
      */
-    transfer(contractAddr, sender, currency, receiver, amount) {
-        return new Operation$1(this.networkID, new TransferFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, amount));
+    transfer(contract, sender, currency, receiver, amount) {
+        return new Operation$1(this.networkID, new TransferFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
     }
     /**
      * Generate a `transfer-from` operation for transferring tokens from target account to receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [receiver] - The receiver's address.
@@ -6258,49 +6222,49 @@ class Token extends ContractGenerator {
      * @param {string | number | Big} [amount] - The amount to transfer.
      * @returns `transfer-from` operation.
      */
-    transferFrom(contractAddr, sender, currency, receiver, target, amount) {
-        return new Operation$1(this.networkID, new TransferFromFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, target, amount));
+    transferFrom(contract, sender, currency, receiver, target, amount) {
+        return new Operation$1(this.networkID, new TransferFromFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, target, amount));
     }
     /**
      * Generate an `approve` operation for approving certain amount tokens to approved account.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [approved] - The address to approve.
      * @param {string | number | Big} [amount] - The amount to approve.
      * @returns `approve` operation
      */
-    approve(contractAddr, sender, currency, approved, amount) {
-        return new Operation$1(this.networkID, new ApproveFact$1(TimeStamp$1.new().UTC(), sender, contractAddr, currency, approved, amount));
+    approve(contract, sender, currency, approved, amount) {
+        return new Operation$1(this.networkID, new ApproveFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, approved, amount));
     }
     /**
      * Get information about the specific token on the contract.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is token information:
      * - `_hint`: Hint for token design,
      * - `symbol`: Symbol of the token,
      * - `name`: Name of the token,
      * - `policy`: Token policy object including `_hint`, `total_supply`, `approve_list`
      */
-    async getTokenInfo(contractAddr) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.token.getToken(this.api, contractAddr, this.delegateIP));
+    async getTokenInfo(contract) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.token.getToken(this.api, contract, this.delegateIP));
     }
     /**
      * Get the allowance information granted by the owner for a specific token.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [owner] - The token owner's address.
      * @param {string | Address} [approved] - Address of approved account.
      * @returns `data` of `SuccessResponse` is token allowance information:
      * - `amount`: String of allowance amount
      */
-    async getAllowance(contractAddr, owner, approved) {
-        Address.from(contractAddr);
+    async getAllowance(contract, owner, approved) {
+        Address.from(contract);
         Address.from(owner);
         Address.from(approved);
-        const response = await getAPIData(() => contract.token.getToken(this.api, contractAddr, this.delegateIP));
+        const response = await getAPIData(() => contractApi.token.getToken(this.api, contract, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = calculateAllowance(response, owner, approved);
         }
@@ -6309,15 +6273,15 @@ class Token extends ContractGenerator {
     /**
      * Get token balance for given account.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [owner] - The token owner's address.
      * @returns`data` of `SuccessResponse` is token balance information:
      * - `amount`: String of amount
      */
-    async getTokenBalance(contractAddr, owner) {
-        Address.from(contractAddr);
+    async getTokenBalance(contract, owner) {
+        Address.from(contract);
         Address.from(owner);
-        return await getAPIData(() => contract.token.getTokenBalance(this.api, contractAddr, owner, this.delegateIP));
+        return await getAPIData(() => contractApi.token.getTokenBalance(this.api, contract, owner, this.delegateIP));
     }
 }
 
@@ -6373,8 +6337,8 @@ class MintFact extends PointFact {
         super(HINT.POINT.MINT.FACT, token, sender, contract, currency);
         this.receiver = Address.from(receiver);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with receiver address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "zero amount"));
+        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
+        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6397,12 +6361,15 @@ class MintFact extends PointFact {
 }
 
 class BurnFact extends PointFact {
-    constructor(token, sender, contract, currency, target, amount) {
+    constructor(token, sender, contract, currency, amount) {
         super(HINT.POINT.BURN.FACT, token, sender, contract, currency);
-        this.target = Address.from(target);
+        this.target = Address.from(sender);
         this.amount = Big.from(amount);
-        Assert.check(Address.from(contract).toString() !== this.target.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with target address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "zero amount"));
+        // Assert.check(
+        //     Address.from(contract).toString() !== this.target.toString(),
+        //     MitumError.detail(ECODE.INVALID_FACT, "target is same with contract address")
+        // )
+        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6429,8 +6396,9 @@ class TransferFact extends PointFact {
         super(HINT.POINT.TRANSFER.FACT, token, sender, contract, currency);
         this.receiver = Address.from(receiver);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with receiver address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "zero amount"));
+        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
+        Assert.check(this.receiver.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with sender address"));
+        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6457,8 +6425,8 @@ class ApproveFact extends PointFact {
         super(HINT.POINT.APPROVE.FACT, token, sender, contract, currency);
         this.approved = Address.from(approved);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.approved.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with approved address"));
-        Assert.check(this.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "under zero amount"));
+        Assert.check(this.contract.toString() !== this.approved.toString(), MitumError.detail(ECODE.INVALID_FACT, "approved is same with contract address"));
+        Assert.check(this.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "amount must not be under zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6486,9 +6454,11 @@ class TransferFromFact extends PointFact {
         this.receiver = Address.from(receiver);
         this.target = Address.from(target);
         this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with receiver address"));
-        Assert.check(this.contract.toString() !== this.target.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with target address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "zero amount"));
+        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
+        Assert.check(this.contract.toString() !== this.target.toString(), MitumError.detail(ECODE.INVALID_FACT, "target is same with contract address"));
+        Assert.check(this.target.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with target address"));
+        Assert.check(this.target.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "target is same with sender address, use 'transfer' instead"));
+        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -6518,7 +6488,7 @@ class Point extends ContractGenerator {
     }
     /**
      * Generate a `register-point` operation for registering a point on a contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | LongString} [name] - The name of the point to register.
@@ -6526,48 +6496,47 @@ class Point extends ContractGenerator {
      * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the point to register. If not provided, the default value is 0.
      * @returns `register-point` operation.
      */
-    registerPoint(contractAddr, sender, currency, name, symbol, initialSupply) {
-        return new Operation$1(this.networkID, new RegisterPointFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, symbol, name, initialSupply ?? 0));
+    registerPoint(contract, sender, currency, name, symbol, initialSupply) {
+        return new Operation$1(this.networkID, new RegisterPointFact(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, initialSupply ?? 0));
     }
     /**
      * Generate a `mint` operation for minting points and allocating them to a receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [receiver] - The receiver's address.
      * @param {string | number | Big} [amount] - The amount to mint.
      * @returns `mint` operation.
      */
-    mint(contractAddr, sender, currency, receiver, amount) {
-        return new Operation$1(this.networkID, new MintFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, amount));
+    mint(contract, sender, currency, receiver, amount) {
+        return new Operation$1(this.networkID, new MintFact(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
     }
     /**
-     * Generate a `burn` operation for burning points from a target account.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * Generate a `burn` operation for burning points from sender account.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [target] - The target account's address.
      * @param {string | number | Big} [amount] - The amount to burn.
      * @returns `burn` operation
      */
-    burn(contractAddr, sender, currency, target, amount) {
-        return new Operation$1(this.networkID, new BurnFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, target, amount));
+    burn(contract, sender, currency, amount) {
+        return new Operation$1(this.networkID, new BurnFact(TimeStamp$1.new().UTC(), sender, contract, currency, amount));
     }
     /**
      * Generate an `transfer` operation for transferring points from the sender to a receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency - The currency ID.
      * @param {string | Address} [receiver] - The receiver's address.
      * @param {string | number | Big} [amount] - The amount to transfer.
      * @returns `transfer` operation.
      */
-    transfer(contractAddr, sender, currency, receiver, amount) {
-        return new Operation$1(this.networkID, new TransferFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, amount));
+    transfer(contract, sender, currency, receiver, amount) {
+        return new Operation$1(this.networkID, new TransferFact(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
     }
     /**
      * Generate a `transfer-from` operation for transferring points from target account to receiver.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [receiver] - The receiver's address.
@@ -6575,49 +6544,49 @@ class Point extends ContractGenerator {
      * @param {string | number | Big} [amount] - The amount to transfer.
      * @returns `transfer-from` operation.
      */
-    transferFrom(contractAddr, sender, currency, receiver, target, amount) {
-        return new Operation$1(this.networkID, new TransferFromFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, receiver, target, amount));
+    transferFrom(contract, sender, currency, receiver, target, amount) {
+        return new Operation$1(this.networkID, new TransferFromFact(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, target, amount));
     }
     /**
      * Generate an `approve` operation for approving certain amount points to approved account.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [approved] - The address to approve.
      * @param {string | number | Big} [amount] - The amount to approve.
      * @returns `approve` operation
      */
-    approve(contractAddr, sender, currency, approved, amount) {
-        return new Operation$1(this.networkID, new ApproveFact(TimeStamp$1.new().UTC(), sender, contractAddr, currency, approved, amount));
+    approve(contract, sender, currency, approved, amount) {
+        return new Operation$1(this.networkID, new ApproveFact(TimeStamp$1.new().UTC(), sender, contract, currency, approved, amount));
     }
     /**
      * Get information about the specific point on the contract.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is point information:
      * - `_hint`: Hint for point design,
      * - `symbol`: Symbol of the point,
      * - `name`: Name of the point,
      * - `policy`: Point policy object including `_hint`, `total_supply`, `approve_list`
      */
-    async getPointInfo(contractAddr) {
-        Address.from(contractAddr);
-        return await getAPIData(() => contract.point.getPoint(this.api, contractAddr, this.delegateIP));
+    async getPointInfo(contract) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.point.getPoint(this.api, contract, this.delegateIP));
     }
     /**
      * Get the allowance information granted by the owner for a specific point.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [owner] - The point owner's address.
      * @param {string | Address} [approved] - Address of approved account.
      * @returns `data` of `SuccessResponse` is point allowance information:
      * - `amount`: String of allowance amount
      */
-    async getAllowance(contractAddr, owner, approved) {
-        Address.from(contractAddr);
+    async getAllowance(contract, owner, approved) {
+        Address.from(contract);
         Address.from(owner);
         Address.from(approved);
-        const response = await getAPIData(() => contract.point.getPoint(this.api, contractAddr, this.delegateIP));
+        const response = await getAPIData(() => contractApi.point.getPoint(this.api, contract, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = calculateAllowance(response, owner, approved);
         }
@@ -6626,15 +6595,15 @@ class Point extends ContractGenerator {
     /**
      * Get point balance for given account.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [owner] - The point owner's address.
      * @returns `data` of `SuccessResponse` is point balance information:
      * - `amount`: String of amount
      */
-    async getPointBalance(contractAddr, owner) {
-        Address.from(contractAddr);
+    async getPointBalance(contract, owner) {
+        Address.from(contract);
         Address.from(owner);
-        return await getAPIData(() => contract.point.getPointBalance(this.api, contractAddr, owner, this.delegateIP));
+        return await getAPIData(() => contractApi.point.getPointBalance(this.api, contract, owner, this.delegateIP));
     }
 }
 

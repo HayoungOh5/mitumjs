@@ -9,9 +9,9 @@ import { CurrencyID } from "../../common";
 import { Bool, IP } from "../../types";
 export declare class KYC extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
-    createService(contractAddr: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<CreateServiceFact>;
-    addController(contractAddr: string | Address, sender: string | Address, controller: string | Address, currency: string | CurrencyID): Operation<AddControllerFact>;
-    addCustomer(contractAddr: string | Address, sender: string | Address, customer: string | Address, status: boolean | Bool, currency: string | CurrencyID): Operation<AddCustomerFact>;
-    removeController(contractAddr: string | Address, sender: string | Address, controller: string | Address, currency: string | CurrencyID): Operation<RemoveControllerFact>;
-    updateCustomer(contractAddr: string | Address, sender: string | Address, customer: string | Address, status: boolean | Bool, currency: string | CurrencyID): Operation<UpdateCustomerFact>;
+    createService(contract: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<CreateServiceFact>;
+    addController(contract: string | Address, sender: string | Address, controller: string | Address, currency: string | CurrencyID): Operation<AddControllerFact>;
+    addCustomer(contract: string | Address, sender: string | Address, customer: string | Address, status: boolean | Bool, currency: string | CurrencyID): Operation<AddCustomerFact>;
+    removeController(contract: string | Address, sender: string | Address, controller: string | Address, currency: string | CurrencyID): Operation<RemoveControllerFact>;
+    updateCustomer(contract: string | Address, sender: string | Address, customer: string | Address, status: boolean | Bool, currency: string | CurrencyID): Operation<UpdateCustomerFact>;
 }

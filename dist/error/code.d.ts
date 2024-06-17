@@ -1,4 +1,3 @@
-import { error_code } from '../types';
 export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.NFT[keyof typeof ECODE.NFT] | typeof ECODE.STO[keyof typeof ECODE.STO] | typeof ECODE.DAO[keyof typeof ECODE.DAO]);
 export declare const ECODE: {
     readonly NO_API: "EC_NO_API";
@@ -60,6 +59,7 @@ export declare const ECODE: {
         readonly INVALID_PARTITION: "EC_INVALID_PARTITION";
     };
     readonly DAO: {
+        readonly INVALID_POLICY: "EC_INVALID_POLICY";
         readonly INVALID_WHITELIST: "EC_INVALID_WHITELIST";
         readonly UNMATCHED_SENDER: "EC_UNMATCHED_SENDER";
     };
@@ -70,19 +70,19 @@ export declare const PCODE: {
     readonly AMBIGUOUS: {
         readonly code: "P0A";
         readonly keyword: readonly [""];
-        readonly description: "AMBIGUOUS";
+        readonly description: "Ambiguous error";
         readonly subject: "";
     };
     readonly MITUM_CORE: {
         readonly code: "P0M";
         readonly keyword: readonly [""];
-        readonly description: "MITUM CORE";
+        readonly description: "Error from Mitum core";
         readonly subject: "";
     };
     readonly UNDEFINED: {
         readonly code: "P00";
         readonly keyword: readonly [""];
-        readonly description: "UNDEFINED";
+        readonly description: "Undefined error";
         readonly subject: "";
     };
     readonly IV_BASE_OP: {
@@ -138,218 +138,134 @@ export declare const DCODE: {
     readonly AMBIGUOUS: {
         readonly code: "D00A";
         readonly keyword: readonly [""];
-        readonly description: "AMBIGUOUS";
+        readonly description: "Ambiguous error";
         readonly subject: "";
     };
     readonly COMPLEX: {
         readonly code: "D00C";
         readonly keyword: readonly [""];
-        readonly description: "COMPLEX";
+        readonly description: "Complex error with multiple DCODE";
         readonly subject: "";
     };
     readonly OP_DEP: {
         readonly code: "D00D";
         readonly keyword: readonly [""];
-        readonly description: "Operation dependent";
+        readonly description: "Operation dependent error";
         readonly subject: "";
     };
     readonly UNDEFINED: {
         readonly code: "D000";
         readonly keyword: readonly [""];
-        readonly description: "UNDEFINED";
+        readonly description: "Undefined error";
         readonly subject: "";
     };
     readonly EMPTY: {
         readonly code: "D101";
-        readonly keyword: readonly ["Operation has empty token"];
-        readonly description: "EMPTY or NULL data";
+        readonly keyword: readonly [""];
+        readonly description: "Empty or null data";
         readonly subject: "";
     };
-    readonly IV_LENGTH: {
+    readonly IV_LEN: {
         readonly code: "D102";
         readonly keyword: readonly ["Array length"];
-        readonly description: "length of array";
+        readonly description: "The provided array exceeds the allowed length.";
         readonly subject: "";
     };
     readonly IV_RANGE: {
         readonly code: "D103";
-        readonly keyword: readonly ["Value out of range", "Operation token size too large"];
-        readonly description: "Out of range";
+        readonly keyword: readonly ["Value out of range"];
+        readonly description: "The variable exceeds the allowed range.";
         readonly subject: "";
     };
-    readonly IV_TYPE: {
+    readonly IV_VAL: {
         readonly code: "D104";
-        readonly keyword: readonly ["Type mismatch", "Invalid account type", "Invalid value"];
-        readonly description: "Invalid type";
+        readonly keyword: readonly ["Invalid value"];
+        readonly description: "Invalid string, Insufficient balance, Invalid state change etc.";
         readonly subject: "";
     };
-    readonly DUPLICATED_VAL: {
+    readonly IV_DUP: {
         readonly code: "D105";
         readonly keyword: readonly ["Duplicated value"];
-        readonly description: "Duplicated value";
+        readonly description: "The item contains duplicate values.";
         readonly subject: "";
     };
-    readonly D106: {
+    readonly SELF_TARGET: {
         readonly code: "D106";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly IV_CHAR: {
-        readonly code: "D107";
-        readonly keyword: readonly [""];
-        readonly description: "Special characters";
-        readonly subject: "";
-    };
-    readonly DECODE_FACT: {
-        readonly code: "D108";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly DECODE_ITEM: {
-        readonly code: "D109";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly DECODE_OP: {
-        readonly code: "D110";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly UNMARSHAL_ITEM: {
-        readonly code: "D111";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly UNMARSHAL_FACT: {
-        readonly code: "D112";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly SELF_TARGETED: {
-        readonly code: "D113";
         readonly keyword: readonly ["Self targeted"];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly D114: {
-        readonly code: "D114";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly D115: {
-        readonly code: "D115";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly D116: {
-        readonly code: "D116";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly D117: {
-        readonly code: "D117";
-        readonly keyword: readonly [""];
-        readonly description: "";
+        readonly description: "Duplicate account addresses provided in an invalid manner. (sender=receiver, sender=contract, etc.)";
         readonly subject: "";
     };
     readonly IV_SIGN: {
         readonly code: "D201";
         readonly keyword: readonly ["Invalid signing"];
-        readonly description: "";
+        readonly description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold";
         readonly subject: "";
     };
-    readonly D202: {
-        readonly code: "D202";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly LACK_OF_SIGN: {
-        readonly code: "D203";
-        readonly keyword: readonly ["Not enough signs"];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly D204: {
-        readonly code: "D204";
-        readonly keyword: readonly [""];
-        readonly description: "";
-        readonly subject: "";
-    };
-    readonly UNAUTHORIZED_AC: {
+    readonly NO_AUTH: {
         readonly code: "D301";
         readonly keyword: readonly ["Account not authorized"];
-        readonly description: "sender is not owner neither operator of the contract";
+        readonly description: "The sender account does not have permission to execute the operation.";
         readonly subject: "";
     };
-    readonly NOT_IN_WHITELIST: {
+    readonly CA_DISALLOW: {
         readonly code: "D302";
-        readonly keyword: readonly [""];
-        readonly description: "account not in the whitelist";
+        readonly keyword: readonly ["Contract account not allowed"];
+        readonly description: "A contract account cannot be used as sender, receiver etc.";
         readonly subject: "";
     };
-    readonly D401: {
+    readonly INSUFF_BAL: {
         readonly code: "D401";
         readonly keyword: readonly [""];
-        readonly description: "";
+        readonly description: "Insufficient token or point balance.";
         readonly subject: "";
     };
-    readonly STATE_NOT_FOUND: {
+    readonly NF_CUR: {
         readonly code: "D501";
-        readonly keyword: readonly ["Account not found", "Currency not found", "Contract account not found", "Service not found"];
-        readonly description: "";
+        readonly keyword: readonly ["Currency not found"];
+        readonly description: "The currency cannot be found on the blockchain.";
         readonly subject: "";
     };
-    readonly D502: {
+    readonly NF_ACC: {
         readonly code: "D502";
-        readonly keyword: readonly [""];
-        readonly description: "";
+        readonly keyword: readonly ["Account not found", "Contract account not found"];
+        readonly description: "The account or contract account cannot be found on the blockchain.";
         readonly subject: "";
     };
-    readonly STATE_EXIST: {
+    readonly NF_SERVICE: {
         readonly code: "D503";
-        readonly keyword: readonly ["Account exist", "Contract account exist", "Currency exist", "State exist"];
-        readonly description: "";
+        readonly keyword: readonly ["Service not found"];
+        readonly description: "The service cannot be found in the given contract.";
         readonly subject: "";
     };
-    readonly D504: {
+    readonly NF_STATE: {
         readonly code: "D504";
-        readonly keyword: readonly [""];
-        readonly description: "";
+        readonly keyword: readonly ["State not found"];
+        readonly description: "The state cannot be found on the blockchain.";
         readonly subject: "";
     };
-    readonly IV_STATE_VAL: {
+    readonly EXIST_CUR: {
         readonly code: "D505";
-        readonly keyword: readonly ["Invalid state value"];
-        readonly description: "";
+        readonly keyword: readonly ["Currency exist"];
+        readonly description: "The currency already exists on the blockchain.";
         readonly subject: "";
     };
-    readonly CONTRACT_ACCOUNT: {
+    readonly EXIST_ACC: {
         readonly code: "D506";
-        readonly keyword: readonly ["Contract account not allowed"];
-        readonly description: "";
+        readonly keyword: readonly ["Account exist", "Contract account exist"];
+        readonly description: "The account or contract account already exists on the blockchain.";
         readonly subject: "";
     };
-    readonly D507: {
+    readonly EXIST_SERVICE: {
         readonly code: "D507";
-        readonly keyword: readonly [""];
-        readonly description: "";
+        readonly keyword: readonly ["Service exist"];
+        readonly description: "The contract already contains the service.";
         readonly subject: "";
     };
-    readonly D508: {
+    readonly EXSIT_STATE: {
         readonly code: "D508";
-        readonly keyword: readonly [""];
-        readonly description: "";
+        readonly keyword: readonly ["State exist"];
+        readonly description: "The state already exists on the blockchain.";
         readonly subject: "";
     };
 };
-export declare const assignCodeFromErrorMessage: (errorMessage: string) => error_code;
+export declare const assignCodeFromErrorMessage: (errorMessage: string) => string;

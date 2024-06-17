@@ -9,7 +9,7 @@ export declare class Big implements IBuffer, IString {
     byteLen(): number;
     get v(): number;
     toString(): string;
-    isZero(): boolean;
+    overZero(): boolean;
     compare(n: string | number | Big): 1 | 0 | -1;
 }
 export declare class Float implements IBuffer, IString {

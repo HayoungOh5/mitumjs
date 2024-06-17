@@ -8,7 +8,7 @@ declare const currency: {
     getCurrencies: (api: string | import("../types").IP, delegateIP: string | import("../types").IP) => Promise<AxiosResponse<any, any>>;
     getCurrency: (api: string | import("../types").IP, currency: string | import("../common").CurrencyID, delegateIP: string | import("../types").IP) => Promise<AxiosResponse<any, any>>;
 };
-declare const contract: {
+declare const contractApi: {
     nft: {
         getNFT: (api: string | import("../types").IP, contract: string | import("../key").Address, nftID: string | number | import("../types").Big, delegateIP: string | import("../types").IP) => Promise<AxiosResponse<any, any>>;
         getNFTs: (api: string | import("../types").IP, contract: string | import("../key").Address, delegateIP: string | import("../types").IP, factHash?: string | undefined, limit?: number | undefined, offset?: number | undefined, reverse?: true | undefined) => Promise<AxiosResponse<any, any>>;
@@ -52,7 +52,7 @@ declare const contract: {
         getPointBalance: (api: string | import("../types").IP, contract: string | import("../key").Address, account: string | import("../key").Address, delegateIP: string | import("../types").IP) => Promise<AxiosResponse<any, any>>;
     };
 };
-export { account, block, node, operation, currency, contract, };
+export { account, block, node, operation, currency, contractApi, };
 declare const _default: {
     account: {
         getAccount: (api: string | import("../types").IP, address: string | import("../key").Address, delegateIP: string | import("../types").IP) => Promise<AxiosResponse<any, any>>;
@@ -79,7 +79,7 @@ declare const _default: {
         getCurrencies: (api: string | import("../types").IP, delegateIP: string | import("../types").IP) => Promise<AxiosResponse<any, any>>;
         getCurrency: (api: string | import("../types").IP, currency: string | import("../common").CurrencyID, delegateIP: string | import("../types").IP) => Promise<AxiosResponse<any, any>>;
     };
-    contract: {
+    contractApi: {
         nft: {
             getNFT: (api: string | import("../types").IP, contract: string | import("../key").Address, nftID: string | number | import("../types").Big, delegateIP: string | import("../types").IP) => Promise<AxiosResponse<any, any>>;
             getNFTs: (api: string | import("../types").IP, contract: string | import("../key").Address, delegateIP: string | import("../types").IP, factHash?: string | undefined, limit?: number | undefined, offset?: number | undefined, reverse?: true | undefined) => Promise<AxiosResponse<any, any>>;

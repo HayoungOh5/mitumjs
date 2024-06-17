@@ -34,7 +34,7 @@ export declare class DAO extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
      * Generate `create-dao` operation for creating a new DAO on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {daoData} [data] - Data for policy of DAO service to create. The properties of `daoData` include:
      * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
@@ -53,10 +53,10 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `create-dao` operation.
      */
-    createService(contractAddr: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): Operation<CreateDAOFact>;
+    createService(contract: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): Operation<CreateDAOFact>;
     /**
      * Generate `update-policy` operation for updating the DAO policy on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {daoData} [data] - Data for policy of DAO service to update. The properties of `daoData` include:
      * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
@@ -75,7 +75,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `update-policy` operation
      */
-    updateService(contractAddr: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): Operation<UpdatePolicyFact>;
+    updateService(contract: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): Operation<UpdatePolicyFact>;
     /**
      * Create transfer calldata for the crypto proposal to transfer crypto currency.
      * @param {string | Address} [sender] - The sender's address.
@@ -124,84 +124,84 @@ export declare class DAO extends ContractGenerator {
     writeBizProposal(proposer: string | Address, startTime: string | number | Big, url: string | LongString, hash: string | LongString, options: string | number | Big): BizProposal;
     /**
      * Generate `propose` operation for propose a new proposal. Only the account in the whitelist can propose.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The unique identifier for the proposal.
      * @param {CryptoProposal | BizProposal} [proposal] - The proposal written by `writeBizProposal` or `writeCryptoProposal`.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `propose` operation.
      */
-    propose(contractAddr: string | Address, sender: string | Address, proposalID: string, proposal: CryptoProposal | BizProposal, currency: string | CurrencyID): Operation<ProposeFact>;
+    propose(contract: string | Address, sender: string | Address, proposalID: string, proposal: CryptoProposal | BizProposal, currency: string | CurrencyID): Operation<ProposeFact>;
     /**
      * Generate `register` operation to register to get voting right to the proposal. If delegator is given, delegate voting rights.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [delegator] - (Optional) The address of the delegator.
      * @returns `register` operation
      */
-    register(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID, delegator?: string | Address): Operation<RegisterFact>;
+    register(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID, delegator?: string | Address): Operation<RegisterFact>;
     /**
      * Generate `cancel-proposal` operation to cancel a DAO proposal.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The unique identifier for the proposal.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `cancel-proposal` operation
      */
-    cancel(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<CancelProposalFact>;
+    cancel(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<CancelProposalFact>;
     /**
      * Generate `pre-snap` operation to take a snapshot before the voting period.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `pre-snap` operation.
      */
-    snapBeforeVoting(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<PreSnapFact>;
+    snapBeforeVoting(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<PreSnapFact>;
     /**
      * Generate `vote` operation to cast a vote for the proposal.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {number} [voteOption] - The option chosen for the vote. (crypto: 0-approve, 1-disapprove, biz: choose from multiple choices)
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `vote` operation.
      */
-    castVote(contractAddr: string | Address, sender: string | Address, proposalID: string, voteOption: number, currency: string | CurrencyID): Operation<VoteFact>;
+    castVote(contract: string | Address, sender: string | Address, proposalID: string, voteOption: number, currency: string | CurrencyID): Operation<VoteFact>;
     /**
      * Generate `post-snap` operation to take a snapshot after the voting period.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `post-snap` operation
      */
-    snapAfterVoting(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<PostSnapFact>;
+    snapAfterVoting(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<PostSnapFact>;
     /**
      * Generate `execute` operation to reflect voting results.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `execute` operation
      */
-    execute(contractAddr: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<ExecuteFact>;
+    execute(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<ExecuteFact>;
     /**
      * Get DAO service information for a specific contract address.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information of the DAO service:
      * - `_hint`: Hint for dao design,
      * - `option`: 'biz' or 'crypto',
      * - `policy`: [Policy]
      */
-    getServiceInfo(contractAddr: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getServiceInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get information about a specific DAO proposal. The `status` does not accurately reflect the current state of the proposal because it is updated only when an operation occurs.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
      * @returns `data` of `SuccessResponse` is information about the DAO proposal:
      * - `_hint`: Hint for the dao proposal state value,
@@ -209,11 +209,11 @@ export declare class DAO extends ContractGenerator {
      * - `proposal`: [BizProposal] or [CryptoProposal],
      * - `policy`: [Policy]
      */
-    getProposalInfo(contractAddr: string | Address, proposalID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getProposalInfo(contract: string | Address, proposalID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get information about a specific delegator in a DAO proposal.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | Address} [delegator] - The address of the delegator.
      * @returns `data` of `SuccessResponse` is delegator information:
@@ -221,22 +221,22 @@ export declare class DAO extends ContractGenerator {
      * - `account`: Address of delegator account,
      * - `delegatee`: Address of delegatee account,
      */
-    getDelegatorInfo(contractAddr: string | Address, proposalID: string, delegator: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getDelegatorInfo(contract: string | Address, proposalID: string, delegator: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get information about voters in a specific DAO proposal.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
      * @returns `data` of `SuccessResponse` is an array of information of the voters:
      * - `_hint`: Hint for dao voter,
      * - `account`: Address of the voter,
      * - `delegators`: [ Address of delegatee, Address of delegator ]
      */
-    getVoterInfo(contractAddr: string | Address, proposalID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getVoterInfo(contract: string | Address, proposalID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get the voting result of a specific DAO proposal.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
      * @returns `data` of `SuccessResponse` is information of voting power and the voting result:
      * - `_hint`: Hint for voting power box.
@@ -244,6 +244,6 @@ export declare class DAO extends ContractGenerator {
      * - `voting_powers`: Object mapping registered account addresses to their corresponding voting information represents `_hint`, `account`,`voted`, `vote_for`, `voting_power`.
      * - `result`: Object consisting of the selected option and the number of votes.
      */
-    getVotingResult(contractAddr: string | Address, proposalID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getVotingResult(contract: string | Address, proposalID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }
 export {};

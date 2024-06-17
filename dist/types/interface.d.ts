@@ -9,15 +9,11 @@ export interface IHintedObject {
 export interface IString {
     toString(): string;
 }
-export type error_code = {
-    pcode: string[];
-    dcode: string[];
-};
 export interface ErrorResponse {
     status?: number;
     method: string | undefined;
     url: string | undefined;
-    error_code: error_code;
+    error_code: string;
     request_body: string | undefined;
     error_message: string;
 }

@@ -31,15 +31,15 @@ export declare class Credential extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
      * Generate a `create-service` operation for creating new credential service on the contract.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-service` operation.
      */
-    createService(contractAddr: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<CreateServiceFact>;
+    createService(contract: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<CreateServiceFact>;
     /**
      * Generate an `add-template` operation for adding a new credential template to the credential service.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {templateData} [data] - The template data to be added. The properties of `templateData` include:
      * - {string} `templateID` - The ID of the template.
@@ -55,10 +55,10 @@ export declare class Credential extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns An `add-template` operation.
      */
-    addTemplate(contractAddr: string | Address, sender: string | Address, data: templateData, currency: string | CurrencyID): Operation<AddTemplateFact>;
+    addTemplate(contract: string | Address, sender: string | Address, data: templateData, currency: string | CurrencyID): Operation<AddTemplateFact>;
     /**
      * Generate an `assign` operation for issue credential to holder.
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {issueData} [data] - The data required for issuing the credential. The properties of `issueData` include:
      * - {string | Address} `holder` - The address of the credential holder.
@@ -71,10 +71,10 @@ export declare class Credential extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `assign` operation.
      */
-    issue(contractAddr: string | Address, sender: string | Address, data: issueData, currency: string | CurrencyID): Operation<AssignFact>;
+    issue(contract: string | Address, sender: string | Address, data: issueData, currency: string | CurrencyID): Operation<AssignFact>;
     /**
      * Generate an `revoke` operation to revoke already issued credential.
-     * @param {string | Address} contractAddr - The contract's address.
+     * @param {string | Address} contract - The contract's address.
      * @param {string | Address} sender - The sender's address.
      * @param {string | Address} holder - The holder's address of the credential to be revoked.
      * @param {string} templateID - The ID of the template associated with the credential.
@@ -82,11 +82,11 @@ export declare class Credential extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `revoke` operation.
      */
-    revoke(contractAddr: string | Address, sender: string | Address, holder: string | Address, templateID: string, id: string, currency: string | CurrencyID): Operation<RevokeFact>;
+    revoke(contract: string | Address, sender: string | Address, holder: string | Address, templateID: string, id: string, currency: string | CurrencyID): Operation<RevokeFact>;
     /**
      * Get information about a credential service on the contract.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is credential service information:
      * - `_hint`: Hint for credential design,
      * - `policy`:
@@ -98,11 +98,11 @@ export declare class Credential extends ContractGenerator {
      * - - - `credential_count`: The number of credential for the holder
      * - - `credential_count`: The total number of credential
      */
-    getServiceInfo(contractAddr: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getServiceInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get detailed information about a specific credential on the template.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [templateID] - The ID of the template associated with the credential.
      * @param {string} [credentialID] - The unique ID of the credential.
      * @returns `data` of `SuccessResponse` is credential information:
@@ -117,11 +117,11 @@ export declare class Credential extends ContractGenerator {
      * - - `did`: The name of the credential,
      * - `is_active`: Indicates whether the credential is active or revoked
      */
-    getCredentialInfo(contractAddr: string | Address, templateID: string, credentialID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getCredentialInfo(contract: string | Address, templateID: string, credentialID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get information about a specific template on the credential service.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [templateID] - The ID of the template.
      * @returns `data` of `SuccessResponse` is template information:
      * - `_hint`: Hint for credential template,
@@ -135,11 +135,11 @@ export declare class Credential extends ContractGenerator {
      * - `description`: The description of the template.
      * - `creator`: The address of the creator of the template.
      */
-    getTemplate(contractAddr: string | Address, templateID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getTemplate(contract: string | Address, templateID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get information about all credentials on the template.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string} [templateID] - The ID of the template.
      * @returns `data` of `SuccessResponse` is array of the all credential informations of the template:
      * - `_hint`: Hint for currency,
@@ -156,11 +156,11 @@ export declare class Credential extends ContractGenerator {
      * - - `is_active`: Indicates whether the credential is active or revoked,
      * - `_links`: links to get additional information of the credential,
      */
-    getAllCredentials(contractAddr: string | Address, templateID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getAllCredentials(contract: string | Address, templateID: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get all credentials owned by the holder in the credential service.
      * @async
-     * @param {string | Address} [contractAddr] - The contract's address.
+     * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [holder] - The holder's address claiming the credentials.
      * @returns `data` of `SuccessResponse` is a object with all credential information owned by the holder:
      * - `did`: The did value of the most recently issued credential,
@@ -179,6 +179,6 @@ export declare class Credential extends ContractGenerator {
      * - - - `is_active`: Indicates whether the credential is active or revoked,
      * - - `_links`: links to get additional information of the credential
      */
-    claimCredential(contractAddr: string | Address, holder: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    claimCredential(contract: string | Address, holder: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }
 export {};
