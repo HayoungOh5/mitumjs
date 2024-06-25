@@ -4,7 +4,7 @@ import { CredentialItem } from "./item";
 import { Address } from "../../key";
 import { CurrencyID } from "../../common";
 export declare class RevokeItem extends CredentialItem {
-    constructor(contract: string | Address, holder: string | Address, templateID: string, id: string, currency: string | CurrencyID);
+    constructor(contract: string | Address, holder: string | Address, templateID: string, credentialID: string, currency: string | CurrencyID);
     toBuffer(): Buffer;
     toString(): string;
 }

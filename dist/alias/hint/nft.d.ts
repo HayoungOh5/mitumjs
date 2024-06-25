@@ -1,14 +1,11 @@
 declare const _default: {
-    NFT_ID: string;
-    DESIGN: string;
-    POLICY: string;
     SIGNER: string;
     SIGNERS: string;
-    CREATE_COLLECTION: {
+    REGISTER_MODEL: {
         FACT: string;
         OPERATION: string;
     };
-    UPDATE_COLLECTION_POLICY: {
+    UPDATE_MODEL_CONFIG: {
         FACT: string;
         OPERATION: string;
     };
@@ -18,7 +15,7 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
-    DELEGATE: {
+    APPROVE_ALL: {
         ITEM: string;
         FACT: string;
         OPERATION: string;
@@ -33,7 +30,7 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
-    SIGN: {
+    ADD_SIGNATURE: {
         ITEM: string;
         FACT: string;
         OPERATION: string;

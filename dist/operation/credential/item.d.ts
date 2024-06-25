@@ -7,9 +7,9 @@ export declare abstract class CredentialItem extends Item {
     readonly contract: Address;
     readonly holder: Address;
     readonly templateID: string;
-    readonly id: string;
+    readonly credentialID: string;
     readonly currency: CurrencyID;
-    protected constructor(hint: string, contract: string | Address, holder: string | Address, templateID: string, id: string, currency: string | CurrencyID);
+    protected constructor(hint: string, contract: string | Address, holder: string | Address, templateID: string, credentialID: string, currency: string | CurrencyID);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
     toString(): string;

@@ -6,8 +6,8 @@ import { CurrencyID } from "../../common";
 import { Big, HintedObject } from "../../types";
 export declare class ApproveItem extends NFTItem {
     readonly approved: Address;
-    readonly nftIDX: Big;
-    constructor(contract: string | Address, approved: string | Address, nftIDX: string | number | Big, currency: string | CurrencyID);
+    readonly nftIdx: Big;
+    constructor(contract: string | Address, approved: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
     toString(): string;

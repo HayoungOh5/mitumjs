@@ -1,14 +1,16 @@
 /// <reference types="node" />
 import { Address } from "../../key";
-import { Amount } from "../../common";
+import { CurrencyID } from "../../common";
 import { Big, Float, HintedObject, IBuffer, IHintedObject } from "../../types";
 export declare class CurrencyDesign implements IBuffer, IHintedObject {
     private static hint;
-    readonly amount: Amount;
+    readonly initialSupply: Big;
+    readonly currencyID: CurrencyID;
     readonly policy: CurrencyPolicy;
     readonly genesisAccount: Address;
-    readonly aggregate: Big;
-    constructor(amount: Amount, genesisAccount: string | Address, policy: CurrencyPolicy);
+    readonly totalSupply: Big;
+    readonly decimal: Big;
+    constructor(initialSupply: string | number | Big, currencyID: string | CurrencyID, genesisAccount: string | Address, decimal: string | number | Big, policy: CurrencyPolicy);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
 }

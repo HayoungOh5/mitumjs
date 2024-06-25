@@ -1,10 +1,10 @@
-import { CreateCollectionFact } from "./create-collection";
-import { UpdateCollectionPolicyFact } from "./update-collection-policy";
+import { RegisterModelFact } from "./register-model";
+import { UpdateModelConfigFact } from "./update-model-config";
 import { MintFact } from "./mint";
 import { ApproveFact } from "./approve";
-import { DelegateFact } from "./delegate";
+import { ApproveAlleFact } from "./approve-all";
 import { TransferFact } from "./transfer";
-import { SignFact } from "./sign";
+import { AddSignatureFact } from "./add-signature";
 import { ContractGenerator, Operation } from "../base";
 import { Address } from "../../key";
 import { CurrencyID } from "../../common";
@@ -13,7 +13,7 @@ type collectionData = {
     name: string | LongString;
     uri: string | LongString;
     royalty: string | number | Big;
-    whitelist: (string | Address)[];
+    minterWhitelist: (string | Address)[];
 };
 type Creator = {
     account: string | Address;
@@ -22,31 +22,31 @@ type Creator = {
 export declare class NFT extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
-     * Generate `create-collection` operation for creating a new NFT collection on the contract.
+     * Generate `register-model` operation to register a new NFT model for creating a collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
      * - {string | LongString} `name` - The name of the NFT collection.
      * - {string | LongString} `uri` - The uri of the NFT collection.
      * - {string | number | Big} `royalty` - The royalty of the NFT collection.
-     * - {(string | Address)[]} `whitelist` - Accounts who have permissions to mint. If it's empty, anyone can mint.
+     * - {(string | Address)[]} `minterWhitelist` - Accounts who have permissions to mint. If it's empty, anyone can mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `create-collection` operation
+     * @returns `register-model` operation
      */
-    createCollection(contract: string | Address, sender: string | Address, data: collectionData, currency: string | CurrencyID): Operation<CreateCollectionFact>;
+    registerModel(contract: string | Address, sender: string | Address, data: collectionData, currency: string | CurrencyID): Operation<RegisterModelFact>;
     /**
-     * Generate `update-collection` operation for updating the policy of an existing NFT collection on the contract.
+     * Generate `update-model-config` operation to update the policy of the nft collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
+     * @param {collectionData} [data] - The policy data for nft collection to be updated. The properties of `collectionData` include:
      * - {string | LongString} `name` - The name of the NFT collection.
      * - {string | LongString} `uri` - The uri of the NFT collection.
      * - {string | number | Big} `royalty` - The royalty of the NFT collection.
-     * - {(string | Address)[]} `whitelist` - Accounts who have permissions to mint.
+     * - {(string | Address)[]} `minterWhitelist` - Accounts who have permissions to mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `update-collection` operation.
+     * @returns `update-model-config` operation.
      */
-    setPolicy(contract: string | Address, sender: string | Address, data: collectionData, currency: string | CurrencyID): Operation<UpdateCollectionPolicyFact>;
+    updateModelConfig(contract: string | Address, sender: string | Address, data: collectionData, currency: string | CurrencyID): Operation<UpdateModelConfigFact>;
     /**
      * Generate `mint` operation for minting a new NFT and assigns it to a receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -91,47 +91,47 @@ export declare class NFT extends ContractGenerator {
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receiver] - The address of the receiver of the NFT.
-     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `transfer` operation.
      */
-    transfer(contract: string | Address, sender: string | Address, receiver: string | Address, nftID: string | number | Big, currency: string | CurrencyID): Operation<TransferFact>;
+    transfer(contract: string | Address, sender: string | Address, receiver: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<TransferFact>;
     /**
-     * Generate `approve` operation to approves NFT to another account (operator).
+     * Generate `approve` operation to approves NFT to another account (approved).
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The address of the owner of the NFT.
-     * @param {string | Address} [operator] - The address being granted approval to manage the NFT.
-     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | Address} [sender] - The address of the sender of the NFT.
+     * @param {string | Address} [approved] - The address being granted approval to manage the NFT.
+     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `approve` operation.
      */
-    approve(contract: string | Address, owner: string | Address, operator: string | Address, nftID: string | number | Big, currency: string | CurrencyID): Operation<ApproveFact>;
+    approve(contract: string | Address, sender: string | Address, approved: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<ApproveFact>;
     /**
-     * Generate `delegate` operation to sets or cancels the approval for an operator to manage all NFTs of the owner.
+     * Generate `approve-all` operation to grant or revoke approval for an account to manage all NFTs of the sender.
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The address of the owner of the NFT.
-     * @param {string | Address} [operator] - The address being granted or denied approval to manage all NFTs.
+     * @param {string | Address} [sender] - The address of the sender giving or revoking approval.
+     * @param {string | Address} [approved] - The address being granted or denied approval to manage all NFTs.
      * @param {"allow" | "cancel"} [mode] - The mode indicating whether to allow or cancel the approval.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `delegate` operation.
+     * @returns `approve-all` operation.
      */
-    setApprovalForAll(contract: string | Address, owner: string | Address, operator: string | Address, mode: "allow" | "cancel", currency: string | CurrencyID): Operation<DelegateFact>;
+    approveAll(contract: string | Address, sender: string | Address, approved: string | Address, mode: "allow" | "cancel", currency: string | CurrencyID): Operation<ApproveAlleFact>;
     /**
-     * Generate `sign` operation to signs an NFT as creator of the artwork.
+     * Generate `add-signature` operation to signs an NFT as creator of the artwork.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [creator] - The address of the creator signing the NFT.
-     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `sign` operation.
      */
-    sign(contract: string | Address, creator: string | Address, nftID: string | number | Big, currency: string | CurrencyID): Operation<SignFact>;
+    addSignature(contract: string | Address, creator: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<AddSignatureFact>;
     /**
      * Get information about an NFT collection on the contract.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information about the NFT collection:
      * - `_hint`: Hint for NFT design,
-     * - `parent`: Address of the contract account,
+     * - `contract`: Address of the contract account,
      * - `creator`: Address of the creator,
      * - `active`: Bool represents activation,
      * - `policy`:
@@ -139,40 +139,40 @@ export declare class NFT extends ContractGenerator {
      * - - `name`: Name of the NFT collection,
      * - - `royalty`: Royalty of the NFT collection,
      * - - `uri`: URI of the NFT collection,
-     * - - `whitelist`: Array of the addresses of accounts who have permissions to mint
+     * - - `minter_whitelist`: Array of the addresses of accounts who have permissions to mint
      */
-    getCollectionInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getModelInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get the owner of a specific NFT.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is the address of the NFT owner.
      */
-    ownerOf(contract: string | Address, nftID: string | number | Big): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getOwner(contract: string | Address, nftIdx: string | number | Big): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get the address approved to manage a specific NFT.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is an address of the approved account to manage the NFT.
      */
-    getApproved(contract: string | Address, nftID: number): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getApproved(contract: string | Address, nftIdx: number): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get the total supply of NFTs in a collection on the contract.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is the total supply of NFTs in the collection.
      */
-    totalSupply(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getTotalSupply(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get the URI of a specific NFT.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is the URI of the NFT.
      */
-    tokenURI(contract: string | Address, nftID: number): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getURI(contract: string | Address, nftIdx: number): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get the address is approved to manage all NFTs of a sepecfic owner.
      * @async
@@ -182,15 +182,15 @@ export declare class NFT extends ContractGenerator {
      * - `_hint`: Hint for NFT operators book,
      * - `operators`: Array of the addresses of accounts that have been delegated authority over all of the owner’s NFTs
      */
-    isApprovedForAll(contract: string | Address, owner: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getApprovedAll(contract: string | Address, owner: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get detailed information about a specific NFT.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is detailed information about the NFT:
      * - `_hint`: Hint for NFT,
-     * - `id`: Index of the NFT,
+     * - `nft_idx`: Index of the NFT,
      * - `active`: Bool represents activation,
      * - `owner`: Address of the owner,
      * - `hash`: Hash for the NFT,
@@ -198,7 +198,7 @@ export declare class NFT extends ContractGenerator {
      * - `approved`: Address of the approved account for the NFT,
      * - `creators`: Creator object,
      */
-    getNFTInfo(contract: string | Address, nftID: number): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getNFT(contract: string | Address, nftIdx: number): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get information of all NFTs in a collection. If the optional parameter factHash is given, only the nft created by the operation is searched.
      * @async
@@ -211,7 +211,7 @@ export declare class NFT extends ContractGenerator {
      * - `_hint`: Hint for currency,
      * - `_embedded`:
      * - - `_hint`: Hint for NFT,
-     * - - `id`: Index of the NFT,
+     * - - `nft_idx`: Index of the NFT,
      * - - `active`: Bool represents activation,
      * - - `owner`: Address of the owner,
      * - - `hash`: Hash for the NFT,

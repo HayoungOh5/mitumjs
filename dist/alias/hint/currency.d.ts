@@ -46,7 +46,7 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
-    UPDATE_OPERATOR: {
+    UPDATE_HANDLER: {
         FACT: string;
         OPERATION: string;
     };

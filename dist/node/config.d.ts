@@ -38,7 +38,7 @@ export declare const Config: {
     NFT: {
         ROYALTY: RangeConfig;
         SHARE: RangeConfig;
-        ADDRESS_IN_WHITELIST: RangeConfig;
+        ADDRESS_IN_MINTER_WHITELIST: RangeConfig;
         SIGNERS_IN_SIGNERS: RangeConfig;
     };
     CREDENTIAL: {

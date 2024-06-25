@@ -3,7 +3,6 @@ declare const _default: {
     CURRENCY: {
         KEY: string;
         KEYS: string;
-        ETH_KEYS: string;
         AMOUNT: string;
         DESIGN: string;
         POLICY: string;
@@ -49,22 +48,19 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
-        UPDATE_OPERATOR: {
+        UPDATE_HANDLER: {
             FACT: string;
             OPERATION: string;
         };
     };
     NFT: {
-        NFT_ID: string;
-        DESIGN: string;
-        POLICY: string;
         SIGNER: string;
         SIGNERS: string;
-        CREATE_COLLECTION: {
+        REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
         };
-        UPDATE_COLLECTION_POLICY: {
+        UPDATE_MODEL_CONFIG: {
             FACT: string;
             OPERATION: string;
         };
@@ -74,7 +70,7 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
-        DELEGATE: {
+        APPROVE_ALL: {
             ITEM: string;
             FACT: string;
             OPERATION: string;
@@ -89,14 +85,14 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
-        SIGN: {
+        ADD_SIGNATURE: {
             ITEM: string;
             FACT: string;
             OPERATION: string;
         };
     };
     CREDENTIAL: {
-        CREATE_SERVICE: {
+        REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
         };
@@ -104,7 +100,7 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
-        ASSIGN: {
+        ISSUE: {
             ITEM: string;
             FACT: string;
             OPERATION: string;
@@ -127,11 +123,11 @@ declare const _default: {
             BIZ: string;
         };
         WHITELIST: string;
-        CREATE_DAO: {
+        REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
         };
-        UPDATE_POLICY: {
+        UPDATE_MODEL_CONFIG: {
             FACT: string;
             OPERATION: string;
         };
@@ -227,17 +223,17 @@ declare const _default: {
         };
     };
     TIMESTAMP: {
-        CREATE_SERVICE: {
+        REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
         };
-        APPEND: {
+        ISSUE: {
             FACT: string;
             OPERATION: string;
         };
     };
     TOKEN: {
-        REGISTER_TOKEN: {
+        REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
         };
@@ -263,7 +259,7 @@ declare const _default: {
         };
     };
     POINT: {
-        REGISTER_POINT: {
+        REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
         };

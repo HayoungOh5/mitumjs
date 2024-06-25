@@ -1,4 +1,4 @@
-import { RegisterTokenFact } from "./register-token";
+import { RegisterModelFact } from "./register-model";
 import { MintFact } from "./mint";
 import { BurnFact } from "./burn";
 import { TransferFact } from "./transfer";
@@ -11,16 +11,17 @@ import { Big, IP, LongString } from "../../types";
 export declare class Token extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
-     * Generate a `register-token` operation for registering a token on a contract.
+     * Generate a `register-model` operation to register new token model on a contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | LongString} [name] - The name of the token to register.
      * @param {string | CurrencyID} [symbol] - The symbol of the token to register.
+     * @param {string | number | Big} [decimal] - (Optional) The decimal number to the token to register. If not provided, the default value is 0.
      * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the token to register. If not provided, the default value is 0.
-     * @returns `register-token` operation.
+     * @returns `register-model` operation.
      */
-    registerToken(contract: string | Address, sender: string | Address, currency: string | CurrencyID, name: string | LongString, symbol: string | CurrencyID, initialSupply?: string | number | Big): Operation<RegisterTokenFact>;
+    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID, name: string | LongString, symbol: string | CurrencyID, decimal?: string | number | Big, initialSupply?: string | number | Big): Operation<RegisterModelFact>;
     /**
      * Generate a `mint` operation for minting tokens and allocating them to a receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -72,7 +73,7 @@ export declare class Token extends ContractGenerator {
      */
     approve(contract: string | Address, sender: string | Address, currency: string | CurrencyID, approved: string | Address, amount: string | number | Big): Operation<ApproveFact>;
     /**
-     * Get information about the specific token on the contract.
+     * Get information about the specific token model on the contract.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is token information:
@@ -81,7 +82,7 @@ export declare class Token extends ContractGenerator {
      * - `name`: Name of the token,
      * - `policy`: Token policy object including `_hint`, `total_supply`, `approve_list`
      */
-    getTokenInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getModelInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get the allowance information granted by the owner for a specific token.
      * @async
@@ -96,9 +97,9 @@ export declare class Token extends ContractGenerator {
      * Get token balance for given account.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The token owner's address.
+     * @param {string | Address} [account] - The token owner's address.
      * @returns`data` of `SuccessResponse` is token balance information:
      * - `amount`: String of amount
      */
-    getTokenBalance(contract: string | Address, owner: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getBalance(contract: string | Address, account: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }

@@ -1,9 +1,9 @@
 declare const _default: {
-    CREATE_SERVICE: {
+    REGISTER_MODEL: {
         FACT: string;
         OPERATION: string;
     };
-    APPEND: {
+    ISSUE: {
         FACT: string;
         OPERATION: string;
     };

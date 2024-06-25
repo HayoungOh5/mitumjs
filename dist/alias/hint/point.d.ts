@@ -1,5 +1,5 @@
 declare const _default: {
-    REGISTER_POINT: {
+    REGISTER_MODEL: {
         FACT: string;
         OPERATION: string;
     };

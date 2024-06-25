@@ -3,7 +3,7 @@ import { UpdateKeyFact } from "./update-key";
 import { TransferFact } from "./transfer";
 import { CreateContractAccountFact } from "./create-contract-account";
 import { WithdrawFact } from "./withdraw";
-import { UpdateOperatorFact } from "./update-operator";
+import { UpdateHandlerFact } from "./update-handler";
 import { RegisterCurrencyFact } from "./register-currency";
 import { UpdateCurrencyFact } from "./update-currency";
 import { MintFact } from "./mint";
@@ -33,20 +33,22 @@ export declare class Currency extends Generator {
      * Generate a `register-currency` operation for registering a new currency.
      * **Signature of nodes** is required, not a general account signature.
      * @param {string | Address} [genesisAddress] - genesis account's address.
-     * @param {string | number | Big} [totalSupply] - total supply amount.
-     * @param {string | CurrencyID} [currency] - currency ID to resgister.
+     * @param {string | number | Big} [initialSupply] - initial supply amount.
+     * @param {string | CurrencyID} [currencyID] - currency ID to resgister.
+     * @param {string | number | Big} [decimal] - decimal number for the currency.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `register-currency` operation.
      */
-    registerCurrency(genesisAddress: string | Address, totalSupply: string | number | Big, currency: string | CurrencyID, data: currencyPolicyData): Operation<RegisterCurrencyFact>;
+    registerCurrency(genesisAddress: string | Address, initialSupply: string | number | Big, currencyID: string | CurrencyID, decimal: string | number | Big, data: currencyPolicyData): Operation<RegisterCurrencyFact>;
     /**
      * Generate an `update-currency` operation for updating an existing Mitum currency.
      * **Signature of nodes** is required, not a general account signature.
      * @param {string | CurrencyID} [currency] - The currency ID to want to updated.
+     * @param {string | number | Big} [decimal] - decimal number for the currency.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `update-currency` operation.
      */
-    updateCurrency(currency: string | CurrencyID, data: currencyPolicyData): Operation<UpdateCurrencyFact>;
+    updateCurrency(currency: string | CurrencyID, decimal: string | number | Big, data: currencyPolicyData): Operation<UpdateCurrencyFact>;
     private buildPolicy;
     /**
      * Generate a `transfer` operation for transferring currency between accounts.
@@ -98,10 +100,10 @@ export declare class Currency extends Generator {
      * @param {string | CurrencyID} [currencyID] - The currency ID.
      * @returns `data` of `SuccessResponse` is currency information:
      * - `_hint`: Hint for currency design
-     * - `amount`: [Amount]
+     * - `initial_supply`: [Amount]
      * - `genesis_account`: Initial account for the currency.
-     * - `policy`: Currency policy information including `new_account_min_balance`, `feeer`
-     * - `aggregate`: Aggregate amount of the currency.
+     * - `policy`: Currency policy information including `min_balance`, `feeer`
+     * - `total_supply`: Total supply amount of the currency.
      */
     getCurrency(currencyID: string | CurrencyID): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }
@@ -163,12 +165,10 @@ export declare class Account extends KeyG {
      */
     createMultiSig(sender: string | Address, keys: keysType, currency: string | CurrencyID, amount: string | number | Big, threshold: string | number | Big): Operation<CreateAccountFact>;
     /**
-     * @deprecated This function is deprecated, use updateMultiSig instead.
-     */
-    update(target: string | Address, newKey: string | Key | PubKey, currency: string | CurrencyID): Operation<UpdateKeyFact>;
-    /**
      * Generate an `update-key` operation for replace the public keys involved in given address.
-     * @param {string | Address} [target] - The target account's address.
+     *
+     * `update-key` cannot be used for single-sig accounts and CA accounts.
+     * @param {string | Address} [sender] - The target account's address.
      * @param {keysType} [newKeys] - An array of object {`key`: publickey, `weight`: weight for the key}
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `update-key` operation.
@@ -184,7 +184,7 @@ export declare class Account extends KeyG {
      * };
      * const keysArray = [pubkey01, pubkey02];
      */
-    updateMultiSig(target: string | Address, newKeys: keysType, currency: string | CurrencyID, threshold: string | number | Big): Operation<UpdateKeyFact>;
+    updateKey(sender: string | Address, newKeys: keysType, currency: string | CurrencyID, threshold: string | number | Big): Operation<UpdateKeyFact>;
     /**
      * Sign and send the `transfer` operation to blockchain network to create single-sig account.
      * @async
@@ -341,14 +341,14 @@ export declare class Contract extends Generator {
      */
     getContractInfo(address: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
-     * Generate an `update-operator` operation to update operator of contract to given operators.
+     * Generate an `update-handler` operation to update handlers of contract to given accounts.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [contract] - The contract account address.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {(string | Address)[]} [operators] - The array of addresses to be updated as operators.
-     * @returns `update-operator` operation.
+     * @param {(string | Address)[]} [handlers] - The array of addresses to be updated as handlers.
+     * @returns `update-handler` operation.
      */
-    updateOperator(sender: string | Address, contract: string | Address, currency: string | CurrencyID, operators: (string | Address)[]): Operation<UpdateOperatorFact>;
+    updateHandler(sender: string | Address, contract: string | Address, currency: string | CurrencyID, handlers: (string | Address)[]): Operation<UpdateHandlerFact>;
     /**
      * Sign and send the `create-contract-account` operation to blockchain network.
      * @async

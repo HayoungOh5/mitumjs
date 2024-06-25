@@ -1,3 +1,3 @@
-import { ECODE, assignCodeFromErrorMessage } from "./code";
+import { ECODE, DCODE, PCODE, assignCodeFromErrorMessage } from "./code";
 import { MitumError, Assert, StringAssert } from "./assert";
-export { ECODE, MitumError, Assert, StringAssert, assignCodeFromErrorMessage, };
+export { ECODE, DCODE, PCODE, MitumError, Assert, StringAssert, assignCodeFromErrorMessage, };

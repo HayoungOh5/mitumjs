@@ -10,11 +10,11 @@ declare const _default: {
         BIZ: string;
     };
     WHITELIST: string;
-    CREATE_DAO: {
+    REGISTER_MODEL: {
         FACT: string;
         OPERATION: string;
     };
-    UPDATE_POLICY: {
+    UPDATE_MODEL_CONFIG: {
         FACT: string;
         OPERATION: string;
     };

@@ -1,5 +1,5 @@
 declare const _default: {
-    REGISTER_TOKEN: {
+    REGISTER_MODEL: {
         FACT: string;
         OPERATION: string;
     };

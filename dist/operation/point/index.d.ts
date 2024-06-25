@@ -1,4 +1,4 @@
-import { RegisterPointFact } from "./register-point";
+import { RegisterModelFact } from "./register-model";
 import { MintFact } from "./mint";
 import { BurnFact } from "./burn";
 import { TransferFact } from "./transfer";
@@ -11,16 +11,17 @@ import { Big, IP, LongString } from "../../types";
 export declare class Point extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
-     * Generate a `register-point` operation for registering a point on a contract.
+     * Generate a `register-model` operation to register new point model on a contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | LongString} [name] - The name of the point to register.
      * @param {string | CurrencyID} [symbol] - The symbol of the point to register.
+     * @param {string | number | Big} [decimal] - (Optional) The decimal number to the point to register. If not provided, the default value is 0.
      * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the point to register. If not provided, the default value is 0.
-     * @returns `register-point` operation.
+     * @returns `register-model` operation.
      */
-    registerPoint(contract: string | Address, sender: string | Address, currency: string | CurrencyID, name: string | LongString, symbol: string | CurrencyID, initialSupply?: string | number | Big): Operation<RegisterPointFact>;
+    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID, name: string | LongString, symbol: string | CurrencyID, decimal?: string | number | Big, initialSupply?: string | number | Big): Operation<RegisterModelFact>;
     /**
      * Generate a `mint` operation for minting points and allocating them to a receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -72,7 +73,7 @@ export declare class Point extends ContractGenerator {
      */
     approve(contract: string | Address, sender: string | Address, currency: string | CurrencyID, approved: string | Address, amount: string | number | Big): Operation<ApproveFact>;
     /**
-     * Get information about the specific point on the contract.
+     * Get information about the specific point model on the contract.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is point information:
@@ -81,7 +82,7 @@ export declare class Point extends ContractGenerator {
      * - `name`: Name of the point,
      * - `policy`: Point policy object including `_hint`, `total_supply`, `approve_list`
      */
-    getPointInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getModelInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get the allowance information granted by the owner for a specific point.
      * @async
@@ -96,9 +97,9 @@ export declare class Point extends ContractGenerator {
      * Get point balance for given account.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The point owner's address.
+     * @param {string | Address} [account] - The point owner's address.
      * @returns `data` of `SuccessResponse` is point balance information:
      * - `amount`: String of amount
      */
-    getPointBalance(contract: string | Address, owner: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getBalance(contract: string | Address, account: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }

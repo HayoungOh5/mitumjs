@@ -54,6 +54,7 @@ const ECODE = {
     INVALID_ADDRESS_TYPE: "EC_INVALID_ADDRESS_TYPE",
     INVALID_ADDRESS_CHECKSUM: "EC_INVALID_ADDRESS_CHECKSUM",
     INVALID_BIG_INTEGER: "EC_INVALID_BIG_INTERGER",
+    INVALID_DECIMAL: "EC_INVALID_DECIMAL",
     INVALID_FLOAT: "EC_INVALID_FLOAT",
     INVALID_UINT8: "EC_INVALID_UINT8",
     INVALID_HINT: "EC_INVALID_HINT",
@@ -777,7 +778,7 @@ const Config = {
     NFT: {
         ROYALTY: getRangeConfig(0, 99),
         SHARE: getRangeConfig(0, 100),
-        ADDRESS_IN_WHITELIST: getRangeConfig(0, 10),
+        ADDRESS_IN_MINTER_WHITELIST: getRangeConfig(0, 10),
         SIGNERS_IN_SIGNERS: getRangeConfig(0, 10),
     },
     CREDENTIAL: {
@@ -842,34 +843,31 @@ var CURRENCY = {
         OPERATION: "mitum-currency-mint-operation",
     },
     CREATE_CONTRACT_ACCOUNT: {
-        ITEM: "mitum-currency-create-contract-account-multiple-amounts",
-        FACT: "mitum-currency-create-contract-account-operation-fact",
-        OPERATION: "mitum-currency-create-contract-account-operation",
+        ITEM: "mitum-extension-create-contract-account-multiple-amounts",
+        FACT: "mitum-extension-create-contract-account-operation-fact",
+        OPERATION: "mitum-extension-create-contract-account-operation",
     },
     WITHDRAW: {
-        ITEM: "mitum-currency-contract-account-withdraw-multi-amounts",
-        FACT: "mitum-currency-contract-account-withdraw-operation-fact",
-        OPERATION: "mitum-currency-contract-account-withdraw-operation",
+        ITEM: "mitum-extension-contract-account-withdraw-multi-amounts",
+        FACT: "mitum-extension-withdraw-operation-fact",
+        OPERATION: "mitum-extension-withdraw-operation",
     },
-    UPDATE_OPERATOR: {
-        FACT: "mitum-currency-contract-account-update-operator-operation-fact",
-        OPERATION: "mitum-currency-contract-account-update-operator-operation",
+    UPDATE_HANDLER: {
+        FACT: "mitum-extension-update-handler-operation-fact",
+        OPERATION: "mitum-extension-update-handler-operation",
     }
 };
 
 var NFT$1 = {
-    NFT_ID: "mitum-nft-nft-id",
-    DESIGN: "mitum-nft-design",
-    POLICY: "mitum-nft-collection-policy",
     SIGNER: "mitum-nft-signer",
     SIGNERS: "mitum-nft-signers",
-    CREATE_COLLECTION: {
-        FACT: "mitum-nft-create-collection-operation-fact",
-        OPERATION: "mitum-nft-create-collection-operation",
+    REGISTER_MODEL: {
+        FACT: "mitum-nft-register-model-operation-fact",
+        OPERATION: "mitum-nft-register-model-operation",
     },
-    UPDATE_COLLECTION_POLICY: {
-        FACT: "mitum-nft-update-collection-policy-operation-fact",
-        OPERATION: "mitum-nft-update-collection-policy-operation",
+    UPDATE_MODEL_CONFIG: {
+        FACT: "mitum-nft-update-model-config-operation-fact",
+        OPERATION: "mitum-nft-update-model-config-operation",
     },
     MINT: {
         FORM: "mitum-nft-mint-form",
@@ -877,10 +875,10 @@ var NFT$1 = {
         FACT: "mitum-nft-mint-operation-fact",
         OPERATION: "mitum-nft-mint-operation",
     },
-    DELEGATE: {
-        ITEM: "mitum-nft-delegate-item",
-        FACT: "mitum-nft-delegate-operation-fact",
-        OPERATION: "mitum-nft-delegate-operation",
+    APPROVE_ALL: {
+        ITEM: "mitum-nft-approve-all-item",
+        FACT: "mitum-nft-approve-all-operation-fact",
+        OPERATION: "mitum-nft-approve-all-operation",
     },
     APPROVE: {
         ITEM: "mitum-nft-approve-item",
@@ -892,26 +890,26 @@ var NFT$1 = {
         FACT: "mitum-nft-transfer-operation-fact",
         OPERATION: "mitum-nft-transfer-operation",
     },
-    SIGN: {
-        ITEM: "mitum-nft-sign-item",
-        FACT: "mitum-nft-sign-operation-fact",
-        OPERATION: "mitum-nft-sign-operation",
+    ADD_SIGNATURE: {
+        ITEM: "mitum-nft-add-signature-item",
+        FACT: "mitum-nft-add-signature-operation-fact",
+        OPERATION: "mitum-nft-add-signature-operation",
     }
 };
 
 var CREDENTIAL = {
-    CREATE_SERVICE: {
-        FACT: "mitum-credential-create-service-operation-fact",
-        OPERATION: "mitum-credential-create-service-operation",
+    REGISTER_MODEL: {
+        FACT: "mitum-credential-register-model-operation-fact",
+        OPERATION: "mitum-credential-register-model-operation",
     },
     ADD_TEMPLATE: {
         FACT: "mitum-credential-add-template-operation-fact",
         OPERATION: "mitum-credential-add-template-operation",
     },
-    ASSIGN: {
-        ITEM: "mitum-credential-assign-item",
-        FACT: "mitum-credential-assign-operation-fact",
-        OPERATION: "mitum-credential-assign-operation",
+    ISSUE: {
+        ITEM: "mitum-credential-issue-item",
+        FACT: "mitum-credential-issue-operation-fact",
+        OPERATION: "mitum-credential-issue-operation",
     },
     REVOKE: {
         ITEM: "mitum-credential-revoke-item",
@@ -932,13 +930,13 @@ var DAO$1 = {
         BIZ: "mitum-dao-biz-proposal",
     },
     WHITELIST: "mitum-dao-whitelist",
-    CREATE_DAO: {
-        FACT: "mitum-dao-create-dao-operation-fact",
-        OPERATION: "mitum-dao-create-dao-operation",
+    REGISTER_MODEL: {
+        FACT: "mitum-dao-register-model-operation-fact",
+        OPERATION: "mitum-dao-register-model-operation",
     },
-    UPDATE_POLICY: {
-        FACT: "mitum-dao-update-policy-operation-fact",
-        OPERATION: "mitum-dao-update-policy-operation",
+    UPDATE_MODEL_CONFIG: {
+        FACT: "mitum-dao-update-model-config-operation-fact",
+        OPERATION: "mitum-dao-update-model-config-operation",
     },
     PROPOSE: {
         FACT: "mitum-dao-propose-operation-fact",
@@ -1035,20 +1033,20 @@ var STO$1 = {
 };
 
 var TIMESTAMP = {
-    CREATE_SERVICE: {
-        FACT: "mitum-timestamp-create-service-operation-fact",
-        OPERATION: "mitum-timestamp-create-service-operation",
+    REGISTER_MODEL: {
+        FACT: "mitum-timestamp-register-model-operation-fact",
+        OPERATION: "mitum-timestamp-register-model-operation",
     },
-    APPEND: {
-        FACT: "mitum-timestamp-append-operation-fact",
-        OPERATION: "mitum-timestamp-append-operation",
+    ISSUE: {
+        FACT: "mitum-timestamp-issue-operation-fact",
+        OPERATION: "mitum-timestamp-issue-operation",
     },
 };
 
 var TOKEN = {
-    REGISTER_TOKEN: {
-        FACT: "mitum-token-register-token-operation-fact",
-        OPERATION: "mitum-token-register-token-operation",
+    REGISTER_MODEL: {
+        FACT: "mitum-token-register-model-operation-fact",
+        OPERATION: "mitum-token-register-model-operation",
     },
     MINT: {
         FACT: "mitum-token-mint-operation-fact",
@@ -1073,9 +1071,9 @@ var TOKEN = {
 };
 
 var POINT = {
-    REGISTER_POINT: {
-        FACT: "mitum-point-register-point-operation-fact",
-        OPERATION: "mitum-point-register-point-operation",
+    REGISTER_MODEL: {
+        FACT: "mitum-point-register-model-operation-fact",
+        OPERATION: "mitum-point-register-model-operation",
     },
     MINT: {
         FACT: "mitum-point-mint-operation-fact",
@@ -1714,6 +1712,10 @@ class PubKey extends Key {
     constructor(key, weight) {
         super(typeof key === "string" ? key : key.toString());
         this.weight = Big.from(weight);
+        const s = key.toString();
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid public key"))
+            .chainAnd(s.endsWith(SUFFIX.KEY.MITUM.PUBLIC))
+            .excute();
         Assert.check(Config.WEIGHT.satisfy(this.weight.v), MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "weight out of range"));
     }
     toBuffer() {
@@ -1822,6 +1824,9 @@ class BaseKeyPair {
         return this.generator.random(option);
     }
     static fromPrivateKey(key) {
+        const s = key.toString();
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_PRIVATE_KEY, "invalid private key"))
+            .chainAnd(s.endsWith(SUFFIX.KEY.MITUM.PRIVATE)).excute();
         return this.generator.fromPrivateKey(key);
     }
     static fromSeed(seed, option) {
@@ -2127,8 +2132,8 @@ var currency$1 = {
 };
 
 const url$6 = (api, contract) => `${IP.from(api).toString()}/nft/${Address.from(contract).toString()}`;
-async function getNFT(api, contract, nftID, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/${nftID}`;
+async function getNFT(api, contract, nftIdx, delegateIP) {
+    const apiPath = `${url$6(api, contract)}/nftidx/${nftIdx}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTs(api, contract, delegateIP, factHash, limit, offset, reverse) {
@@ -2136,28 +2141,28 @@ async function getNFTs(api, contract, delegateIP, factHash, limit, offset, rever
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTCount(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/count`;
+    const apiPath = `${url$6(api, contract)}/totalsupply`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getCollection(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/collection`;
+async function getModel$5(api, contract, delegateIP) {
+    const apiPath = `${url$6(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountOperators(api, contract, account, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/account/${Address.from(account).toString()}/operators`;
+    const apiPath = `${url$6(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var nft = {
     getNFT,
     getNFTs,
     getNFTCount,
-    getCollection,
+    getModel: getModel$5,
     getAccountOperators,
 };
 
 const url$5 = (api, contract) => `${IP.from(api).toString()}/did/${Address.from(contract).toString()}`;
-async function getService$3(api, contract, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/service`;
+async function getModel$4(api, contract, delegateIP) {
+    const apiPath = `${url$5(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredential(api, contract, templateID, credentialID, delegateIP) {
@@ -2177,7 +2182,7 @@ async function getCredentialByHolder(api, contract, holder, delegateIP) {
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var credential = {
-    getService: getService$3,
+    getModel: getModel$4,
     getCredential,
     getTemplate,
     getCredentials,
@@ -2185,38 +2190,38 @@ var credential = {
 };
 
 const url$4 = (api, contract) => `${IP.from(api).toString()}/dao/${Address.from(contract).toString()}`;
-async function getService$2(api, contract, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/service`;
+async function getModel$3(api, contract, delegateIP) {
+    const apiPath = `${url$4(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getProposal(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$4(api, contract)}/proposal/${proposalID}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getDelegator(api, contract, proposalID, delegator, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/delegator/${Address.from(delegator).toString()}`;
+async function getApproved(api, contract, proposalID, registrant, delegateIP) {
+    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getVoter(api, contract, proposalID, delegateIP) {
+async function getVoters(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/voter`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getVotingResult(api, contract, proposalID, delegateIP) {
+async function getVotingStatus(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/votingpower`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var dao = {
-    getService: getService$2,
+    getModel: getModel$3,
     getProposal,
-    getDelegator,
-    getVoter,
-    getVotingResult,
+    getApproved,
+    getVoters,
+    getVotingStatus,
 };
 
 var kyc = {};
 
 const url$3 = (api, contract) => `${IP.from(api).toString()}/sto/${Address.from(contract).toString()}`;
-async function getService$1(api, contract, delegateIP) {
+async function getService(api, contract, delegateIP) {
     const apiPath = `${url$3(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
@@ -2241,7 +2246,7 @@ async function getAuthorized(api, contract, operator, delegateIP) {
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var sto = {
-    getService: getService$1,
+    getService,
     getPartitions,
     getBalanceByHolder,
     getOperatorsByHolder,
@@ -2250,21 +2255,21 @@ var sto = {
 };
 
 const url$2 = (api, contract) => `${IP.from(api).toString()}/timestamp/${Address.from(contract).toString()}`;
-async function getService(api, contract, delegateIP) {
-    const apiPath = `${url$2(api, contract)}/service`;
+async function getModel$2(api, contract, delegateIP) {
+    const apiPath = `${url$2(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getTimeStamp(api, contract, projectID, tid, delegateIP) {
-    const apiPath = `${url$2(api, contract)}/project/${projectID}/id/${Big.from(tid).toString()}`;
+async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
+    const apiPath = `${url$2(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var timestamp = {
-    getService,
+    getModel: getModel$2,
     getTimeStamp,
 };
 
 const url$1 = (api, contract) => `${IP.from(api).toString()}/token/${Address.from(contract).toString()}`;
-async function getToken(api, contract, delegateIP) {
+async function getModel$1(api, contract, delegateIP) {
     const apiPath = `${url$1(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
@@ -2273,12 +2278,12 @@ async function getTokenBalance(api, contract, account, delegateIP) {
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var token = {
-    getToken,
+    getModel: getModel$1,
     getTokenBalance,
 };
 
 const url = (api, contract) => `${IP.from(api).toString()}/point/${Address.from(contract).toString()}`;
-async function getPoint(api, contract, delegateIP) {
+async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
@@ -2287,7 +2292,7 @@ async function getPointBalance(api, contract, account, delegateIP) {
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var point = {
-    getPoint,
+    getModel,
     getPointBalance,
 };
 
@@ -2482,6 +2487,82 @@ class Block extends Generator {
     }
 }
 
+class Utils {
+    constructor(decimal = 9) {
+        this.decimal = decimal;
+    }
+    /**
+     * Sets the decimal value used for unit conversions.
+     * @param {number} decimal - The decimal places to be used, must be positive integer.
+     */
+    setDecimal(decimal) {
+        Assert.check(Number.isInteger(decimal) && decimal > 0, MitumError.detail(ECODE.INVALID_DECIMAL, "Invalid decimal number"));
+        this.decimal = decimal;
+    }
+    /**
+     * Validates if a string can be converted to a BigInt.
+     * @param {string} value - The value to be validated.
+     * @returns {boolean} - True if valid, false otherwise.
+     */
+    isValidBigIntString(value) {
+        try {
+            BigInt(value);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
+    /**
+     * Validates if a string is a valid decimal number.
+     * @param {string} value - The value to be validated.
+     * @returns {boolean} - True if valid, false otherwise.
+     */
+    isValidDecimalString(value) {
+        const decimalPattern = /^-?\d+(\.\d+)?$/;
+        return decimalPattern.test(value);
+    }
+    /**
+     * Converts integer string *value* into a "decimal string", assuming decimal places.
+     * The `decimal` number can be set with `setDecimal()` and the default value is 9.
+     * @param {string} value - Integer in string type.
+     * @returns {string} - Value expressed in minimum units.
+     * @example
+     * // Example: Convert mFACT to FACT (decimal: 9)
+     * const value = "20000000000"; //mFACT
+     * const result = mitum.utils.formatUnits(value);
+     * console.log(`mFACT to FACT: ${result}`); // "20.0"
+     */
+    formatUnits(value) {
+        Assert.check(this.isValidBigIntString(value), MitumError.detail(ECODE.INVALID_BIG_INTEGER, "Invalid BigNumberish string: Cannot convert to a BigInt"));
+        const bigIntVal = BigInt(value);
+        const factor = BigInt(10 ** this.decimal);
+        const ether = (bigIntVal / factor).toString();
+        const fractional = (bigIntVal % factor).toString().padStart(1, '0');
+        return `${ether}.${fractional}`;
+    }
+    /**
+     * Converts the "decimal string" *value* to a integer string, assuming decimal places.
+     * The `decimal` number can be set with `setDecimal()` and the default value is 9.
+     * @param {string} value - Decimal number in string type.
+     * @returns {string} - Value expressed in basis units.
+     * @example
+     * // Example: Convert FACT to mFACT (decimal: 9)
+     * const value = "12.12345"; //FACT
+     * const result = mitum.utils.parseUnits(value);
+     * console.log(`FACT to mFACT: ${result}`); // "12123450000"
+     */
+    parseUnits(value) {
+        Assert.check(this.isValidDecimalString(value), MitumError.detail(ECODE.INVALID_FLOAT, "Invalid decimal string"));
+        let [integerPart, fractionalPart = ''] = value.split('.');
+        fractionalPart = Number(fractionalPart) === 0 ? '' : fractionalPart;
+        integerPart = Number(integerPart) === 0 ? '' : integerPart;
+        Assert.check(fractionalPart.length <= this.decimal, MitumError.detail(ECODE.INVALID_FLOAT, "Fractional part exceeds the decimal limit"));
+        const paddedFractional = fractionalPart.padEnd(this.decimal, '0');
+        return integerPart + paddedFractional;
+    }
+}
+
 class CurrencyItem extends Item {
     constructor(hint, amounts) {
         super(hint);
@@ -2529,9 +2610,9 @@ class CreateAccountFact extends OperationFact {
 }
 
 class UpdateKeyFact extends Fact {
-    constructor(token, target, keys, currency) {
+    constructor(token, sender, keys, currency) {
         super(HINT.CURRENCY.UPDATE_KEY.FACT, token);
-        this.target = Address.from(target);
+        this.sender = Address.from(sender);
         this.keys = keys;
         this.currency = CurrencyID.from(currency);
         this._hash = this.hashing();
@@ -2539,7 +2620,7 @@ class UpdateKeyFact extends Fact {
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
-            this.target.toBuffer(),
+            this.sender.toBuffer(),
             this.keys.toBuffer(),
             this.currency.toBuffer(),
         ]);
@@ -2547,7 +2628,7 @@ class UpdateKeyFact extends Fact {
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            target: this.target.toString(),
+            sender: this.sender.toString(),
             keys: this.keys.toHintedObject(),
             currency: this.currency.toString(),
         };
@@ -2667,16 +2748,16 @@ class WithdrawFact extends OperationFact {
     }
 }
 
-class UpdateOperatorFact extends Fact {
-    constructor(token, sender, contract, currency, operators) {
-        super(HINT.CURRENCY.UPDATE_OPERATOR.FACT, token);
+class UpdateHandlerFact extends Fact {
+    constructor(token, sender, contract, currency, handlers) {
+        super(HINT.CURRENCY.UPDATE_HANDLER.FACT, token);
         this.sender = Address.from(sender);
         this.contract = Address.from(contract);
         this.currency = CurrencyID.from(currency);
-        this.operators = operators.map(a => Address.from(a));
+        this.handlers = handlers.map(a => Address.from(a));
         this._hash = this.hashing();
-        Assert.check((this.operators.length !== 0), MitumError.detail(ECODE.INVALID_FACT, "empty operators"));
-        Assert.check(hasOverlappingAddress(this.operators), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in operators"));
+        Assert.check((this.handlers.length !== 0), MitumError.detail(ECODE.INVALID_FACT, "empty handlers"));
+        Assert.check(hasOverlappingAddress(this.handlers), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in handlers"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -2684,7 +2765,7 @@ class UpdateOperatorFact extends Fact {
             this.sender.toBuffer(),
             this.contract.toBuffer(),
             this.currency.toBuffer(),
-            Buffer.concat(this.operators.sort(SortFunc).map(a => a.toBuffer())),
+            Buffer.concat(this.handlers.sort(SortFunc).map(a => a.toBuffer())),
         ]);
     }
     toHintedObject() {
@@ -2693,11 +2774,11 @@ class UpdateOperatorFact extends Fact {
             sender: this.sender.toString(),
             contract: this.contract.toString(),
             currency: this.currency.toString(),
-            operators: this.operators.sort(SortFunc).map((w) => w.toString()),
+            handlers: this.handlers.sort(SortFunc).map((w) => w.toString()),
         };
     }
     get operationHint() {
-        return HINT.CURRENCY.UPDATE_OPERATOR.OPERATION;
+        return HINT.CURRENCY.UPDATE_HANDLER.OPERATION;
     }
 }
 
@@ -2725,16 +2806,18 @@ class RegisterCurrencyFact extends NodeFact {
 }
 
 class UpdateCurrencyFact extends NodeFact {
-    constructor(token, currency, policy) {
+    constructor(token, currency, decimal, policy) {
         super(HINT.CURRENCY.UPDATE_CURRENCY.FACT, token);
         this.currency = CurrencyID.from(currency);
         this.policy = policy;
+        this.decimal = Big.from(decimal);
         this._hash = this.hashing();
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             this.currency.toBuffer(),
+            this.decimal.toBuffer(),
             this.policy.toBuffer(),
         ]);
     }
@@ -2742,6 +2825,7 @@ class UpdateCurrencyFact extends NodeFact {
         return {
             ...super.toHintedObject(),
             currency: this.currency.toString(),
+            decimal: this.decimal.v,
             policy: this.policy.toHintedObject(),
         };
     }
@@ -2799,27 +2883,34 @@ let MintFact$3 = class MintFact extends NodeFact {
 };
 
 class CurrencyDesign {
-    constructor(amount, genesisAccount, policy) {
-        this.amount = amount;
+    constructor(initialSupply, currencyID, genesisAccount, decimal, policy) {
+        this.initialSupply = Big.from(initialSupply);
+        this.currencyID = CurrencyID.from(currencyID);
         this.genesisAccount = Address.from(genesisAccount);
         this.policy = policy;
-        this.aggregate = amount.big;
+        this.totalSupply = Big.from(initialSupply);
+        this.decimal = Big.from(decimal);
+        Assert.check(0 < this.decimal.big, MitumError.detail(ECODE.CURRENCY.INVALID_CURRENCY_DESIGN, "decimal number must not be set to 0 or below"));
     }
     toBuffer() {
         return Buffer.concat([
-            this.amount.toBuffer(),
+            this.initialSupply.toBuffer(),
+            this.currencyID.toBuffer(),
+            this.decimal.toBuffer(),
             this.genesisAccount.toBuffer(),
             this.policy.toBuffer(),
-            this.aggregate.toBuffer(),
+            this.totalSupply.toBuffer(),
         ]);
     }
     toHintedObject() {
         return {
             _hint: CurrencyDesign.hint.toString(),
-            amount: this.amount.toHintedObject(),
+            initial_supply: this.currencyID.toString(),
+            currency_id: this.initialSupply.toString(),
+            decimal: this.decimal.v,
             genesis_account: this.genesisAccount.toString(),
             policy: this.policy.toHintedObject(),
-            aggregate: this.aggregate.toString(),
+            total_supply: this.totalSupply.toString(),
         };
     }
 }
@@ -2838,7 +2929,7 @@ class CurrencyPolicy {
     toHintedObject() {
         return {
             _hint: CurrencyPolicy.hint.toString(),
-            new_account_min_balance: this.newAccountMinBalance.toString(),
+            min_balance: this.newAccountMinBalance.toString(),
             feeer: this.feeer.toHintedObject(),
         };
     }
@@ -2936,34 +3027,35 @@ class Currency extends Generator {
      * Generate a `register-currency` operation for registering a new currency.
      * **Signature of nodes** is required, not a general account signature.
      * @param {string | Address} [genesisAddress] - genesis account's address.
-     * @param {string | number | Big} [totalSupply] - total supply amount.
-     * @param {string | CurrencyID} [currency] - currency ID to resgister.
+     * @param {string | number | Big} [initialSupply] - initial supply amount.
+     * @param {string | CurrencyID} [currencyID] - currency ID to resgister.
+     * @param {string | number | Big} [decimal] - decimal number for the currency.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `register-currency` operation.
      */
-    registerCurrency(genesisAddress, totalSupply, currency, data) {
+    registerCurrency(genesisAddress, initialSupply, currencyID, decimal, data) {
         Address.from(genesisAddress);
         const keysToCheck = ['minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the currencyPolicyData structure`));
         });
-        const amount = new Amount(currency, totalSupply);
-        const design = new CurrencyDesign(amount, genesisAddress, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee));
+        const design = new CurrencyDesign(initialSupply, currencyID, genesisAddress, decimal, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee));
         return new Operation$1(this.networkID, new RegisterCurrencyFact(TimeStamp$1.new().UTC(), design));
     }
     /**
      * Generate an `update-currency` operation for updating an existing Mitum currency.
      * **Signature of nodes** is required, not a general account signature.
      * @param {string | CurrencyID} [currency] - The currency ID to want to updated.
+     * @param {string | number | Big} [decimal] - decimal number for the currency.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `update-currency` operation.
      */
-    updateCurrency(currency, data) {
+    updateCurrency(currency, decimal, data) {
         const keysToCheck = ['minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the currencyPolicyData structure`));
         });
-        return new Operation$1(this.networkID, new UpdateCurrencyFact(TimeStamp$1.new().UTC(), currency, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee)));
+        return new Operation$1(this.networkID, new UpdateCurrencyFact(TimeStamp$1.new().UTC(), currency, decimal, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee)));
     }
     buildPolicy(feeType, minBalance, receiver, fee, ratio, min, max) {
         Address.from(receiver);
@@ -3058,10 +3150,10 @@ class Currency extends Generator {
      * @param {string | CurrencyID} [currencyID] - The currency ID.
      * @returns `data` of `SuccessResponse` is currency information:
      * - `_hint`: Hint for currency design
-     * - `amount`: [Amount]
+     * - `initial_supply`: [Amount]
      * - `genesis_account`: Initial account for the currency.
-     * - `policy`: Currency policy information including `new_account_min_balance`, `feeer`
-     * - `aggregate`: Aggregate amount of the currency.
+     * - `policy`: Currency policy information including `min_balance`, `feeer`
+     * - `total_supply`: Total supply amount of the currency.
      */
     async getCurrency(currencyID) {
         return await getAPIData(() => api.currency.getCurrency(this.api, currencyID, this.delegateIP));
@@ -3150,14 +3242,10 @@ class Account extends KeyG {
         ]));
     }
     /**
-     * @deprecated This function is deprecated, use updateMultiSig instead.
-     */
-    update(target, newKey, currency) {
-        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new Keys([new PubKey(newKey, 100)], 100), currency));
-    }
-    /**
      * Generate an `update-key` operation for replace the public keys involved in given address.
-     * @param {string | Address} [target] - The target account's address.
+     *
+     * `update-key` cannot be used for single-sig accounts and CA accounts.
+     * @param {string | Address} [sender] - The target account's address.
      * @param {keysType} [newKeys] - An array of object {`key`: publickey, `weight`: weight for the key}
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `update-key` operation.
@@ -3173,8 +3261,8 @@ class Account extends KeyG {
      * };
      * const keysArray = [pubkey01, pubkey02];
      */
-    updateMultiSig(target, newKeys, currency, threshold) {
-        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), target, new Keys(newKeys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), currency));
+    updateKey(sender, newKeys, currency, threshold) {
+        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), sender, new Keys(newKeys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), currency));
     }
     /**
      * Sign and send the `transfer` operation to blockchain network to create single-sig account.
@@ -3388,15 +3476,15 @@ class Contract extends Generator {
         return response;
     }
     /**
-     * Generate an `update-operator` operation to update operator of contract to given operators.
+     * Generate an `update-handler` operation to update handlers of contract to given accounts.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [contract] - The contract account address.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {(string | Address)[]} [operators] - The array of addresses to be updated as operators.
-     * @returns `update-operator` operation.
+     * @param {(string | Address)[]} [handlers] - The array of addresses to be updated as handlers.
+     * @returns `update-handler` operation.
      */
-    updateOperator(sender, contract, currency, operators) {
-        return new Operation$1(this.networkID, new UpdateOperatorFact(TimeStamp$1.new().UTC(), sender, contract, currency, operators));
+    updateHandler(sender, contract, currency, handlers) {
+        return new Operation$1(this.networkID, new UpdateHandlerFact(TimeStamp$1.new().UTC(), sender, contract, currency, handlers));
     }
     /**
      * Sign and send the `create-contract-account` operation to blockchain network.
@@ -3428,17 +3516,17 @@ class Contract extends Generator {
     }
 }
 
-class CreateCollectionFact extends ContractFact {
-    constructor(token, sender, contract, name, royalty, uri, whitelist, currency) {
-        super(HINT.NFT.CREATE_COLLECTION.FACT, token, sender, contract, currency);
+let RegisterModelFact$5 = class RegisterModelFact extends ContractFact {
+    constructor(token, sender, contract, name, royalty, uri, minterWhitelist, currency) {
+        super(HINT.NFT.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.name = LongString.from(name);
         this.royalty = Big.from(royalty);
         this.uri = LongString.from(uri);
-        this.whitelist = whitelist ? whitelist.map(w => Address.from(w)) : [];
+        this.minterWhitelist = minterWhitelist ? minterWhitelist.map(w => Address.from(w)) : [];
         Assert.check(Config.NFT.ROYALTY.satisfy(this.royalty.v), MitumError.detail(ECODE.INVALID_FACT, "royalty out of range"));
-        Assert.check(Config.NFT.ADDRESS_IN_WHITELIST.satisfy(this.whitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
-        Assert.check(hasOverlappingAddress(this.whitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
-        this.whitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
+        Assert.check(Config.NFT.ADDRESS_IN_MINTER_WHITELIST.satisfy(this.minterWhitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
+        Assert.check(hasOverlappingAddress(this.minterWhitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
+        this.minterWhitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -3448,7 +3536,7 @@ class CreateCollectionFact extends ContractFact {
             this.royalty.toBuffer("fill"),
             this.uri.toBuffer(),
             this.currency.toBuffer(),
-            Buffer.concat(this.whitelist.sort(SortFunc).map(w => w.toBuffer())),
+            Buffer.concat(this.minterWhitelist.sort(SortFunc).map(w => w.toBuffer())),
         ]);
     }
     toHintedObject() {
@@ -3457,25 +3545,25 @@ class CreateCollectionFact extends ContractFact {
             name: this.name.toString(),
             royalty: this.royalty.v,
             uri: this.uri.toString(),
-            whitelist: this.whitelist.sort(SortFunc).map(w => w.toString()),
+            minter_whitelist: this.minterWhitelist.sort(SortFunc).map(w => w.toString()),
         };
     }
     get operationHint() {
-        return HINT.NFT.CREATE_COLLECTION.OPERATION;
+        return HINT.NFT.REGISTER_MODEL.OPERATION;
     }
-}
+};
 
-class UpdateCollectionPolicyFact extends ContractFact {
-    constructor(token, sender, contract, name, royalty, uri, whitelist, currency) {
-        super(HINT.NFT.UPDATE_COLLECTION_POLICY.FACT, token, sender, contract, currency);
+let UpdateModelConfigFact$1 = class UpdateModelConfigFact extends ContractFact {
+    constructor(token, sender, contract, name, royalty, uri, minterWhitelist, currency) {
+        super(HINT.NFT.UPDATE_MODEL_CONFIG.FACT, token, sender, contract, currency);
         this.name = LongString.from(name);
         this.royalty = Big.from(royalty);
         this.uri = LongString.from(uri);
-        this.whitelist = whitelist ? whitelist.map(w => Address.from(w)) : [];
+        this.minterWhitelist = minterWhitelist ? minterWhitelist.map(w => Address.from(w)) : [];
         Assert.check(Config.NFT.ROYALTY.satisfy(this.royalty.v), MitumError.detail(ECODE.INVALID_FACT, "royalty out of range"));
-        Assert.check(Config.NFT.ADDRESS_IN_WHITELIST.satisfy(this.whitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
-        Assert.check(hasOverlappingAddress(this.whitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
-        this.whitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
+        Assert.check(Config.NFT.ADDRESS_IN_MINTER_WHITELIST.satisfy(this.minterWhitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
+        Assert.check(hasOverlappingAddress(this.minterWhitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
+        this.minterWhitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -3485,7 +3573,7 @@ class UpdateCollectionPolicyFact extends ContractFact {
             this.royalty.toBuffer("fill"),
             this.uri.toBuffer(),
             this.currency.toBuffer(),
-            Buffer.concat(this.whitelist.sort(SortFunc).map(w => w.toBuffer())),
+            Buffer.concat(this.minterWhitelist.sort(SortFunc).map(w => w.toBuffer())),
         ]);
     }
     toHintedObject() {
@@ -3494,13 +3582,13 @@ class UpdateCollectionPolicyFact extends ContractFact {
             name: this.name.toString(),
             royalty: this.royalty.v,
             uri: this.uri.toString(),
-            whitelist: this.whitelist.sort(SortFunc).map(w => w.toString()),
+            minter_whitelist: this.minterWhitelist.sort(SortFunc).map(w => w.toString()),
         };
     }
     get operationHint() {
-        return HINT.NFT.UPDATE_COLLECTION_POLICY.OPERATION;
+        return HINT.NFT.UPDATE_MODEL_CONFIG.OPERATION;
     }
-}
+};
 
 class NFTItem extends Item {
     constructor(hint, contract, currency) {
@@ -3568,16 +3656,16 @@ let MintFact$2 = class MintFact extends OperationFact {
 };
 
 class ApproveItem extends NFTItem {
-    constructor(contract, approved, nftIDX, currency) {
+    constructor(contract, approved, nftIdx, currency) {
         super(HINT.NFT.APPROVE.ITEM, contract, currency);
         this.approved = Address.from(approved);
-        this.nftIDX = Big.from(nftIDX);
+        this.nftIdx = Big.from(nftIdx);
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             this.approved.toBuffer(),
-            this.nftIDX.toBuffer("fill"),
+            this.nftIdx.toBuffer("fill"),
             this.currency.toBuffer(),
         ]);
     }
@@ -3585,7 +3673,7 @@ class ApproveItem extends NFTItem {
         return {
             ...super.toHintedObject(),
             approved: this.approved.toString(),
-            nftidx: this.nftIDX.v,
+            nft_idx: this.nftIdx.v,
         };
     }
     toString() {
@@ -3598,7 +3686,7 @@ let ApproveFact$2 = class ApproveFact extends OperationFact {
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate approve found in items"));
         this.items.forEach(it => {
             Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-            Assert.check(it.approved.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "operator is same with contract address"));
+            Assert.check(it.approved.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "approved is same with contract address"));
         });
     }
     get operationHint() {
@@ -3606,16 +3694,16 @@ let ApproveFact$2 = class ApproveFact extends OperationFact {
     }
 };
 
-class DelegateItem extends NFTItem {
-    constructor(contract, operator, mode, currency) {
-        super(HINT.NFT.DELEGATE.ITEM, contract, currency);
-        this.operator = Address.from(operator);
+class ApproveAllItem extends NFTItem {
+    constructor(contract, approved, mode, currency) {
+        super(HINT.NFT.APPROVE_ALL.ITEM, contract, currency);
+        this.approved = Address.from(approved);
         this.mode = mode;
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
-            this.operator.toBuffer(),
+            this.approved.toBuffer(),
             Buffer.from(this.mode),
             this.currency.toBuffer(),
         ]);
@@ -3623,26 +3711,26 @@ class DelegateItem extends NFTItem {
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            delegatee: this.operator.toString(),
+            approved: this.approved.toString(),
             mode: this.mode,
         };
     }
     toString() {
-        return `${super.toString()}-${this.operator.toString()}`;
+        return `${super.toString()}-${this.approved.toString()}`;
     }
 }
-class DelegateFact extends OperationFact {
+class ApproveAlleFact extends OperationFact {
     constructor(token, sender, items) {
-        super(HINT.NFT.DELEGATE.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate operator found in items"));
+        super(HINT.NFT.APPROVE_ALL.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate approved found in items"));
         this.items.forEach(it => {
             Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-            Assert.check(it.operator.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "operator is same with contract address"));
-            Assert.check(this.sender.toString() != it.operator.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with operator address"));
+            Assert.check(it.approved.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "approved is same with contract address"));
+            Assert.check(this.sender.toString() != it.approved.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with approved address"));
         });
     }
     get operationHint() {
-        return HINT.NFT.DELEGATE.OPERATION;
+        return HINT.NFT.APPROVE_ALL.OPERATION;
     }
 }
 
@@ -3685,32 +3773,32 @@ let TransferFact$2 = class TransferFact extends OperationFact {
     }
 };
 
-class SignItem extends NFTItem {
-    constructor(contract, nft, currency) {
-        super(HINT.NFT.SIGN.ITEM, contract, currency);
-        this.nft = Big.from(nft);
+class AddSignatureItem extends NFTItem {
+    constructor(contract, nftIdx, currency) {
+        super(HINT.NFT.ADD_SIGNATURE.ITEM, contract, currency);
+        this.nftIdx = Big.from(nftIdx);
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
-            this.nft.toBuffer("fill"),
+            this.nftIdx.toBuffer("fill"),
             this.currency.toBuffer(),
         ]);
     }
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            nft: this.nft.v,
+            nft_idx: this.nftIdx.v,
         };
     }
 }
-class SignFact extends OperationFact {
+class AddSignatureFact extends OperationFact {
     constructor(token, sender, items) {
-        super(HINT.NFT.SIGN.FACT, token, sender, items);
+        super(HINT.NFT.ADD_SIGNATURE.FACT, token, sender, items);
         this.items.forEach(it => Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address")));
     }
     get operationHint() {
-        return HINT.NFT.SIGN.OPERATION;
+        return HINT.NFT.ADD_SIGNATURE.OPERATION;
     }
 }
 
@@ -3764,42 +3852,42 @@ class NFT extends ContractGenerator {
         super(networkID, api, delegateIP);
     }
     /**
-     * Generate `create-collection` operation for creating a new NFT collection on the contract.
+     * Generate `register-model` operation to register a new NFT model for creating a collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
      * - {string | LongString} `name` - The name of the NFT collection.
      * - {string | LongString} `uri` - The uri of the NFT collection.
      * - {string | number | Big} `royalty` - The royalty of the NFT collection.
-     * - {(string | Address)[]} `whitelist` - Accounts who have permissions to mint. If it's empty, anyone can mint.
+     * - {(string | Address)[]} `minterWhitelist` - Accounts who have permissions to mint. If it's empty, anyone can mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `create-collection` operation
+     * @returns `register-model` operation
      */
-    createCollection(contract, sender, data, currency) {
-        const keysToCheck = ['name', 'uri', 'royalty', 'whitelist'];
+    registerModel(contract, sender, data, currency) {
+        const keysToCheck = ['name', 'uri', 'royalty', 'minterWhitelist'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the collectionData structure`));
         });
-        return new Operation$1(this.networkID, new CreateCollectionFact(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.whitelist, currency));
+        return new Operation$1(this.networkID, new RegisterModelFact$5(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.minterWhitelist, currency));
     }
     /**
-     * Generate `update-collection` operation for updating the policy of an existing NFT collection on the contract.
+     * Generate `update-model-config` operation to update the policy of the nft collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
+     * @param {collectionData} [data] - The policy data for nft collection to be updated. The properties of `collectionData` include:
      * - {string | LongString} `name` - The name of the NFT collection.
      * - {string | LongString} `uri` - The uri of the NFT collection.
      * - {string | number | Big} `royalty` - The royalty of the NFT collection.
-     * - {(string | Address)[]} `whitelist` - Accounts who have permissions to mint.
+     * - {(string | Address)[]} `minterWhitelist` - Accounts who have permissions to mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `update-collection` operation.
+     * @returns `update-model-config` operation.
      */
-    setPolicy(contract, sender, data, currency) {
-        const keysToCheck = ['name', 'uri', 'royalty', 'whitelist'];
+    updateModelConfig(contract, sender, data, currency) {
+        const keysToCheck = ['name', 'uri', 'royalty', 'minterWhitelist'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the collectionData structure`));
         });
-        return new Operation$1(this.networkID, new UpdateCollectionPolicyFact(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.whitelist, currency));
+        return new Operation$1(this.networkID, new UpdateModelConfigFact$1(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.minterWhitelist, currency));
     }
     /**
      * Generate `mint` operation for minting a new NFT and assigns it to a receiver.
@@ -3861,55 +3949,55 @@ class NFT extends ContractGenerator {
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receiver] - The address of the receiver of the NFT.
-     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `transfer` operation.
      */
-    transfer(contract, sender, receiver, nftID, currency) {
+    transfer(contract, sender, receiver, nftIdx, currency) {
         const fact = new TransferFact$2(TimeStamp$1.new().UTC(), sender, [
-            new TransferItem(contract, receiver, nftID, currency)
+            new TransferItem(contract, receiver, nftIdx, currency)
         ]);
         return new Operation$1(this.networkID, fact);
     }
     /**
-     * Generate `approve` operation to approves NFT to another account (operator).
+     * Generate `approve` operation to approves NFT to another account (approved).
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The address of the owner of the NFT.
-     * @param {string | Address} [operator] - The address being granted approval to manage the NFT.
-     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | Address} [sender] - The address of the sender of the NFT.
+     * @param {string | Address} [approved] - The address being granted approval to manage the NFT.
+     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `approve` operation.
      */
-    approve(contract, owner, operator, nftID, currency) {
-        return new Operation$1(this.networkID, new ApproveFact$2(TimeStamp$1.new().UTC(), owner, [
-            new ApproveItem(contract, operator, nftID, currency)
+    approve(contract, sender, approved, nftIdx, currency) {
+        return new Operation$1(this.networkID, new ApproveFact$2(TimeStamp$1.new().UTC(), sender, [
+            new ApproveItem(contract, approved, nftIdx, currency)
         ]));
     }
     /**
-     * Generate `delegate` operation to sets or cancels the approval for an operator to manage all NFTs of the owner.
+     * Generate `approve-all` operation to grant or revoke approval for an account to manage all NFTs of the sender.
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The address of the owner of the NFT.
-     * @param {string | Address} [operator] - The address being granted or denied approval to manage all NFTs.
+     * @param {string | Address} [sender] - The address of the sender giving or revoking approval.
+     * @param {string | Address} [approved] - The address being granted or denied approval to manage all NFTs.
      * @param {"allow" | "cancel"} [mode] - The mode indicating whether to allow or cancel the approval.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `delegate` operation.
+     * @returns `approve-all` operation.
      */
-    setApprovalForAll(contract, owner, operator, mode, currency) {
-        return new Operation$1(this.networkID, new DelegateFact(TimeStamp$1.new().UTC(), owner, [
-            new DelegateItem(contract, operator, mode, currency)
+    approveAll(contract, sender, approved, mode, currency) {
+        return new Operation$1(this.networkID, new ApproveAlleFact(TimeStamp$1.new().UTC(), sender, [
+            new ApproveAllItem(contract, approved, mode, currency)
         ]));
     }
     /**
-     * Generate `sign` operation to signs an NFT as creator of the artwork.
+     * Generate `add-signature` operation to signs an NFT as creator of the artwork.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [creator] - The address of the creator signing the NFT.
-     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `sign` operation.
      */
-    sign(contract, creator, nftID, currency) {
-        return new Operation$1(this.networkID, new SignFact(TimeStamp$1.new().UTC(), creator, [
-            new SignItem(contract, nftID, currency)
+    addSignature(contract, creator, nftIdx, currency) {
+        return new Operation$1(this.networkID, new AddSignatureFact(TimeStamp$1.new().UTC(), creator, [
+            new AddSignatureItem(contract, nftIdx, currency)
         ]));
     }
     /**
@@ -3918,7 +4006,7 @@ class NFT extends ContractGenerator {
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information about the NFT collection:
      * - `_hint`: Hint for NFT design,
-     * - `parent`: Address of the contract account,
+     * - `contract`: Address of the contract account,
      * - `creator`: Address of the creator,
      * - `active`: Bool represents activation,
      * - `policy`:
@@ -3926,22 +4014,22 @@ class NFT extends ContractGenerator {
      * - - `name`: Name of the NFT collection,
      * - - `royalty`: Royalty of the NFT collection,
      * - - `uri`: URI of the NFT collection,
-     * - - `whitelist`: Array of the addresses of accounts who have permissions to mint
+     * - - `minter_whitelist`: Array of the addresses of accounts who have permissions to mint
      */
-    async getCollectionInfo(contract) {
+    async getModelInfo(contract) {
         Address.from(contract);
-        return await getAPIData(() => contractApi.nft.getCollection(this.api, contract, this.delegateIP));
+        return await getAPIData(() => contractApi.nft.getModel(this.api, contract, this.delegateIP));
     }
     /**
      * Get the owner of a specific NFT.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | number | Big} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is the address of the NFT owner.
      */
-    async ownerOf(contract, nftID) {
+    async getOwner(contract, nftIdx) {
         Address.from(contract);
-        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftID, this.delegateIP));
+        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data.owner ? response.data.owner : null;
         }
@@ -3951,12 +4039,12 @@ class NFT extends ContractGenerator {
      * Get the address approved to manage a specific NFT.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is an address of the approved account to manage the NFT.
      */
-    async getApproved(contract, nftID) {
+    async getApproved(contract, nftIdx) {
         Address.from(contract);
-        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftID, this.delegateIP));
+        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data.approved ? response.data.approved : null;
         }
@@ -3968,11 +4056,11 @@ class NFT extends ContractGenerator {
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is the total supply of NFTs in the collection.
      */
-    async totalSupply(contract) {
+    async getTotalSupply(contract) {
         Address.from(contract);
         const response = await getAPIData(() => contractApi.nft.getNFTCount(this.api, contract, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
-            response.data = response.data.nft_count ? Number(response.data.nft_count) : 0;
+            response.data = response.data.nft_count ? Number(response.data.nft_total_supply) : 0;
         }
         return response;
     }
@@ -3980,12 +4068,12 @@ class NFT extends ContractGenerator {
      * Get the URI of a specific NFT.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is the URI of the NFT.
      */
-    async tokenURI(contract, nftID) {
+    async getURI(contract, nftIdx) {
         Address.from(contract);
-        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftID, this.delegateIP));
+        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data.uri ? response.data.uri : null;
         }
@@ -4000,7 +4088,7 @@ class NFT extends ContractGenerator {
      * - `_hint`: Hint for NFT operators book,
      * - `operators`: Array of the addresses of accounts that have been delegated authority over all of the owner’s NFTs
      */
-    async isApprovedForAll(contract, owner) {
+    async getApprovedAll(contract, owner) {
         Address.from(contract);
         Address.from(owner);
         return await getAPIData(() => contractApi.nft.getAccountOperators(this.api, contract, owner, this.delegateIP));
@@ -4009,10 +4097,10 @@ class NFT extends ContractGenerator {
      * Get detailed information about a specific NFT.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftID] - The ID of the NFT (Indicate the order of minted).
+     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @returns `data` of `SuccessResponse` is detailed information about the NFT:
      * - `_hint`: Hint for NFT,
-     * - `id`: Index of the NFT,
+     * - `nft_idx`: Index of the NFT,
      * - `active`: Bool represents activation,
      * - `owner`: Address of the owner,
      * - `hash`: Hash for the NFT,
@@ -4020,9 +4108,9 @@ class NFT extends ContractGenerator {
      * - `approved`: Address of the approved account for the NFT,
      * - `creators`: Creator object,
      */
-    async getNFTInfo(contract, nftID) {
+    async getNFT(contract, nftIdx) {
         Address.from(contract);
-        return await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftID, this.delegateIP));
+        return await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
     }
     /**
      * Get information of all NFTs in a collection. If the optional parameter factHash is given, only the nft created by the operation is searched.
@@ -4036,7 +4124,7 @@ class NFT extends ContractGenerator {
      * - `_hint`: Hint for currency,
      * - `_embedded`:
      * - - `_hint`: Hint for NFT,
-     * - - `id`: Index of the NFT,
+     * - - `nft_idx`: Index of the NFT,
      * - - `active`: Bool represents activation,
      * - - `owner`: Address of the owner,
      * - - `hash`: Hash for the NFT,
@@ -4051,9 +4139,9 @@ class NFT extends ContractGenerator {
     }
 }
 
-let CreateServiceFact$2 = class CreateServiceFact extends ContractFact {
+let RegisterModelFact$4 = class RegisterModelFact extends ContractFact {
     constructor(token, sender, contract, currency) {
-        super(HINT.CREDENTIAL.CREATE_SERVICE.FACT, token, sender, contract, currency);
+        super(HINT.CREDENTIAL.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -4063,7 +4151,7 @@ let CreateServiceFact$2 = class CreateServiceFact extends ContractFact {
         ]);
     }
     get operationHint() {
-        return HINT.CREDENTIAL.CREATE_SERVICE.OPERATION;
+        return HINT.CREDENTIAL.REGISTER_MODEL.OPERATION;
     }
 };
 
@@ -4127,15 +4215,15 @@ class AddTemplateFact extends ContractFact {
 }
 
 class CredentialItem extends Item {
-    constructor(hint, contract, holder, templateID, id, currency) {
+    constructor(hint, contract, holder, templateID, credentialID, currency) {
         super(hint);
         this.contract = Address.from(contract);
         this.holder = Address.from(holder);
         this.templateID = templateID;
-        this.id = id;
+        this.credentialID = credentialID;
         this.currency = CurrencyID.from(currency);
         Assert.check(Config.CREDENTIAL.TEMPLATE_ID.satisfy(templateID.length), MitumError.detail(ECODE.INVALID_ITEM, "template id length out of range"));
-        Assert.check(Config.CREDENTIAL.ID.satisfy(id.length), MitumError.detail(ECODE.INVALID_ITEM, "credential id length out of range"));
+        Assert.check(Config.CREDENTIAL.ID.satisfy(credentialID.length), MitumError.detail(ECODE.INVALID_ITEM, "credential id length out of range"));
         Assert.check(this.contract.toString() !== this.holder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "holder is same with contract address"));
     }
     toBuffer() {
@@ -4143,7 +4231,7 @@ class CredentialItem extends Item {
             this.contract.toBuffer(),
             this.holder.toBuffer(),
             Buffer.from(this.templateID),
-            Buffer.from(this.id),
+            Buffer.from(this.credentialID),
         ]);
     }
     toHintedObject() {
@@ -4152,7 +4240,7 @@ class CredentialItem extends Item {
             contract: this.contract.toString(),
             holder: this.holder.toString(),
             template_id: this.templateID,
-            id: this.id,
+            credential_id: this.credentialID,
             currency: this.currency.toString(),
         };
     }
@@ -4161,9 +4249,9 @@ class CredentialItem extends Item {
     }
 }
 
-class AssignItem extends CredentialItem {
-    constructor(contract, holder, templateID, id, value, validFrom, validUntil, did, currency) {
-        super(HINT.CREDENTIAL.ASSIGN.ITEM, contract, holder, templateID, id, currency);
+let IssueItem$1 = class IssueItem extends CredentialItem {
+    constructor(contract, holder, templateID, credentialID, value, validFrom, validUntil, did, currency) {
+        super(HINT.CREDENTIAL.ISSUE.ITEM, contract, holder, templateID, credentialID, currency);
         this.value = value;
         this.validFrom = Big.from(validFrom);
         this.validUntil = Big.from(validUntil);
@@ -4191,25 +4279,25 @@ class AssignItem extends CredentialItem {
         };
     }
     toString() {
-        return `${super.toString()}-${this.id}`;
+        return `${super.toString()}-${this.credentialID}`;
     }
-}
-class AssignFact extends OperationFact {
+};
+let IssueFact$2 = class IssueFact extends OperationFact {
     constructor(token, sender, items) {
-        super(HINT.CREDENTIAL.ASSIGN.FACT, token, sender, items);
+        super(HINT.CREDENTIAL.ISSUE.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate credential id found in items"));
         items.forEach(item => {
             Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
         });
     }
     get operationHint() {
-        return HINT.CREDENTIAL.ASSIGN.OPERATION;
+        return HINT.CREDENTIAL.ISSUE.OPERATION;
     }
-}
+};
 
 class RevokeItem extends CredentialItem {
-    constructor(contract, holder, templateID, id, currency) {
-        super(HINT.CREDENTIAL.REVOKE.ITEM, contract, holder, templateID, id, currency);
+    constructor(contract, holder, templateID, credentialID, currency) {
+        super(HINT.CREDENTIAL.REVOKE.ITEM, contract, holder, templateID, credentialID, currency);
     }
     toBuffer() {
         return Buffer.concat([
@@ -4218,7 +4306,7 @@ class RevokeItem extends CredentialItem {
         ]);
     }
     toString() {
-        return `${super.toString()}-${this.id}`;
+        return `${super.toString()}-${this.credentialID}`;
     }
 }
 class RevokeFact extends OperationFact {
@@ -4239,14 +4327,14 @@ class Credential extends ContractGenerator {
         super(networkID, api, delegateIP);
     }
     /**
-     * Generate a `create-service` operation for creating new credential service on the contract.
+     * Generate a `register-model` operation to register new credential model on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `create-service` operation.
+     * @returns `register-model` operation.
      */
-    createService(contract, sender, currency) {
-        return new Operation$1(this.networkID, new CreateServiceFact$2(TimeStamp$1.new().UTC(), sender, contract, currency));
+    registerModel(contract, sender, currency) {
+        return new Operation$1(this.networkID, new RegisterModelFact$4(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     /**
      * Generate an `add-template` operation for adding a new credential template to the credential service.
@@ -4276,30 +4364,30 @@ class Credential extends ContractGenerator {
         return new Operation$1(this.networkID, new AddTemplateFact(TimeStamp$1.new().UTC(), sender, contract, data.templateID, data.templateName, data.serviceDate, data.expirationDate, data.templateShare, data.multiAudit, data.displayName, data.subjectKey, data.description, data.creator, currency));
     }
     /**
-     * Generate an `assign` operation for issue credential to holder.
+     * Generate an `issue` operation for issue credential to holder.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {issueData} [data] - The data required for issuing the credential. The properties of `issueData` include:
      * - {string | Address} `holder` - The address of the credential holder.
      * - {string} `templateID` - The ID of the template.
-     * - {string} `id` - The ID of the credential.
+     * - {string} `credentialID` - The ID of the credential.
      * - {string} `value` - The value of the credential.
      * - {string | number | Big} `validFrom` - The timestamp for validFrom.
      * - {string | number | Big} `validUntil` - The timestamp for validUntil.
      * - {string} `did` - The Decentralized Identifier (DID) associated with the credential.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `assign` operation.
+     * @returns `issue` operation.
      */
     issue(contract, sender, data, currency) {
-        const keysToCheck = ['holder', 'templateID', 'id', 'value', 'validFrom', 'validUntil', 'did'];
+        const keysToCheck = ['holder', 'templateID', 'credentialID', 'value', 'validFrom', 'validUntil', 'did'];
         keysToCheck.forEach((key) => {
             const s = data[key];
             Assert.check(s !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the templateData structure`));
         });
         new URIString(data['templateID'], 'templateID');
-        new URIString(data['id'], 'id');
-        return new Operation$1(this.networkID, new AssignFact(TimeStamp$1.new().UTC(), sender, [
-            new AssignItem(contract, data.holder, data.templateID, data.id, data.value, data.validFrom, data.validUntil, data.did, currency)
+        new URIString(data['credentialID'], 'credentialID');
+        return new Operation$1(this.networkID, new IssueFact$2(TimeStamp$1.new().UTC(), sender, [
+            new IssueItem$1(contract, data.holder, data.templateID, data.credentialID, data.value, data.validFrom, data.validUntil, data.did, currency)
         ]));
     }
     /**
@@ -4308,19 +4396,19 @@ class Credential extends ContractGenerator {
      * @param {string | Address} sender - The sender's address.
      * @param {string | Address} holder - The holder's address of the credential to be revoked.
      * @param {string} templateID - The ID of the template associated with the credential.
-     * @param {string} id - The ID of the credential to be revoked.
+     * @param {string} credentialID - The ID of the credential to be revoked.
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `revoke` operation.
      */
-    revoke(contract, sender, holder, templateID, id, currency) {
+    revoke(contract, sender, holder, templateID, credentialID, currency) {
         new URIString(templateID, 'templateID');
-        new URIString(id, 'id');
+        new URIString(credentialID, 'credentialID');
         return new Operation$1(this.networkID, new RevokeFact(TimeStamp$1.new().UTC(), sender, [
-            new RevokeItem(contract, holder, templateID, id, currency)
+            new RevokeItem(contract, holder, templateID, credentialID, currency)
         ]));
     }
     /**
-     * Get information about a credential service on the contract.
+     * Get information about a credential model on the contract.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is credential service information:
@@ -4334,9 +4422,9 @@ class Credential extends ContractGenerator {
      * - - - `credential_count`: The number of credential for the holder
      * - - `credential_count`: The total number of credential
      */
-    async getServiceInfo(contract) {
+    async getModelInfo(contract) {
         Address.from(contract);
-        return await getAPIData(() => contractApi.credential.getService(this.api, contract, this.delegateIP));
+        return await getAPIData(() => contractApi.credential.getModel(this.api, contract, this.delegateIP));
     }
     /**
      * Get detailed information about a specific credential on the template.
@@ -4349,14 +4437,14 @@ class Credential extends ContractGenerator {
      * - - `_hint`: Hint for credential,
      * - - `holder`: Address of holder,
      * - - `template_id`: The id for the template,
-     * - - `id`: The id for the credential,
+     * - - `credential_id`: The id for the credential,
      * - - `value`: The value of credential,
      * - - `valid_from`: The timestamp for valid_from,
      * - - `valid_until`: The timestamp for valid_until,
      * - - `did`: The name of the credential,
      * - `is_active`: Indicates whether the credential is active or revoked
      */
-    async getCredentialInfo(contract, templateID, credentialID) {
+    async getCredential(contract, templateID, credentialID) {
         Address.from(contract);
         new URIString(templateID, 'templateID');
         new URIString(credentialID, 'credentialID');
@@ -4396,7 +4484,7 @@ class Credential extends ContractGenerator {
      * - - - `_hint`: Hint for credential,
      * - - - `holder`: Address of holder,
      * - - - `template_id`: The id for the template,
-     * - - - `id`: The id for the credential,
+     * - - - `credential_id`: The id for the credential,
      * - - - `value`: The value of credential,
      * - - - `valid_from`: The timestamp for valid_from,
      * - - - `valid_until`: The timestamp for valid_until,
@@ -4423,7 +4511,7 @@ class Credential extends ContractGenerator {
      * - - - - `_hint`: Hint for credential,
      * - - - - `holder`: Address of holder,
      * - - - - `template_id`: The id for the template,
-     * - - - - `id`: The id for the credential,
+     * - - - - `credential_id`: The id for the credential,
      * - - - - `value`: The value of credential,
      * - - - - `valid_from`: The timestamp for valid_from,
      * - - - - `valid_until`: The timestamp for valid_until,
@@ -4431,19 +4519,19 @@ class Credential extends ContractGenerator {
      * - - - `is_active`: Indicates whether the credential is active or revoked,
      * - - `_links`: links to get additional information of the credential
      */
-    async claimCredential(contract, holder) {
+    async getByHolder(contract, holder) {
         Address.from(contract);
         Address.from(holder);
         return await getAPIData(() => contractApi.credential.getCredentialByHolder(this.api, contract, holder, this.delegateIP));
     }
 }
 
-class CreateDAOFact extends ContractFact {
-    constructor(token, sender, contract, option, policy, currency) {
-        super(HINT.DAO.CREATE_DAO.FACT, token, sender, contract, currency);
+let RegisterModelFact$3 = class RegisterModelFact extends ContractFact {
+    constructor(votingPowerToken, sender, contract, option, policy, currency) {
+        super(HINT.DAO.REGISTER_MODEL.FACT, votingPowerToken, sender, contract, currency);
         this.option = option;
         this.policy = policy;
-        this.policy.whitelist.accounts.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
+        this.policy.proposerWhitelist.accounts.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -4459,13 +4547,13 @@ class CreateDAOFact extends ContractFact {
             ...super.toHintedObject(),
             option: this.option,
             ...this.policy.toHintedObject(),
-            _hint: new Hint(HINT.DAO.CREATE_DAO.FACT).toString()
+            _hint: new Hint(HINT.DAO.REGISTER_MODEL.FACT).toString()
         };
     }
     get operationHint() {
-        return HINT.DAO.CREATE_DAO.OPERATION;
+        return HINT.DAO.REGISTER_MODEL.OPERATION;
     }
-}
+};
 
 class DAOFact extends ContractFact {
     constructor(hint, token, sender, contract, proposalID, currency) {
@@ -4531,23 +4619,23 @@ class CancelProposalFact extends DAOFact {
 }
 
 class RegisterFact extends DAOFact {
-    constructor(token, sender, contract, proposalID, delegated, currency) {
+    constructor(token, sender, contract, proposalID, approved, currency) {
         super(HINT.DAO.REGISTER.FACT, token, sender, contract, proposalID, currency);
-        this.delegated = Address.from(delegated);
-        Assert.check(this.contract.toString() !== this.delegated.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with delegated address"));
+        this.approved = Address.from(approved);
+        Assert.check(this.contract.toString() !== this.approved.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with approved address"));
         this._hash = this.hashing();
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
-            this.delegated.toBuffer(),
+            this.approved.toBuffer(),
             this.currency.toBuffer(),
         ]);
     }
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            delegated: this.delegated.toString(),
+            approved: this.approved.toString(),
         };
     }
     get operationHint() {
@@ -4629,12 +4717,12 @@ class ExecuteFact extends DAOFact {
 }
 
 class DAOPolicy {
-    constructor(votingPowerToken, threshold, fee, whitelist, proposalReviewPeriod, registrationPeriod, preSnapshotPeriod, votingPeriod, postSnapshotPeriod, executionDelayPeriod, turnout, quorum) {
+    constructor(votingPowerToken, threshold, proposalFee, proposerWhitelist, proposalReviewPeriod, registrationPeriod, preSnapshotPeriod, votingPeriod, postSnapshotPeriod, executionDelayPeriod, turnout, quorum) {
         this.hint = new Hint(HINT.DAO.POLICY);
         this.votingPowerToken = CurrencyID.from(votingPowerToken);
         this.threshold = Big.from(threshold);
-        this.fee = fee,
-            this.whitelist = whitelist;
+        this.proposalFee = proposalFee,
+            this.proposerWhitelist = proposerWhitelist;
         this.proposalReviewPeriod = Big.from(proposalReviewPeriod);
         this.registrationPeriod = Big.from(registrationPeriod);
         this.preSnapshotPeriod = Big.from(preSnapshotPeriod);
@@ -4653,8 +4741,8 @@ class DAOPolicy {
         return Buffer.concat([
             this.votingPowerToken.toBuffer(),
             this.threshold.toBuffer(),
-            this.fee.toBuffer(),
-            this.whitelist.toBuffer(),
+            this.proposalFee.toBuffer(),
+            this.proposerWhitelist.toBuffer(),
             this.proposalReviewPeriod.toBuffer("fill"),
             this.registrationPeriod.toBuffer("fill"),
             this.preSnapshotPeriod.toBuffer("fill"),
@@ -4670,8 +4758,8 @@ class DAOPolicy {
             _hint: this.hint.toString(),
             voting_power_token: this.votingPowerToken.toString(),
             threshold: this.threshold.toString(),
-            fee: this.fee.toHintedObject(),
-            whitelist: this.whitelist.toHintedObject(),
+            proposal_fee: this.proposalFee.toHintedObject(),
+            proposer_whitelist: this.proposerWhitelist.toHintedObject(),
             proposal_review_period: this.proposalReviewPeriod.v,
             registration_period: this.registrationPeriod.v,
             pre_snapshot_period: this.preSnapshotPeriod.v,
@@ -4826,12 +4914,12 @@ class BizProposal extends Proposal {
     }
 }
 
-class UpdatePolicyFact extends ContractFact {
+class UpdateModelConfigFact extends ContractFact {
     constructor(token, sender, contract, option, policy, currency) {
-        super(HINT.DAO.UPDATE_POLICY.FACT, token, sender, contract, currency);
+        super(HINT.DAO.UPDATE_MODEL_CONFIG.FACT, token, sender, contract, currency);
         this.option = option;
         this.policy = policy;
-        this.policy.whitelist.accounts.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
+        this.policy.proposerWhitelist.accounts.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -4847,11 +4935,11 @@ class UpdatePolicyFact extends ContractFact {
             ...super.toHintedObject(),
             option: this.option,
             ...this.policy.toHintedObject(),
-            _hint: new Hint(HINT.DAO.UPDATE_POLICY.FACT).toString()
+            _hint: new Hint(HINT.DAO.UPDATE_MODEL_CONFIG.FACT).toString()
         };
     }
     get operationHint() {
-        return HINT.DAO.UPDATE_POLICY.OPERATION;
+        return HINT.DAO.UPDATE_MODEL_CONFIG.OPERATION;
     }
 }
 
@@ -4860,15 +4948,15 @@ class DAO extends ContractGenerator {
         super(networkID, api, delegateIP);
     }
     /**
-     * Generate `create-dao` operation for creating a new DAO on the contract.
+     * Generate `register-model` operation to register a new DAO model on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {daoData} [data] - Data for policy of DAO service to create. The properties of `daoData` include:
      * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
-     * - {string | CurrencyID} `token` - The currency ID to be used when calculating voting power.
-     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold.
-     * - {string | number | Big} `fee` - The fee paid when registering a proposal.
-     * - {(string | Address)[]} `proposers` - An array of addresses for accounts who can propose the new proposals.
+     * - {string | CurrencyID} `votingPowerToken` - The currency ID to be used when calculating voting power.
+     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold after paying for the proposal fee.
+     * - {string | number | Big} `proposalFee` - The fee paid when registering a proposal.
+     * - {(string | Address)[]} `proposerWhitelist` - An array of addresses for accounts who can propose the new proposals.
      * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
      * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
      * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
@@ -4878,25 +4966,25 @@ class DAO extends ContractGenerator {
      * - {string | number | Big} `turnout` - The minimum rate of attendees for a proposal to pass (in percentage)
      * - {string | number | Big} `quorum` - The minimum rate of upvotes for a proposal to pass (in percentage)
      * @param {string | CurrencyID} currency - The currency ID.
-     * @returns `create-dao` operation.
+     * @returns `register-model` operation.
      */
-    createService(contract, sender, data, currency) {
-        const keysToCheck = ['option', 'token', 'threshold', 'fee', 'proposers', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
+    registerModel(contract, sender, data, currency) {
+        const keysToCheck = ['option', 'votingPowerToken', 'threshold', 'proposalFee', 'proposerWhitelist', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the daoData structure`));
         });
-        return new Operation$1(this.networkID, new CreateDAOFact(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.token, data.threshold, new Fee(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
+        return new Operation$1(this.networkID, new RegisterModelFact$3(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
     }
     /**
-     * Generate `update-policy` operation for updating the DAO policy on the contract.
+     * Generate `update-model-config` operation for updating the DAO policy on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {daoData} [data] - Data for policy of DAO service to update. The properties of `daoData` include:
      * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
-     * - {string | CurrencyID} `token` - The currency ID to be used when calculating voting power.
-     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold.
-     * - {string | number | Big} `fee` - The fee paid when registering a proposal.
-     * - {(string | Address)[]} `proposers` - An array of addresses for accounts who can propose the new proposals.
+     * - {string | CurrencyID} `votingPowerToken` - The currency ID to be used when calculating voting power.
+     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold after paying for the proposal fee.
+     * - {string | number | Big} `proposalFee` - The fee paid when registering a proposal.
+     * - {(string | Address)[]} `proposerWhitelist` - An array of addresses for accounts who can propose the new proposals.
      * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
      * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
      * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
@@ -4906,14 +4994,14 @@ class DAO extends ContractGenerator {
      * - {string | number | Big} `turnout` - The minimum rate of attendees for a proposal to pass (in percentage)
      * - {string | number | Big} `quorum` - The minimum rate of upvotes for a proposal to pass (in percentage)
      * @param {string | CurrencyID} currency - The currency ID.
-     * @returns `update-policy` operation
+     * @returns `update-model-config` operation
      */
-    updateService(contract, sender, data, currency) {
-        const keysToCheck = ['option', 'token', 'threshold', 'fee', 'proposers', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
+    updateModelConfig(contract, sender, data, currency) {
+        const keysToCheck = ['option', 'votingPowerToken', 'threshold', 'proposalFee', 'proposerWhitelist', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the daoData structure`));
         });
-        return new Operation$1(this.networkID, new UpdatePolicyFact(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.token, data.threshold, new Fee(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
+        return new Operation$1(this.networkID, new UpdateModelConfigFact(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
     }
     /**
      * Create transfer calldata for the crypto proposal to transfer crypto currency.
@@ -4929,10 +5017,10 @@ class DAO extends ContractGenerator {
     /**
      * Create governance calldata for the crypto proposal to update DAO policy.
      * @param {policyData} [data] - Data for policy of DAO service to update. The properties of `policyData` include:
-     * - {string | CurrencyID} `token` - The currency ID to be used when calculating voting power.
-     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold.
-     * - {string | number | Big} `fee` - The fee paid when registering a proposal.
-     * - {(string | Address)[]} `proposers` - An array of addresses for accounts who can propose the new proposals.
+     * - {string | CurrencyID} `votingPowerToken` - The currency ID to be used when calculating voting power.
+     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold after paying for the proposal fee.
+     * - {string | number | Big} `proposalFee` - The fee paid when registering a proposal.
+     * - {(string | Address)[]} `proposerWhitelist` - An array of addresses for accounts who can propose the new proposals.
      * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
      * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
      * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
@@ -4945,11 +5033,11 @@ class DAO extends ContractGenerator {
      * @returns governance calldata.
      */
     formSetPolicyCalldata(data, currency) {
-        const keysToCheck = ['token', 'threshold', 'fee', 'proposers', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
+        const keysToCheck = ['votingPowerToken', 'threshold', 'proposalFee', 'proposerWhitelist', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the policyData structure`));
         });
-        return new GovernanceCalldata(new DAOPolicy(data.token, data.threshold, new Fee(currency, data.fee), new Whitelist(true, data.proposers.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum));
+        return new GovernanceCalldata(new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum));
     }
     /**
      * Write a crypto proposal include `TransferCalldata` or `GovernanceCalldata` .
@@ -4986,16 +5074,16 @@ class DAO extends ContractGenerator {
         return new Operation$1(this.networkID, new ProposeFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, proposal, currency));
     }
     /**
-     * Generate `register` operation to register to get voting right to the proposal. If delegator is given, delegate voting rights.
+     * Generate `register` operation to register to get voting right to the proposal. If approved is given, delegate voting rights to the account.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string} [proposalID] - The proposal ID.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [delegator] - (Optional) The address of the delegator.
+     * @param {string | Address} [approved] - (Optional) The address of the account to which voting rights will be delegated..
      * @returns `register` operation
      */
-    register(contract, sender, proposalID, currency, delegator) {
-        return new Operation$1(this.networkID, new RegisterFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, delegator ? delegator : sender, currency));
+    register(contract, sender, proposalID, currency, approved) {
+        return new Operation$1(this.networkID, new RegisterFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, approved ? approved : sender, currency));
     }
     /**
      * Generate `cancel-proposal` operation to cancel a DAO proposal.
@@ -5005,7 +5093,7 @@ class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `cancel-proposal` operation
      */
-    cancel(contract, sender, proposalID, currency) {
+    cancelProposal(contract, sender, proposalID, currency) {
         return new Operation$1(this.networkID, new CancelProposalFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
     }
     /**
@@ -5016,7 +5104,7 @@ class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `pre-snap` operation.
      */
-    snapBeforeVoting(contract, sender, proposalID, currency) {
+    preSnap(contract, sender, proposalID, currency) {
         return new Operation$1(this.networkID, new PreSnapFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
     }
     /**
@@ -5028,7 +5116,7 @@ class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `vote` operation.
      */
-    castVote(contract, sender, proposalID, voteOption, currency) {
+    vote(contract, sender, proposalID, voteOption, currency) {
         return new Operation$1(this.networkID, new VoteFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, voteOption, currency));
     }
     /**
@@ -5039,7 +5127,7 @@ class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `post-snap` operation
      */
-    snapAfterVoting(contract, sender, proposalID, currency) {
+    postSnap(contract, sender, proposalID, currency) {
         return new Operation$1(this.networkID, new PostSnapFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
     }
     /**
@@ -5054,7 +5142,7 @@ class DAO extends ContractGenerator {
         return new Operation$1(this.networkID, new ExecuteFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
     }
     /**
-     * Get DAO service information for a specific contract address.
+     * Get DAO model information for a specific contract address.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information of the DAO service:
@@ -5062,9 +5150,9 @@ class DAO extends ContractGenerator {
      * - `option`: 'biz' or 'crypto',
      * - `policy`: [Policy]
      */
-    async getServiceInfo(contract) {
+    async getModelInfo(contract) {
         Address.from(contract);
-        return await getAPIData(() => contractApi.dao.getService(this.api, contract, this.delegateIP));
+        return await getAPIData(() => contractApi.dao.getModel(this.api, contract, this.delegateIP));
     }
     /**
      * Get information about a specific DAO proposal. The `status` does not accurately reflect the current state of the proposal because it is updated only when an operation occurs.
@@ -5077,26 +5165,26 @@ class DAO extends ContractGenerator {
      * - `proposal`: [BizProposal] or [CryptoProposal],
      * - `policy`: [Policy]
      */
-    async getProposalInfo(contract, proposalID) {
+    async getProposal(contract, proposalID) {
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
         return await getAPIData(() => contractApi.dao.getProposal(this.api, contract, proposalID, this.delegateIP));
     }
     /**
-     * Get information about a specific delegator in a DAO proposal.
+     * Get the approved account who has taken over the voting rights from the registrant account.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
-     * @param {string | Address} [delegator] - The address of the delegator.
-     * @returns `data` of `SuccessResponse` is delegator information:
-     * - `_hint`: Hint for dao delegator info,
-     * - `account`: Address of delegator account,
-     * - `delegatee`: Address of delegatee account,
+     * @param {string | Address} [account] - The address of the account that has approved another account.
+     * @returns `data` of `SuccessResponse` is approval information:
+     * - `_hint`: Hint for DAO approval voting info,
+     * - `account`: Address of the registrant that has approved another account,
+     * - `approved`: Address of the approved account,
      */
-    async getDelegatorInfo(contract, proposalID, delegator) {
+    async getApproved(contract, proposalID, account) {
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
-        return await getAPIData(() => contractApi.dao.getDelegator(this.api, contract, proposalID, delegator, this.delegateIP));
+        return await getAPIData(() => contractApi.dao.getApproved(this.api, contract, proposalID, account, this.delegateIP));
     }
     /**
      * Get information about voters in a specific DAO proposal.
@@ -5105,16 +5193,16 @@ class DAO extends ContractGenerator {
      * @param {string} [proposalID] - The proposal ID.
      * @returns `data` of `SuccessResponse` is an array of information of the voters:
      * - `_hint`: Hint for dao voter,
-     * - `account`: Address of the voter,
-     * - `delegators`: [ Address of delegatee, Address of delegator ]
+     * - `voter`: Address of account that can vote,
+     * - `votring_power_holders`: List of accounts that have delegated their voting power to voter.
      */
-    async getVoterInfo(contract, proposalID) {
+    async getVoters(contract, proposalID) {
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
-        return await getAPIData(() => contractApi.dao.getVoter(this.api, contract, proposalID, this.delegateIP));
+        return await getAPIData(() => contractApi.dao.getVoters(this.api, contract, proposalID, this.delegateIP));
     }
     /**
-     * Get the voting result of a specific DAO proposal.
+     * Get the status of the voting for the proposal.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string} [proposalID] - The proposal ID.
@@ -5124,10 +5212,10 @@ class DAO extends ContractGenerator {
      * - `voting_powers`: Object mapping registered account addresses to their corresponding voting information represents `_hint`, `account`,`voted`, `vote_for`, `voting_power`.
      * - `result`: Object consisting of the selected option and the number of votes.
      */
-    async getVotingResult(contract, proposalID) {
+    async getVotingStatus(contract, proposalID) {
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
-        return await getAPIData(() => contractApi.dao.getVotingResult(this.api, contract, proposalID, this.delegateIP));
+        return await getAPIData(() => contractApi.dao.getVotingStatus(this.api, contract, proposalID, this.delegateIP));
     }
 }
 
@@ -5232,7 +5320,7 @@ class IssueItem extends STOItem {
         };
     }
 }
-class IssueFact extends OperationFact {
+let IssueFact$1 = class IssueFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.STO.ISSUE.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate contract found in items"));
@@ -5243,7 +5331,7 @@ class IssueFact extends OperationFact {
     get operationHint() {
         return HINT.STO.ISSUE.OPERATION;
     }
-}
+};
 
 class AuthorizeOperatorItem extends STOItem {
     constructor(contract, operator, partition, currency) {
@@ -5493,7 +5581,7 @@ class STO extends ContractGenerator {
      * @returns `issue` operation.
      */
     issue(contract, sender, receiver, partition, amount, currency) {
-        return new Operation$1(this.networkID, new IssueFact(TimeStamp$1.new().UTC(), sender, [
+        return new Operation$1(this.networkID, new IssueFact$1(TimeStamp$1.new().UTC(), sender, [
             new IssueItem(contract, receiver, amount, partition, currency)
         ]));
     }
@@ -5637,7 +5725,7 @@ class STO extends ContractGenerator {
     }
 }
 
-let CreateServiceFact$1 = class CreateServiceFact extends ContractFact {
+class CreateServiceFact extends ContractFact {
     constructor(token, sender, contract, currency) {
         super(HINT.KYC.CREATE_SERVICE.FACT, token, sender, contract, currency);
         this._hash = this.hashing();
@@ -5651,7 +5739,7 @@ let CreateServiceFact$1 = class CreateServiceFact extends ContractFact {
     get operationHint() {
         return HINT.KYC.CREATE_SERVICE.OPERATION;
     }
-};
+}
 
 class KYCItem extends Item {
     constructor(hint, contract, currency) {
@@ -5817,7 +5905,7 @@ class KYC extends ContractGenerator {
         super(networkID, api, delegateIP);
     }
     createService(contract, sender, currency) {
-        return new Operation$1(this.networkID, new CreateServiceFact$1(TimeStamp$1.new().UTC(), sender, contract, currency));
+        return new Operation$1(this.networkID, new CreateServiceFact(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     addController(contract, sender, controller, currency) {
         return new Operation$1(this.networkID, new AddControllerFact(TimeStamp$1.new().UTC(), sender, [
@@ -5857,9 +5945,9 @@ class TimeStampFact extends ContractFact {
     }
 }
 
-class CreateServiceFact extends TimeStampFact {
+let RegisterModelFact$2 = class RegisterModelFact extends TimeStampFact {
     constructor(token, sender, contract, currency) {
-        super(HINT.TIMESTAMP.CREATE_SERVICE.FACT, token, sender, contract, currency);
+        super(HINT.TIMESTAMP.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -5868,13 +5956,13 @@ class CreateServiceFact extends TimeStampFact {
         ]);
     }
     get operationHint() {
-        return HINT.TIMESTAMP.CREATE_SERVICE.OPERATION;
+        return HINT.TIMESTAMP.REGISTER_MODEL.OPERATION;
     }
-}
+};
 
-class AppendFact extends TimeStampFact {
-    constructor(token, sender, target, projectID, requestTimeStamp, data, currency) {
-        super(HINT.TIMESTAMP.APPEND.FACT, token, sender, target, currency);
+class IssueFact extends TimeStampFact {
+    constructor(token, sender, contract, projectID, requestTimeStamp, data, currency) {
+        super(HINT.TIMESTAMP.ISSUE.FACT, token, sender, contract, currency);
         this.projectID = projectID;
         this.requestTimeStamp = Big.from(requestTimeStamp);
         this.data = data;
@@ -5894,13 +5982,13 @@ class AppendFact extends TimeStampFact {
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            projectid: this.projectID,
+            project_id: this.projectID,
             request_timestamp: this.requestTimeStamp.v,
             data: this.data,
         };
     }
     get operationHint() {
-        return HINT.TIMESTAMP.APPEND.OPERATION;
+        return HINT.TIMESTAMP.ISSUE.OPERATION;
     }
 }
 
@@ -5909,28 +5997,28 @@ class TimeStamp extends ContractGenerator {
         super(networkID, api, delegateIP);
     }
     /**
-     * Generate a `create-service` operation for creating new timestamp service on the contract.
+     * Generate a `register-model` operation to register new timestamp model on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `create-service` operation.
+     * @returns `register-model` operation.
      */
-    createService(contract, sender, currency) {
-        return new Operation$1(this.networkID, new CreateServiceFact(TimeStamp$1.new().UTC(), sender, contract, currency));
+    registerModel(contract, sender, currency) {
+        return new Operation$1(this.networkID, new RegisterModelFact$2(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     /**
-     * Generate `append` operation for appending new timestamp to the project on the timestamp service.
+     * Generate `issue` operation to issue new timestamp to the project on the timestamp model.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [projectID] - The ID of the project to which data is appended.
+     * @param {string} [projectID] - The ID of the project to issue.
      * @param {string | number | Big} [requestTimeStamp] - Value of the timestamp to record.
      * @param {string} [data] - The data to be appended.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `append` operation
+     * @returns `issue` operation
      */
-    append(contract, sender, projectID, requestTimeStamp, data, currency) {
+    issue(contract, sender, projectID, requestTimeStamp, data, currency) {
         new URIString(projectID, 'projectID');
-        const fact = new AppendFact(TimeStamp$1.new().UTC(), sender, contract, projectID, requestTimeStamp, data, currency);
+        const fact = new IssueFact(TimeStamp$1.new().UTC(), sender, contract, projectID, requestTimeStamp, data, currency);
         return new Operation$1(this.networkID, fact);
     }
     /**
@@ -5941,28 +6029,28 @@ class TimeStamp extends ContractGenerator {
      * - `_hint`: Hint for timestamp design,
      * - `projects`: Array of all project's id
      */
-    async getServiceInfo(contract) {
+    async getModelInfo(contract) {
         Address.from(contract);
-        return await getAPIData(() => contractApi.timestamp.getService(this.api, contract, this.delegateIP));
+        return await getAPIData(() => contractApi.timestamp.getModel(this.api, contract, this.delegateIP));
     }
     /**
      * Get detailed information about a timestamp on the project.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string} [projectID] - The ID of the project.
-     * @param {string | number | Big} [tid] - The timestamp ID (Indicate the order of appended to the project)
+     * @param {string | number | Big} [timestampIdx] - The index of timestamp (Indicate the order of appended to the project)
      * @returns `data` of `SuccessResponse` is information about the timestamp with certain tid on the certain project:
      * - `_hint`: Hint for timestamp item,
-     * - `projectid`: ID of the timestamp project,
+     * - `project_id`: ID of the timestamp project,
      * - `request_timestamp`: Request timestamp entered when appending timestamp,
      * - `response_timestamp`: Time when the timestamp was registered,
-     * - `timestampid`: A number representing the timestamp id,
+     * - `timestamp_idx`: A index for the timestamp ,
      * - `data`: Data string
      */
-    async getTimestampInfo(contract, projectID, tid) {
+    async getTimestamp(contract, projectID, timestampIdx) {
         Address.from(contract);
         new URIString(projectID, 'projectID');
-        return await getAPIData(() => contractApi.timestamp.getTimeStamp(this.api, contract, projectID, tid, this.delegateIP));
+        return await getAPIData(() => contractApi.timestamp.getTimeStamp(this.api, contract, projectID, timestampIdx, this.delegateIP));
     }
 }
 
@@ -5983,13 +6071,15 @@ class TokenFact extends ContractFact {
     }
 }
 
-class RegisterTokenFact extends TokenFact {
-    constructor(token, sender, contract, currency, symbol, name, initialSupply) {
-        super(HINT.TOKEN.REGISTER_TOKEN.FACT, token, sender, contract, currency);
+let RegisterModelFact$1 = class RegisterModelFact extends TokenFact {
+    constructor(token, sender, contract, currency, symbol, name, decimal, initialSupply) {
+        super(HINT.TOKEN.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.symbol = CurrencyID.from(symbol);
         this.name = LongString.from(name);
+        this.decimal = Big.from(decimal);
         this.initialSupply = Big.from(initialSupply);
         Assert.check(this.initialSupply.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "initialSupply under zero"));
+        Assert.check(this.decimal.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "decimal number under zero"));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -5997,6 +6087,7 @@ class RegisterTokenFact extends TokenFact {
             super.toBuffer(),
             this.symbol.toBuffer(),
             this.name.toBuffer(),
+            this.decimal.toBuffer(),
             this.initialSupply.toBuffer(),
         ]);
     }
@@ -6005,13 +6096,14 @@ class RegisterTokenFact extends TokenFact {
             ...super.toHintedObject(),
             symbol: this.symbol.toString(),
             name: this.name.toString(),
+            decimal: this.decimal.toString(),
             initial_supply: this.initialSupply.toString(),
         };
     }
     get operationHint() {
-        return HINT.TOKEN.REGISTER_TOKEN.OPERATION;
+        return HINT.TOKEN.REGISTER_MODEL.OPERATION;
     }
-}
+};
 
 let MintFact$1 = class MintFact extends TokenFact {
     constructor(token, sender, contract, currency, receiver, amount) {
@@ -6186,17 +6278,18 @@ class Token extends ContractGenerator {
         super(networkID, api, delegateIP);
     }
     /**
-     * Generate a `register-token` operation for registering a token on a contract.
+     * Generate a `register-model` operation to register new token model on a contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | LongString} [name] - The name of the token to register.
      * @param {string | CurrencyID} [symbol] - The symbol of the token to register.
+     * @param {string | number | Big} [decimal] - (Optional) The decimal number to the token to register. If not provided, the default value is 0.
      * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the token to register. If not provided, the default value is 0.
-     * @returns `register-token` operation.
+     * @returns `register-model` operation.
      */
-    registerToken(contract, sender, currency, name, symbol, initialSupply) {
-        return new Operation$1(this.networkID, new RegisterTokenFact(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, initialSupply ?? 0));
+    registerModel(contract, sender, currency, name, symbol, decimal, initialSupply) {
+        return new Operation$1(this.networkID, new RegisterModelFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
     }
     /**
      * Generate a `mint` operation for minting tokens and allocating them to a receiver.
@@ -6259,7 +6352,7 @@ class Token extends ContractGenerator {
         return new Operation$1(this.networkID, new ApproveFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, approved, amount));
     }
     /**
-     * Get information about the specific token on the contract.
+     * Get information about the specific token model on the contract.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is token information:
@@ -6268,9 +6361,9 @@ class Token extends ContractGenerator {
      * - `name`: Name of the token,
      * - `policy`: Token policy object including `_hint`, `total_supply`, `approve_list`
      */
-    async getTokenInfo(contract) {
+    async getModelInfo(contract) {
         Address.from(contract);
-        return await getAPIData(() => contractApi.token.getToken(this.api, contract, this.delegateIP));
+        return await getAPIData(() => contractApi.token.getModel(this.api, contract, this.delegateIP));
     }
     /**
      * Get the allowance information granted by the owner for a specific token.
@@ -6285,7 +6378,7 @@ class Token extends ContractGenerator {
         Address.from(contract);
         Address.from(owner);
         Address.from(approved);
-        const response = await getAPIData(() => contractApi.token.getToken(this.api, contract, this.delegateIP));
+        const response = await getAPIData(() => contractApi.token.getModel(this.api, contract, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = calculateAllowance(response, owner, approved);
         }
@@ -6295,14 +6388,14 @@ class Token extends ContractGenerator {
      * Get token balance for given account.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The token owner's address.
+     * @param {string | Address} [account] - The token owner's address.
      * @returns`data` of `SuccessResponse` is token balance information:
      * - `amount`: String of amount
      */
-    async getTokenBalance(contract, owner) {
+    async getBalance(contract, account) {
         Address.from(contract);
-        Address.from(owner);
-        return await getAPIData(() => contractApi.token.getTokenBalance(this.api, contract, owner, this.delegateIP));
+        Address.from(account);
+        return await getAPIData(() => contractApi.token.getTokenBalance(this.api, contract, account, this.delegateIP));
     }
 }
 
@@ -6323,12 +6416,14 @@ class PointFact extends ContractFact {
     }
 }
 
-class RegisterPointFact extends PointFact {
-    constructor(token, sender, contract, currency, symbol, name, initialSupply) {
-        super(HINT.POINT.REGISTER_POINT.FACT, token, sender, contract, currency);
+class RegisterModelFact extends PointFact {
+    constructor(token, sender, contract, currency, symbol, name, decimal, initialSupply) {
+        super(HINT.POINT.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.symbol = CurrencyID.from(symbol);
         this.name = LongString.from(name);
+        this.decimal = Big.from(decimal);
         this.initialSupply = Big.from(initialSupply);
+        Assert.check(this.decimal.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "decimal number under zero"));
         Assert.check(this.initialSupply.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "initialSupply under zero"));
         this._hash = this.hashing();
     }
@@ -6337,6 +6432,7 @@ class RegisterPointFact extends PointFact {
             super.toBuffer(),
             this.symbol.toBuffer(),
             this.name.toBuffer(),
+            this.decimal.toBuffer(),
             this.initialSupply.toBuffer(),
         ]);
     }
@@ -6345,11 +6441,12 @@ class RegisterPointFact extends PointFact {
             ...super.toHintedObject(),
             symbol: this.symbol.toString(),
             name: this.name.toString(),
+            decimal: this.decimal.toString(),
             initial_supply: this.initialSupply.toString(),
         };
     }
     get operationHint() {
-        return HINT.POINT.REGISTER_POINT.OPERATION;
+        return HINT.POINT.REGISTER_MODEL.OPERATION;
     }
 }
 
@@ -6508,17 +6605,18 @@ class Point extends ContractGenerator {
         super(networkID, api, delegateIP);
     }
     /**
-     * Generate a `register-point` operation for registering a point on a contract.
+     * Generate a `register-model` operation to register new point model on a contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | LongString} [name] - The name of the point to register.
      * @param {string | CurrencyID} [symbol] - The symbol of the point to register.
+     * @param {string | number | Big} [decimal] - (Optional) The decimal number to the point to register. If not provided, the default value is 0.
      * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the point to register. If not provided, the default value is 0.
-     * @returns `register-point` operation.
+     * @returns `register-model` operation.
      */
-    registerPoint(contract, sender, currency, name, symbol, initialSupply) {
-        return new Operation$1(this.networkID, new RegisterPointFact(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, initialSupply ?? 0));
+    registerModel(contract, sender, currency, name, symbol, decimal, initialSupply) {
+        return new Operation$1(this.networkID, new RegisterModelFact(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
     }
     /**
      * Generate a `mint` operation for minting points and allocating them to a receiver.
@@ -6581,7 +6679,7 @@ class Point extends ContractGenerator {
         return new Operation$1(this.networkID, new ApproveFact(TimeStamp$1.new().UTC(), sender, contract, currency, approved, amount));
     }
     /**
-     * Get information about the specific point on the contract.
+     * Get information about the specific point model on the contract.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is point information:
@@ -6590,9 +6688,9 @@ class Point extends ContractGenerator {
      * - `name`: Name of the point,
      * - `policy`: Point policy object including `_hint`, `total_supply`, `approve_list`
      */
-    async getPointInfo(contract) {
+    async getModelInfo(contract) {
         Address.from(contract);
-        return await getAPIData(() => contractApi.point.getPoint(this.api, contract, this.delegateIP));
+        return await getAPIData(() => contractApi.point.getModel(this.api, contract, this.delegateIP));
     }
     /**
      * Get the allowance information granted by the owner for a specific point.
@@ -6607,7 +6705,7 @@ class Point extends ContractGenerator {
         Address.from(contract);
         Address.from(owner);
         Address.from(approved);
-        const response = await getAPIData(() => contractApi.point.getPoint(this.api, contract, this.delegateIP));
+        const response = await getAPIData(() => contractApi.point.getModel(this.api, contract, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = calculateAllowance(response, owner, approved);
         }
@@ -6617,14 +6715,14 @@ class Point extends ContractGenerator {
      * Get point balance for given account.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The point owner's address.
+     * @param {string | Address} [account] - The point owner's address.
      * @returns `data` of `SuccessResponse` is point balance information:
      * - `amount`: String of amount
      */
-    async getPointBalance(contract, owner) {
+    async getBalance(contract, account) {
         Address.from(contract);
-        Address.from(owner);
-        return await getAPIData(() => contractApi.point.getPointBalance(this.api, contract, owner, this.delegateIP));
+        Address.from(account);
+        return await getAPIData(() => contractApi.point.getPointBalance(this.api, contract, account, this.delegateIP));
     }
 }
 
@@ -6896,6 +6994,10 @@ class Mitum extends Generator {
         this._dao = new DAO(this.networkID, this.api, this.delegateIP);
         this._token = new Token(this.networkID, this.api, this.delegateIP);
         this._point = new Point(this.networkID, this.api, this.delegateIP);
+        this.ECODE = ECODE;
+        this.PCODE = PCODE;
+        this.DCODE = DCODE;
+        this._utils = new Utils();
     }
     refresh() {
         this._node = new Node(this.api, this.delegateIP);
@@ -6912,6 +7014,7 @@ class Mitum extends Generator {
         this._dao = new DAO(this.networkID, this.api, this.delegateIP);
         this._token = new Token(this.networkID, this.api, this.delegateIP);
         this._point = new Point(this.networkID, this.api, this.delegateIP);
+        this._utils = new Utils();
     }
     get node() {
         return this._node;
@@ -6957,6 +7060,9 @@ class Mitum extends Generator {
     }
     get point() {
         return this._point;
+    }
+    get utils() {
+        return this._utils;
     }
     /**
      * Set the API URL to interact with Mitum network.
