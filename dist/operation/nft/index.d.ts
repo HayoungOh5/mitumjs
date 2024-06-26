@@ -119,12 +119,12 @@ export declare class NFT extends ContractGenerator {
     /**
      * Generate `add-signature` operation to signs an NFT as creator of the artwork.
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [creator] - The address of the creator signing the NFT.
+     * @param {string | Address} [sender] - The address of the creator signing the NFT.
      * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `sign` operation.
      */
-    addSignature(contract: string | Address, creator: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<AddSignatureFact>;
+    addSignature(contract: string | Address, sender: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<AddSignatureFact>;
     /**
      * Get information about an NFT collection on the contract.
      * @async

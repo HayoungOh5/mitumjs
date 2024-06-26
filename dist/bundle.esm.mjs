@@ -1367,9 +1367,8 @@ class NodeFactSign extends FactSign {
 }
 
 let Operation$1 = class Operation {
-    constructor(networkID, fact, memo) {
+    constructor(networkID, fact) {
         this.id = networkID;
-        this.memo = memo ?? "";
         this.fact = fact;
         this.hint = new Hint(fact.operationHint);
         this._factSigns = [];
@@ -1469,12 +1468,11 @@ let Operation$1 = class Operation {
         ]);
     }
     toHintedObject() {
-        const op = {
+        const operation = {
             _hint: this.hint.toString(),
             fact: this.fact.toHintedObject(),
             hash: this._hash.length === 0 ? "" : base58.encode(this._hash)
         };
-        const operation = this.memo ? op : { ...op, memo: this.memo };
         const factSigns = this._factSigns.length === 0 ? [] : this._factSigns.sort(SortFunc);
         return {
             ...operation,
@@ -3969,13 +3967,13 @@ class NFT extends ContractGenerator {
     /**
      * Generate `add-signature` operation to signs an NFT as creator of the artwork.
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [creator] - The address of the creator signing the NFT.
+     * @param {string | Address} [sender] - The address of the creator signing the NFT.
      * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `sign` operation.
      */
-    addSignature(contract, creator, nftIdx, currency) {
-        return new Operation$1(this.networkID, new AddSignatureFact(TimeStamp$1.new().UTC(), creator, [
+    addSignature(contract, sender, nftIdx, currency) {
+        return new Operation$1(this.networkID, new AddSignatureFact(TimeStamp$1.new().UTC(), sender, [
             new AddSignatureItem(contract, nftIdx, currency)
         ]));
     }
@@ -4039,7 +4037,7 @@ class NFT extends ContractGenerator {
         Address.from(contract);
         const response = await getAPIData(() => contractApi.nft.getNFTCount(this.api, contract, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
-            response.data = response.data.nft_count ? Number(response.data.nft_total_supply) : 0;
+            response.data = response.data.nft_total_supply ? Number(response.data.nft_total_supply) : 0;
         }
         return response;
     }
@@ -5939,7 +5937,7 @@ let RegisterModelFact$2 = class RegisterModelFact extends TimeStampFact {
     }
 };
 
-class IssueFact extends TimeStampFact {
+class IssueFact extends ContractFact {
     constructor(token, sender, contract, projectID, requestTimeStamp, data, currency) {
         super(HINT.TIMESTAMP.ISSUE.FACT, token, sender, contract, currency);
         this.projectID = projectID;
