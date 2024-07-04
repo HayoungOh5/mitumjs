@@ -333,7 +333,7 @@ const assignCodeFromErrorMessage = (errorMessage) => {
             break;
         }
     }
-    pcodeArr.length === 0 ?? pcodeArr.push(PCODE.UNDEFINED.code);
+    pcodeArr.length === 0 && pcodeArr.push(PCODE.UNDEFINED.code);
     if (dcodeArr.length > 1) {
         return pcodeArr.slice(-1) + DCODE.COMPLEX.code;
     }
@@ -3750,7 +3750,7 @@ class TransferItem extends NFTItem {
         return {
             ...super.toHintedObject(),
             receiver: this.receiver.toString(),
-            nft: this.nft.v,
+            nft_idx: this.nft.v,
         };
     }
     toString() {
@@ -6949,16 +6949,16 @@ class OperationResponse {
                 const receipt = await getAPIData(() => api$1.getOperation(this._api, this.response.data.fact.hash, this._delegateIP));
                 if (isSuccessResponse(receipt) && receipt.data !== undefined) {
                     if (receipt.data.in_state) {
-                        console.log('\x1b[34m%s\x1b[0m', `operation in_state is true`);
+                        console.log('\x1b[34m%s\x1b[0m', `operation in_state is true. fact hash: ${this.response.data.fact.hash}`);
                         return receipt;
                     }
                     else {
-                        console.log('\x1b[31m%s\x1b[0m', `operation in_state is false. reason: ${receipt.data.reason}`);
+                        console.log('\x1b[31m%s\x1b[0m', `operation in_state is false. fact hash: ${this.response.data.fact.hash}, reason: ${receipt.data.reason}`);
                         return receipt;
                     }
                 }
                 else {
-                    console.log('\x1b[33m%s\x1b[0m', "polling...");
+                    console.log('\x1b[33m%s\x1b[0m', `polling for ${elapsedTime} ms, fact hash: ${this.response.data.fact.hash}`);
                 }
             }
             catch (error) {
