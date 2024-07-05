@@ -29,10 +29,10 @@ export declare class Utils {
      * @param {string} value - Integer in string type.
      * @returns {string} - Value expressed in minimum units.
      * @example
-     * // Example: Convert mFACT to FACT (decimal: 9)
-     * const value = "20000000000"; //mFACT
+     * // Example: Convert PAGE to FACT (decimal: 9)
+     * const value = "20000000000"; //PAGE
      * const result = mitum.utils.formatUnits(value);
-     * console.log(`mFACT to FACT: ${result}`); // "20.0"
+     * console.log(`PAGE to FACT: ${result}`); // "20.0"
      */
     formatUnits(value: string): string;
     /**

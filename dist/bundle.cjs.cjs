@@ -2526,10 +2526,10 @@ class Utils {
      * @param {string} value - Integer in string type.
      * @returns {string} - Value expressed in minimum units.
      * @example
-     * // Example: Convert mFACT to FACT (decimal: 9)
-     * const value = "20000000000"; //mFACT
+     * // Example: Convert PAGE to FACT (decimal: 9)
+     * const value = "20000000000"; //PAGE
      * const result = mitum.utils.formatUnits(value);
-     * console.log(`mFACT to FACT: ${result}`); // "20.0"
+     * console.log(`PAGE to FACT: ${result}`); // "20.0"
      */
     formatUnits(value) {
         Assert.check(this.isValidBigIntString(value), MitumError.detail(ECODE.INVALID_BIG_INTEGER, "Invalid BigNumberish string: Cannot convert to a BigInt"));
@@ -2804,18 +2804,16 @@ class RegisterCurrencyFact extends NodeFact {
 }
 
 class UpdateCurrencyFact extends NodeFact {
-    constructor(token, currency, decimal, policy) {
+    constructor(token, currency, policy) {
         super(HINT.CURRENCY.UPDATE_CURRENCY.FACT, token);
         this.currency = CurrencyID.from(currency);
         this.policy = policy;
-        this.decimal = Big.from(decimal);
         this._hash = this.hashing();
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             this.currency.toBuffer(),
-            this.decimal.toBuffer(),
             this.policy.toBuffer(),
         ]);
     }
@@ -2823,7 +2821,6 @@ class UpdateCurrencyFact extends NodeFact {
         return {
             ...super.toHintedObject(),
             currency: this.currency.toString(),
-            decimal: this.decimal.v,
             policy: this.policy.toHintedObject(),
         };
     }
@@ -2903,10 +2900,10 @@ class CurrencyDesign {
     toHintedObject() {
         return {
             _hint: CurrencyDesign.hint.toString(),
-            initial_supply: this.currencyID.toString(),
-            currency_id: this.initialSupply.toString(),
-            decimal: this.decimal.v,
+            currency_id: this.currencyID.toString(),
+            decimal: this.decimal.toString(),
             genesis_account: this.genesisAccount.toString(),
+            initial_supply: this.initialSupply.toString(),
             policy: this.policy.toHintedObject(),
             total_supply: this.totalSupply.toString(),
         };
@@ -2927,8 +2924,8 @@ class CurrencyPolicy {
     toHintedObject() {
         return {
             _hint: CurrencyPolicy.hint.toString(),
-            min_balance: this.newAccountMinBalance.toString(),
             feeer: this.feeer.toHintedObject(),
+            min_balance: this.newAccountMinBalance.toString(),
         };
     }
 }
@@ -2970,8 +2967,8 @@ class FixedFeeer extends Feeer {
     toHintedObject() {
         const feeer = {
             ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
             amount: this.amount.toString(),
+            receiver: this.receiver.toString(),
         };
         if (this.exchangeMinAmount) {
             return {
@@ -3044,16 +3041,15 @@ class Currency extends Generator {
      * Generate an `update-currency` operation for updating an existing Mitum currency.
      * **Signature of nodes** is required, not a general account signature.
      * @param {string | CurrencyID} [currency] - The currency ID to want to updated.
-     * @param {string | number | Big} [decimal] - decimal number for the currency.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `update-currency` operation.
      */
-    updateCurrency(currency, decimal, data) {
+    updateCurrency(currency, data) {
         const keysToCheck = ['minBalance', 'feeType', 'feeReceiver'];
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the currencyPolicyData structure`));
         });
-        return new Operation$1(this.networkID, new UpdateCurrencyFact(TimeStamp$1.new().UTC(), currency, decimal, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee)));
+        return new Operation$1(this.networkID, new UpdateCurrencyFact(TimeStamp$1.new().UTC(), currency, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee)));
     }
     buildPolicy(feeType, minBalance, receiver, fee, ratio, min, max) {
         Address.from(receiver);
@@ -4690,7 +4686,7 @@ class VoteFact extends DAOFact {
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            vote: this.vote.v,
+            vote_option: this.vote.v,
         };
     }
     get operationHint() {

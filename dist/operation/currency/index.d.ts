@@ -44,11 +44,10 @@ export declare class Currency extends Generator {
      * Generate an `update-currency` operation for updating an existing Mitum currency.
      * **Signature of nodes** is required, not a general account signature.
      * @param {string | CurrencyID} [currency] - The currency ID to want to updated.
-     * @param {string | number | Big} [decimal] - decimal number for the currency.
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `update-currency` operation.
      */
-    updateCurrency(currency: string | CurrencyID, decimal: string | number | Big, data: currencyPolicyData): Operation<UpdateCurrencyFact>;
+    updateCurrency(currency: string | CurrencyID, data: currencyPolicyData): Operation<UpdateCurrencyFact>;
     private buildPolicy;
     /**
      * Generate a `transfer` operation for transferring currency between accounts.
