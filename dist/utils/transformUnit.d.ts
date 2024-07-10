@@ -8,7 +8,7 @@ export declare class Utils {
     constructor(decimal?: number);
     /**
      * Sets the decimal value used for unit conversions.
-     * @param {number} decimal - The decimal places to be used, must be positive integer.
+     * @param {number} decimal - The decimal places to be used, input integer must equal or greater than 0.
      */
     setDecimal(decimal: number): void;
     /**
@@ -41,10 +41,10 @@ export declare class Utils {
      * @param {string} value - Decimal number in string type.
      * @returns {string} - Value expressed in basis units.
      * @example
-     * // Example: Convert FACT to mFACT (decimal: 9)
+     * // Example: Convert FACT to PAGE (decimal: 9)
      * const value = "12.12345"; //FACT
      * const result = mitum.utils.parseUnits(value);
-     * console.log(`FACT to mFACT: ${result}`); // "12123450000"
+     * console.log(`FACT to PAGE: ${result}`); // "12123450000"
      */
     parseUnits(value: string): string;
 }

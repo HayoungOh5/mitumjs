@@ -2491,10 +2491,10 @@ class Utils {
     }
     /**
      * Sets the decimal value used for unit conversions.
-     * @param {number} decimal - The decimal places to be used, must be positive integer.
+     * @param {number} decimal - The decimal places to be used, input integer must equal or greater than 0.
      */
     setDecimal(decimal) {
-        Assert.check(Number.isInteger(decimal) && decimal > 0, MitumError.detail(ECODE.INVALID_DECIMAL, "Invalid decimal number"));
+        Assert.check(Number.isInteger(decimal) && decimal >= 0, MitumError.detail(ECODE.INVALID_DECIMAL, "Invalid decimal number"));
         this.decimal = decimal;
     }
     /**
@@ -2535,9 +2535,16 @@ class Utils {
         Assert.check(this.isValidBigIntString(value), MitumError.detail(ECODE.INVALID_BIG_INTEGER, "Invalid BigNumberish string: Cannot convert to a BigInt"));
         const bigIntVal = BigInt(value);
         const factor = BigInt(10 ** this.decimal);
-        const ether = (bigIntVal / factor).toString();
-        const fractional = (bigIntVal % factor).toString().padStart(1, '0');
-        return `${ether}.${fractional}`;
+        const integerPart = bigIntVal / factor;
+        const integerString = integerPart === 0n && bigIntVal < 0n ? `-${integerPart.toString()}` : integerPart.toString();
+        const fractionalPart = bigIntVal % factor < 0n ? -bigIntVal % factor : bigIntVal % factor;
+        const fractionalString = fractionalPart.toString().padStart(this.decimal, '0');
+        if (fractionalString === undefined || /^0*$/.test(fractionalString)) {
+            return `${integerString}.0`;
+        }
+        else {
+            return `${integerString}.${fractionalString.replace(/0+$/, '')}`;
+        }
     }
     /**
      * Converts the "decimal string" *value* to a integer string, assuming decimal places.
@@ -2545,13 +2552,16 @@ class Utils {
      * @param {string} value - Decimal number in string type.
      * @returns {string} - Value expressed in basis units.
      * @example
-     * // Example: Convert FACT to mFACT (decimal: 9)
+     * // Example: Convert FACT to PAGE (decimal: 9)
      * const value = "12.12345"; //FACT
      * const result = mitum.utils.parseUnits(value);
-     * console.log(`FACT to mFACT: ${result}`); // "12123450000"
+     * console.log(`FACT to PAGE: ${result}`); // "12123450000"
      */
     parseUnits(value) {
         Assert.check(this.isValidDecimalString(value), MitumError.detail(ECODE.INVALID_FLOAT, "Invalid decimal string"));
+        if (Number(value) === 0) {
+            return "0";
+        }
         let [integerPart, fractionalPart = ''] = value.split('.');
         fractionalPart = Number(fractionalPart) === 0 ? '' : fractionalPart;
         integerPart = Number(integerPart) === 0 ? '' : integerPart;
