@@ -109,7 +109,7 @@ export declare class Currency extends Generator {
 export declare class Account extends KeyG {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
-     * Generate a key pair and the corresponding `transfer` operation to create a single-sig account.
+     * Generate a key pair and the corresponding `transfer` operation to create a single-sig account. Avoid using seed ​​that are easy to predict.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)

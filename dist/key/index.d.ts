@@ -1,10 +1,10 @@
-import { KeyPairType, AddressType, Account } from "./types";
+import { KeyPairType, AddressType, Account, HDAccount } from "./types";
 import { randomN } from "./random";
 import { Keys, Key, PubKey } from "./pub";
 import { BaseKeyPair, KeyPair } from "./keypair";
 import { Address, ZeroAddress, NodeAddress } from "./address";
 import { Big, Generator, IP } from "../types";
-export { KeyPairType, AddressType, Account, Address, ZeroAddress, NodeAddress, Key, Keys, PubKey, BaseKeyPair, KeyPair, randomN, };
+export { KeyPairType, AddressType, Account, HDAccount, Address, ZeroAddress, NodeAddress, Key, Keys, PubKey, BaseKeyPair, KeyPair, randomN, };
 type keysType = ({
     key: string | Key | PubKey;
     weight: string | number | Big;
@@ -14,9 +14,10 @@ type keysType = ({
 }>;
 export declare class KeyG extends Generator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
+    private fillHDwallet;
     /**
-     * Generate a key pair randomly or from the given seed phrase.
-     * @param {string} [seed] - (Optional) The seed for deterministic key generation. If not provided, a random key pair will be generated.
+     * Generate a key pair randomly or from the given string seed. Avoid using seed ​​that are easy to predict.
+     * @param {string} [seed] - (Optional) The random string seed for deterministic key generation. If not provided, a random key pair will be generated.
      * @returns An `Account` object with following properties:
      * - `privatekey`: private key,
      * - `publickey`: public key,
@@ -34,6 +35,17 @@ export declare class KeyG extends Generator {
      */
     keys(n: number): Array<Account>;
     /**
+     * Generate a key randomly or from the given entropy using the HD wallet method. (BIP-32 standard)
+     * @param {string | Uint8Array} [entropy] - (Optional) The entropy for deterministic key generation. A specific range of hexadecimal digits or Uint8Array.
+     * @returns An `HDAccount` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address,
+     * - `phrase`: phrases made up of 12 mnemonic words,
+     * - `path`: derivation path for HD wallet. Default set to "m/44'/60'/0'/0/0"
+     */
+    hdKey(entropy?: string | Uint8Array): HDAccount;
+    /**
      * Generate a key pair from the given private key.
      * @param {string | Key} [key] - The private key.
      * @returns An `Account` object with following properties:
@@ -43,9 +55,21 @@ export declare class KeyG extends Generator {
      */
     fromPrivateKey(key: string | Key): Account;
     /**
-     * Generate an address from the given public key.
+     * Generate a key pair from given mnemonic phrase using the HD wallet method.
+     * @param {string} [phrase] - The Mnemonic phrase obtained when executed `hdKey()` method.
+     * @param {string} [path] - (Optional) The derivation path for HD wallet.
+     * @returns An `HDAccount` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     * - `phrase`: phrases made up of 12 mnemonic words,
+     * - `path`: derivation path for HD wallet
+     */
+    fromPhrase(phrase: string, path?: string): HDAccount;
+    /**
+     * Generate an address derived the given public key.
      * @param {string | Key} [key] - The public key.
-     * @returns The address.
+     * @returns The address derived from public key
      */
     address(key: string | Key): string;
     /**

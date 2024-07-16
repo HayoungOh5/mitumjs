@@ -1,4 +1,4 @@
-export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.NFT[keyof typeof ECODE.NFT] | typeof ECODE.STO[keyof typeof ECODE.STO] | typeof ECODE.DAO[keyof typeof ECODE.DAO]);
+export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.HDWALLET[keyof typeof ECODE.HDWALLET] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.NFT[keyof typeof ECODE.NFT] | typeof ECODE.STO[keyof typeof ECODE.STO] | typeof ECODE.DAO[keyof typeof ECODE.DAO]);
 export declare const ECODE: {
     readonly NO_API: "EC_NO_API";
     readonly UNKNOWN: "EC_UNKNOWN";
@@ -47,6 +47,11 @@ export declare const ECODE: {
     readonly NOT_IMPLEMENTED_METHOD: "EC_NOT_IMPLEMENTED_METHOD";
     readonly FAIL_FILE_CREATION: "EC_FAIL_FILE_CREATION";
     readonly FAIL_SIGN: "EC_FAIL_SIGN";
+    readonly HDWALLET: {
+        readonly INVALID_PHRASE: "EC_INVALID_PHRASE";
+        readonly INVALID_ENTROPY: "EC_INVALID_ENTROPY";
+        readonly INVALID_PATH: "EC_INVALID_PATH";
+    };
     readonly CURRENCY: {
         readonly INVALID_CURRENCY_FEEER: "EC_INVALID_CURRENCY_FEEER";
         readonly INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY";

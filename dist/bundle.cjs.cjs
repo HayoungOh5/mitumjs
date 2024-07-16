@@ -82,6 +82,11 @@ const ECODE = {
     NOT_IMPLEMENTED_METHOD: "EC_NOT_IMPLEMENTED_METHOD",
     FAIL_FILE_CREATION: "EC_FAIL_FILE_CREATION",
     FAIL_SIGN: "EC_FAIL_SIGN",
+    HDWALLET: {
+        INVALID_PHRASE: "EC_INVALID_PHRASE",
+        INVALID_ENTROPY: "EC_INVALID_ENTROPY",
+        INVALID_PATH: "EC_INVALID_PATH",
+    },
     CURRENCY: {
         INVALID_CURRENCY_FEEER: "EC_INVALID_CURRENCY_FEEER",
         INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY",
@@ -1821,14 +1826,23 @@ class BaseKeyPair {
     static random(option) {
         return this.generator.random(option);
     }
+    static fromSeed(seed, option) {
+        return this.generator.fromSeed(seed, option);
+    }
     static fromPrivateKey(key) {
         const s = key.toString();
         StringAssert.with(s, MitumError.detail(ECODE.INVALID_PRIVATE_KEY, "invalid private key"))
             .chainAnd(s.endsWith(SUFFIX.KEY.MITUM.PRIVATE)).excute();
         return this.generator.fromPrivateKey(key);
     }
-    static fromSeed(seed, option) {
-        return this.generator.fromSeed(seed, option);
+    static hdRandom(option) {
+        return this.generator.hdRandom(option);
+    }
+    static hdFromEntropy(entropy, option) {
+        return this.generator.hdFromEntropy(entropy, option);
+    }
+    static fromPhrase(phrase, path, option) {
+        return this.generator.fromPhrase(phrase, path, option);
     }
     ethSign(msg) {
         const ec = new elliptic.ec("secp256k1");
@@ -1894,17 +1908,61 @@ class KeyPair extends BaseKeyPair {
     }
 }
 KeyPair.generator = {
+    fillHDAccount(kp, wallet) {
+        return {
+            privatekey: kp.privateKey.toString(),
+            publickey: kp.publicKey.toString(),
+            address: "",
+            phrase: wallet.mnemonic?.phrase,
+            path: wallet.path
+        };
+    },
     random() {
         return new KeyPair(ethers.Wallet.createRandom().privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
-    },
-    fromPrivateKey(key) {
-        return new KeyPair(key);
     },
     fromSeed(seed) {
         StringAssert.with(seed, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"))
             .satisfyConfig(Config.SEED)
             .excute();
         return new KeyPair(BaseKeyPair.K(seed).toString(16) + SUFFIX.KEY.MITUM.PRIVATE);
+    },
+    fromPrivateKey(key) {
+        return new KeyPair(key);
+    },
+    hdRandom() {
+        const wallet = ethers.Wallet.createRandom();
+        const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
+        return this.fillHDAccount(kp, wallet);
+    },
+    hdFromEntropy(entropy) {
+        let byteArray;
+        if (entropy instanceof Uint8Array) {
+            byteArray = entropy;
+        }
+        else {
+            Assert.check(/^0x([0-9a-f][0-9a-f])*$/i.test(entropy), MitumError.detail(ECODE.HDWALLET.INVALID_ENTROPY, "invalid entropy, must be an even length hexadecimal number"));
+            const hex = entropy.slice(2);
+            byteArray = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        }
+        Assert.check(byteArray.length % 4 === 0 && byteArray.length >= 16 && byteArray.length <= 32, MitumError.detail(ECODE.HDWALLET.INVALID_ENTROPY, "invalid entropy size, must be convertible to a multiple of 4 bytes, and between 16 and 32 bytes"));
+        return this.fromPhrase(ethers.Mnemonic.fromEntropy(byteArray).phrase);
+    },
+    fromPhrase(phrase, path) {
+        const defaultPath = "m/44'/60'/0'/0/0";
+        try {
+            const wallet = ethers.HDNodeWallet.fromPhrase(phrase, "", path ? path : defaultPath);
+            const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
+            return this.fillHDAccount(kp, wallet);
+        }
+        catch (error) {
+            if (error.argument === 'mnemonic') {
+                Assert.check(false, MitumError.detail(ECODE.HDWALLET.INVALID_PHRASE, `invalid phrase, ${error.shortMessage}`));
+            }
+            else {
+                Assert.check(false, MitumError.detail(ECODE.HDWALLET.INVALID_PATH, `invalid path, ${error.shortMessage} with value ${error.value}`));
+            }
+            throw error;
+        }
     }
 };
 
@@ -1934,9 +1992,18 @@ class KeyG extends Generator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    fillHDwallet(hdwallet) {
+        return {
+            privatekey: hdwallet.privatekey,
+            publickey: hdwallet.publickey,
+            address: this.address(hdwallet.publickey),
+            phrase: hdwallet.phrase,
+            path: hdwallet.path,
+        };
+    }
     /**
-     * Generate a key pair randomly or from the given seed phrase.
-     * @param {string} [seed] - (Optional) The seed for deterministic key generation. If not provided, a random key pair will be generated.
+     * Generate a key pair randomly or from the given string seed. Avoid using seed ​​that are easy to predict.
+     * @param {string} [seed] - (Optional) The random string seed for deterministic key generation. If not provided, a random key pair will be generated.
      * @returns An `Account` object with following properties:
      * - `privatekey`: private key,
      * - `publickey`: public key,
@@ -1977,6 +2044,30 @@ class KeyG extends Generator {
         });
     }
     /**
+     * Generate a key randomly or from the given entropy using the HD wallet method. (BIP-32 standard)
+     * @param {string | Uint8Array} [entropy] - (Optional) The entropy for deterministic key generation. A specific range of hexadecimal digits or Uint8Array.
+     * @returns An `HDAccount` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address,
+     * - `phrase`: phrases made up of 12 mnemonic words,
+     * - `path`: derivation path for HD wallet. Default set to "m/44'/60'/0'/0/0"
+     */
+    hdKey(entropy) {
+        if (!entropy) {
+            const hdwallet = KeyPair.hdRandom("mitum");
+            return this.fillHDwallet(hdwallet);
+        }
+        const hdwallet = KeyPair.hdFromEntropy(entropy);
+        return this.fillHDwallet(hdwallet);
+    }
+    // hdKeys(n: number): Array<HDAccount> {
+    //     return Array.from({ length: n }, (_) => {
+    //         const hdwallet = KeyPair.hdRandom("mitum");
+    //         return this.fillHDwallet(hdwallet)
+    //     });
+    // }
+    /**
      * Generate a key pair from the given private key.
      * @param {string | Key} [key] - The private key.
      * @returns An `Account` object with following properties:
@@ -1993,9 +2084,24 @@ class KeyG extends Generator {
         };
     }
     /**
-     * Generate an address from the given public key.
+     * Generate a key pair from given mnemonic phrase using the HD wallet method.
+     * @param {string} [phrase] - The Mnemonic phrase obtained when executed `hdKey()` method.
+     * @param {string} [path] - (Optional) The derivation path for HD wallet.
+     * @returns An `HDAccount` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     * - `phrase`: phrases made up of 12 mnemonic words,
+     * - `path`: derivation path for HD wallet
+     */
+    fromPhrase(phrase, path) {
+        const hdwallet = KeyPair.fromPhrase(phrase, path);
+        return this.fillHDwallet(hdwallet);
+    }
+    /**
+     * Generate an address derived the given public key.
      * @param {string | Key} [key] - The public key.
-     * @returns The address.
+     * @returns The address derived from public key
      */
     address(key) {
         const suffix = key.toString().slice(-3);
@@ -3168,7 +3274,7 @@ class Account extends KeyG {
         super(networkID, api, delegateIP);
     }
     /**
-     * Generate a key pair and the corresponding `transfer` operation to create a single-sig account.
+     * Generate a key pair and the corresponding `transfer` operation to create a single-sig account. Avoid using seed ​​that are easy to predict.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
