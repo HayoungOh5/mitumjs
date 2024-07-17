@@ -49,7 +49,6 @@ export declare const ECODE: {
     readonly FAIL_SIGN: "EC_FAIL_SIGN";
     readonly HDWALLET: {
         readonly INVALID_PHRASE: "EC_INVALID_PHRASE";
-        readonly INVALID_ENTROPY: "EC_INVALID_ENTROPY";
         readonly INVALID_PATH: "EC_INVALID_PATH";
     };
     readonly CURRENCY: {

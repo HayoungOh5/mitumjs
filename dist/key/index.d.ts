@@ -35,16 +35,15 @@ export declare class KeyG extends Generator {
      */
     keys(n: number): Array<Account>;
     /**
-     * Generate a key randomly or from the given entropy using the HD wallet method. (BIP-32 standard)
-     * @param {string | Uint8Array} [entropy] - (Optional) The entropy for deterministic key generation. A specific range of hexadecimal digits or Uint8Array.
+     * Generate a key randomly using the HD wallet method. (BIP-32 standard)
      * @returns An `HDAccount` object with following properties:
      * - `privatekey`: private key,
      * - `publickey`: public key,
      * - `address`: address,
      * - `phrase`: phrases made up of 12 mnemonic words,
-     * - `path`: derivation path for HD wallet. Default set to "m/44'/60'/0'/0/0"
+     * - `path`: derivation path for HD wallet. Default set to "m/44'/1'/0'/0/0"
      */
-    hdKey(entropy?: string | Uint8Array): HDAccount;
+    hdKey(): HDAccount;
     /**
      * Generate a key pair from the given private key.
      * @param {string | Key} [key] - The private key.
@@ -63,7 +62,7 @@ export declare class KeyG extends Generator {
      * - `publickey`: public key,
      * - `address`: address
      * - `phrase`: phrases made up of 12 mnemonic words,
-     * - `path`: derivation path for HD wallet
+     * - `path`: derivation path for HD wallet, default set to "m/44'/1'/0'/0/0"
      */
     fromPhrase(phrase: string, path?: string): HDAccount;
     /**

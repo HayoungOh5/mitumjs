@@ -7,7 +7,6 @@ interface IKeyGenerator {
     fromPrivateKey(key: string | Key): BaseKeyPair;
     fromSeed(seed: string | Buffer | Uint8Array, option?: KeyPairType): BaseKeyPair;
     hdRandom(option?: KeyPairType): HDAccount;
-    hdFromEntropy(entropy: string | Uint8Array, option?: KeyPairType): HDAccount;
     fromPhrase(phrase: string, path?: string, option?: KeyPairType): HDAccount;
 }
 export declare abstract class BaseKeyPair {
@@ -24,7 +23,6 @@ export declare abstract class BaseKeyPair {
     static fromSeed<T extends BaseKeyPair>(seed: string | Buffer | Uint8Array, option?: KeyPairType): T;
     static fromPrivateKey<T extends BaseKeyPair>(key: string | Key): T;
     static hdRandom(option?: KeyPairType): HDAccount;
-    static hdFromEntropy(entropy: string | Uint8Array, option?: KeyPairType): HDAccount;
     static fromPhrase(phrase: string, path?: string, option?: KeyPairType): HDAccount;
     protected ethSign(msg: string | Buffer): Buffer;
     protected ethVerify(sig: string | Buffer, msg: string | Buffer): boolean;
@@ -37,7 +35,6 @@ export declare class KeyPair extends BaseKeyPair {
         fromSeed(seed: string): KeyPair;
         fromPrivateKey(key: string | Key): KeyPair;
         hdRandom(): HDAccount;
-        hdFromEntropy(entropy: string | Uint8Array): HDAccount;
         fromPhrase(phrase: string, path?: string): HDAccount;
     };
     private constructor();

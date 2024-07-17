@@ -84,7 +84,6 @@ const ECODE = {
     FAIL_SIGN: "EC_FAIL_SIGN",
     HDWALLET: {
         INVALID_PHRASE: "EC_INVALID_PHRASE",
-        INVALID_ENTROPY: "EC_INVALID_ENTROPY",
         INVALID_PATH: "EC_INVALID_PATH",
     },
     CURRENCY: {
@@ -1790,6 +1789,8 @@ class Keys {
 }
 Keys.hint = new Hint(HINT.CURRENCY.KEYS);
 
+const defaultPath = "m/44'/1'/0'/0/0";
+
 const privateKeyToPublicKey = (privateKey) => {
     let privateBuf;
     if (!Buffer.isBuffer(privateKey)) {
@@ -1837,9 +1838,6 @@ class BaseKeyPair {
     }
     static hdRandom(option) {
         return this.generator.hdRandom(option);
-    }
-    static hdFromEntropy(entropy, option) {
-        return this.generator.hdFromEntropy(entropy, option);
     }
     static fromPhrase(phrase, path, option) {
         return this.generator.fromPhrase(phrase, path, option);
@@ -1930,25 +1928,17 @@ KeyPair.generator = {
         return new KeyPair(key);
     },
     hdRandom() {
-        const wallet = ethers.Wallet.createRandom();
-        const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
-        return this.fillHDAccount(kp, wallet);
-    },
-    hdFromEntropy(entropy) {
-        let byteArray;
-        if (entropy instanceof Uint8Array) {
-            byteArray = entropy;
+        try {
+            const wallet = ethers.HDNodeWallet.createRandom("", defaultPath);
+            const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
+            return this.fillHDAccount(kp, wallet);
         }
-        else {
-            Assert.check(/^0x([0-9a-f][0-9a-f])*$/i.test(entropy), MitumError.detail(ECODE.HDWALLET.INVALID_ENTROPY, "invalid entropy, must be an even length hexadecimal number"));
-            const hex = entropy.slice(2);
-            byteArray = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        catch (error) {
+            Assert.check(false, MitumError.detail(ECODE.UNKNOWN, `unknown error occur during HDNodeWallet.createRandom(), ${error.shortMessage}`));
+            throw error;
         }
-        Assert.check(byteArray.length % 4 === 0 && byteArray.length >= 16 && byteArray.length <= 32, MitumError.detail(ECODE.HDWALLET.INVALID_ENTROPY, "invalid entropy size, must be convertible to a multiple of 4 bytes, and between 16 and 32 bytes"));
-        return this.fromPhrase(ethers.Mnemonic.fromEntropy(byteArray).phrase);
     },
     fromPhrase(phrase, path) {
-        const defaultPath = "m/44'/60'/0'/0/0";
         try {
             const wallet = ethers.HDNodeWallet.fromPhrase(phrase, "", path ? path : defaultPath);
             const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
@@ -2044,29 +2034,18 @@ class KeyG extends Generator {
         });
     }
     /**
-     * Generate a key randomly or from the given entropy using the HD wallet method. (BIP-32 standard)
-     * @param {string | Uint8Array} [entropy] - (Optional) The entropy for deterministic key generation. A specific range of hexadecimal digits or Uint8Array.
+     * Generate a key randomly using the HD wallet method. (BIP-32 standard)
      * @returns An `HDAccount` object with following properties:
      * - `privatekey`: private key,
      * - `publickey`: public key,
      * - `address`: address,
      * - `phrase`: phrases made up of 12 mnemonic words,
-     * - `path`: derivation path for HD wallet. Default set to "m/44'/60'/0'/0/0"
+     * - `path`: derivation path for HD wallet. Default set to "m/44'/1'/0'/0/0"
      */
-    hdKey(entropy) {
-        if (!entropy) {
-            const hdwallet = KeyPair.hdRandom("mitum");
-            return this.fillHDwallet(hdwallet);
-        }
-        const hdwallet = KeyPair.hdFromEntropy(entropy);
+    hdKey() {
+        const hdwallet = KeyPair.hdRandom("mitum");
         return this.fillHDwallet(hdwallet);
     }
-    // hdKeys(n: number): Array<HDAccount> {
-    //     return Array.from({ length: n }, (_) => {
-    //         const hdwallet = KeyPair.hdRandom("mitum");
-    //         return this.fillHDwallet(hdwallet)
-    //     });
-    // }
     /**
      * Generate a key pair from the given private key.
      * @param {string | Key} [key] - The private key.
@@ -2092,7 +2071,7 @@ class KeyG extends Generator {
      * - `publickey`: public key,
      * - `address`: address
      * - `phrase`: phrases made up of 12 mnemonic words,
-     * - `path`: derivation path for HD wallet
+     * - `path`: derivation path for HD wallet, default set to "m/44'/1'/0'/0/0"
      */
     fromPhrase(phrase, path) {
         const hdwallet = KeyPair.fromPhrase(phrase, path);
