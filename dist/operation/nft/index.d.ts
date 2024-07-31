@@ -21,6 +21,7 @@ type Creator = {
 };
 export declare class NFT extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
+    private checkArrayLength;
     /**
      * Generate `register-model` operation to register a new NFT model for creating a collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -63,15 +64,15 @@ export declare class NFT extends ContractGenerator {
      * Generate `mint` operation with multiple item for minting N number of NFT and assigns it to a receiver.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
+     * @param {string | Address} [receivers] - The array of address of the receiver of the newly minted NFT.
      * @param {number} [n] - The number of NFT to be minted.
-     * @param {string | LongString} [uri] - The URI of the NFT to mint.
-     * @param {string | LongString} [hash] - The hash of the NFT to mint.
+     * @param {string | LongString} [uri] - The array of URI for the NFTs to mint.
+     * @param {string | LongString} [hash] - The array of hash for the NFT to mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
      * @returns `mint` operation.
      */
-    multiMint(contract: string | Address, sender: string | Address, receiver: string | Address, n: number, uri: string | LongString, hash: string | LongString, currency: string | CurrencyID, creator: string | Address): Operation<MintFact>;
+    multiMint(contract: string | Address, sender: string | Address, receivers: string[] | Address[], n: number, uri: string[] | LongString[], hash: string[] | LongString[], currency: string | CurrencyID, creator: string | Address): Operation<MintFact>;
     /**
      * Generate `mint` operation in case of multiple creators.
      * @param {string | Address} [contract] - The contract's address.

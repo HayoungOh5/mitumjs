@@ -37,6 +37,7 @@ var crypto__namespace = /*#__PURE__*/_interopNamespaceDefault(crypto);
 const ECODE = {
     NO_API: "EC_NO_API",
     UNKNOWN: "EC_UNKNOWN",
+    OP_SIZE_EXCEEDED: "EC_OP_SIZE_EXCEEDED",
     EMPTY_STRING: "EC_EMPTY_STRING",
     EMPTY_SIGN: "EC_EMPTY_SIGN",
     INVALID_DATE: "EC_INVALID_DATE",
@@ -772,7 +773,7 @@ const Config = {
     KEYS_IN_ACCOUNT: getRangeConfig(1, 100),
     AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
     ITEMS_IN_FACT: getRangeConfig(1, 100),
-    OPERATIONS_IN_SEAL: getRangeConfig(1, 10),
+    OP_SIZE: getRangeConfig(1, 262144),
     KEY: {
         MITUM: {
             PRIVATE: getRangeConfig(67),
@@ -784,6 +785,8 @@ const Config = {
         SHARE: getRangeConfig(0, 100),
         ADDRESS_IN_MINTER_WHITELIST: getRangeConfig(0, 10),
         SIGNERS_IN_SIGNERS: getRangeConfig(0, 10),
+        HASH: getRangeConfig(1, 1024),
+        URI: getRangeConfig(1, 1000),
     },
     CREDENTIAL: {
         ID: getRangeConfig(1, 20),
@@ -3703,6 +3706,8 @@ class NFTItem extends Item {
 class MintItem extends NFTItem {
     constructor(contract, receiver, hash, uri, creators, currency) {
         super(HINT.NFT.MINT.ITEM, contract, currency);
+        Assert.check(Config.NFT.HASH.satisfy(hash.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, "hash length is out of range"));
+        Assert.check(Config.NFT.URI.satisfy(uri.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, "uri length is out of range"));
         this.receiver = Address.from(receiver);
         this.hash = LongString.from(hash);
         this.uri = LongString.from(uri);
@@ -3940,6 +3945,9 @@ class NFT extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    checkArrayLength(array, expectedLength, arrayName) {
+        Assert.check(array.length === expectedLength, MitumError.detail(ECODE.INVALID_LENGTH, `length of ${arrayName} must be ${expectedLength}, but got ${array.length}`));
+    }
     /**
      * Generate `register-model` operation to register a new NFT model for creating a collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -3996,17 +4004,20 @@ class NFT extends ContractGenerator {
      * Generate `mint` operation with multiple item for minting N number of NFT and assigns it to a receiver.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
+     * @param {string | Address} [receivers] - The array of address of the receiver of the newly minted NFT.
      * @param {number} [n] - The number of NFT to be minted.
-     * @param {string | LongString} [uri] - The URI of the NFT to mint.
-     * @param {string | LongString} [hash] - The hash of the NFT to mint.
+     * @param {string | LongString} [uri] - The array of URI for the NFTs to mint.
+     * @param {string | LongString} [hash] - The array of hash for the NFT to mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
      * @returns `mint` operation.
      */
-    multiMint(contract, sender, receiver, n, uri, hash, currency, creator) {
-        Assert.check(n !== 0, MitumError.detail(ECODE.INVALID_ITEMS, "n should over 0"));
-        const items = Array.from({ length: n }).map(() => new MintItem(contract, receiver, hash, uri, new Signers([new Signer$1(creator, 100, false)]), currency));
+    multiMint(contract, sender, receivers, n, uri, hash, currency, creator) {
+        Assert.check(Config.ITEMS_IN_FACT.satisfy(n), MitumError.detail(ECODE.INVALID_ITEMS, "n is out of range"));
+        this.checkArrayLength(receivers, n, "receivers");
+        this.checkArrayLength(uri, n, "uri");
+        this.checkArrayLength(hash, n, "hash");
+        const items = Array.from({ length: n }).map((_, idx) => new MintItem(contract, receivers[idx], hash[idx], uri[idx], new Signers([new Signer$1(creator, 100, false)]), currency));
         return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, items));
     }
     /**
@@ -6980,6 +6991,7 @@ class Operation extends Generator {
         Assert.check(isOpFact(operation) || isHintedObject(operation), MitumError.detail(ECODE.INVALID_OPERATION, `input is neither in OP<Fact> nor HintedObject format`));
         operation = isOpFact(operation) ? operation.toHintedObject() : operation;
         Assert.check(operation.signs.length !== 0, MitumError.detail(ECODE.EMPTY_SIGN, `signature is required before sending the operation`));
+        Assert.check(Config.OP_SIZE.satisfy(Buffer.byteLength(JSON.stringify(operation), 'utf8')), MitumError.detail(ECODE.OP_SIZE_EXCEEDED, `Operation size exceeds the allowed limit of ${Config.OP_SIZE.max} bytes.`));
         const sendResponse = await getAPIData(() => api$1.send(this.api, operation, this.delegateIP, headers));
         return new OperationResponse(sendResponse, this.api, this.delegateIP);
     }

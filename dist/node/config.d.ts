@@ -28,7 +28,7 @@ export declare const Config: {
     KEYS_IN_ACCOUNT: RangeConfig;
     AMOUNTS_IN_ITEM: RangeConfig;
     ITEMS_IN_FACT: RangeConfig;
-    OPERATIONS_IN_SEAL: RangeConfig;
+    OP_SIZE: RangeConfig;
     KEY: {
         MITUM: {
             PRIVATE: RangeConfig;
@@ -40,6 +40,8 @@ export declare const Config: {
         SHARE: RangeConfig;
         ADDRESS_IN_MINTER_WHITELIST: RangeConfig;
         SIGNERS_IN_SIGNERS: RangeConfig;
+        HASH: RangeConfig;
+        URI: RangeConfig;
     };
     CREDENTIAL: {
         ID: RangeConfig;

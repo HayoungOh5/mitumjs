@@ -2,6 +2,7 @@ export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.HDWALLE
 export declare const ECODE: {
     readonly NO_API: "EC_NO_API";
     readonly UNKNOWN: "EC_UNKNOWN";
+    readonly OP_SIZE_EXCEEDED: "EC_OP_SIZE_EXCEEDED";
     readonly EMPTY_STRING: "EC_EMPTY_STRING";
     readonly EMPTY_SIGN: "EC_EMPTY_SIGN";
     readonly INVALID_DATE: "EC_INVALID_DATE";
