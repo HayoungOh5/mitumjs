@@ -56,14 +56,14 @@ export declare class Mitum extends Generator {
      */
     setNetworkID(networkID: string): void;
     /**Get the API URL in use.
-     * @returns {string} The API URL.
+     * @returns {string | undefined} The API URL.
     */
-    getAPI(): string;
+    getAPI(): string | undefined;
     /**
      * Get the delegate IP in use.
      * @returns {string} The delegate IP address.
      */
-    getDelegate(): string;
+    getDelegate(): string | undefined;
     /**Get the network ID in use.
      * @returns {string} The network ID (chain).
     */

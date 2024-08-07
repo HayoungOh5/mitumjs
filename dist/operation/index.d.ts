@@ -86,11 +86,9 @@ export declare class Operation extends Generator {
         [i: string]: any;
     }): Promise<OperationResponse>;
 }
-export declare class OperationResponse {
+export declare class OperationResponse extends Operation {
     readonly response: any;
-    private _api;
-    private _delegateIP;
-    constructor(response: SuccessResponse | ErrorResponse, api: string | IP, delegateIP: string | IP);
+    constructor(response: SuccessResponse | ErrorResponse, networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
      * Get receipt when a sent operation is recorded in a block by polling the blockchain network for a certain time.
      * @async

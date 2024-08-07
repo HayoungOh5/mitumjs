@@ -474,8 +474,7 @@ class ShortDate extends LongString {
 class IP extends LongString {
     constructor(s) {
         super(s);
-        Assert.check(/^(http|https):\/\/(\d{1,3}\.){3}\d{1,3}(?::\d+)?$/.test(s)
-            || /^(http|https):\/\/(?:[\w-]+\.)+[\w-]+(?::\d+)?(?:\/[\w-./?%&=]*)?$/.test(s), MitumError.detail(ECODE.INVALID_IP, "invalid ip address, ip"));
+        Assert.check(/^(http|https):\/\/(?:[\w-]+\.)*[\w-]+(?::\d+)?(?:\/[\w-./?%&=]*)?$/.test(s), MitumError.detail(ECODE.INVALID_IP, "invalid ip address, ip"));
     }
     static from(s) {
         return s instanceof IP ? s : new IP(s);
@@ -490,26 +489,42 @@ class URIString {
 class Generator {
     constructor(networkID, api, delegateIP) {
         this._networkID = networkID;
-        this._api = api ? IP.from(api) : undefined;
-        this._delegateIP = delegateIP ? IP.from(delegateIP) : undefined;
+        this.setAPI(api);
+        this.setDelegate(delegateIP);
     }
     setNetworkID(networkID) {
         this._networkID = networkID;
     }
     setAPI(api) {
-        this._api = api ? IP.from(api) : undefined;
+        if (typeof api === "string") {
+            this._api = IP.from(api.endsWith('/') ? api.slice(0, -1) : api);
+        }
+        else if (api instanceof IP) {
+            this._api = api;
+        }
+        else {
+            this._api = undefined;
+        }
     }
     setDelegate(delegateIP) {
-        this._delegateIP = delegateIP ? IP.from(delegateIP) : undefined;
+        if (typeof delegateIP === "string") {
+            this._delegateIP = IP.from(delegateIP.endsWith('/') ? delegateIP.slice(0, -1) : delegateIP);
+        }
+        else if (delegateIP instanceof IP) {
+            this._delegateIP = delegateIP;
+        }
+        else {
+            this._delegateIP = undefined;
+        }
     }
     get networkID() {
         return this._networkID;
     }
     get api() {
-        return this._api ? this._api.toString() : "";
+        return this._api ? this._api.toString() : undefined;
     }
     get delegateIP() {
-        return this._delegateIP ? this._delegateIP.toString() : "";
+        return this._delegateIP ? this._delegateIP.toString() : undefined;
     }
 }
 
@@ -1248,7 +1263,7 @@ const getChecksum = (hex) => {
     return checksum;
 };
 
-const delegateUri = (delegateIP) => `${IP.from(delegateIP).toString()}?uri=`;
+const delegateUri = (delegateIP) => `${delegateIP}?uri=`;
 const validatePositiveInteger = (val, name) => {
     if (!Number.isSafeInteger(val) || val < 0) {
         throw new Error(`${name} must be a integer >= 0`);
@@ -2131,11 +2146,11 @@ class KeyG extends Generator {
 }
 
 async function getAccount(api, address, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/account/${Address.from(address).toString()}`;
+    const apiPath = `${api}/account/${Address.from(address).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountByPublicKey(api, publicKey, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/accounts?publickey=${Key.from(publicKey).toString()}`;
+    const apiPath = `${api}/accounts?publickey=${Key.from(publicKey).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var account = {
@@ -2144,15 +2159,15 @@ var account = {
 };
 
 async function getBlocks(api, delegateIP, limit, offset, reverse) {
-    const apiPath = apiPathWithParams(`${IP.from(api).toString()}/block/manifests`, limit, offset, reverse);
+    const apiPath = apiPathWithParams(`${api}/block/manifests`, limit, offset, reverse);
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockByHeight(api, height, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/${Big.from(height).toString()}/manifest`;
+    const apiPath = `${api}/block/${Big.from(height).toString()}/manifest`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockByHash(api, hash, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/${hash}/manifest`;
+    const apiPath = `${api}/block/${hash}/manifest`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var block = {
@@ -2162,7 +2177,7 @@ var block = {
 };
 
 async function getNode(api, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/`;
+    const apiPath = `${api}/`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var node = {
@@ -2170,27 +2185,27 @@ var node = {
 };
 
 async function getOperations(api, delegateIP, limit, offset, reverse) {
-    const apiPath = apiPathWithParamsExt(`${IP.from(api).toString()}/block/operations`, limit, offset, reverse);
+    const apiPath = apiPathWithParamsExt(`${api}/block/operations`, limit, offset, reverse);
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getOperation(api, hash, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/block/operation/${hash}`;
+    const apiPath = `${api}/block/operation/${hash}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockOperationsByHeight(api, height, delegateIP, limit, offset, reverse) {
-    const apiPath = apiPathWithParams(`${IP.from(api).toString()}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
+    const apiPath = apiPathWithParams(`${api}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-// async function getBlockOperationsByHash(api: string | IP, hash: string, delegateIP: string | IP) {
-//     const apiPath = `${IP.from(api).toString()}/block/${hash}/operations`;
+// async function getBlockOperationsByHash(api: string | undefined, hash: string, delegateIP: string | undefined) {
+//     const apiPath = `${api}/block/${hash}/operations`;
 //     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))  
 // }
 async function getAccountOperations(api, address, delegateIP, limit, offset, reverse) {
-    const apiPath = apiPathWithParamsExt(`${IP.from(api).toString()}/account/${Address.from(address).toString()}/operations`, limit, offset, reverse);
+    const apiPath = apiPathWithParamsExt(`${api}/account/${Address.from(address).toString()}/operations`, limit, offset, reverse);
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function send(api, operation, delegateIP, config) {
-    const apiPath = `${IP.from(api).toString()}/builder/send`;
+    const apiPath = `${api}/builder/send`;
     return !delegateIP
         ? await axios.post(apiPath, JSON.stringify(operation), config)
         : await axios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
@@ -2205,11 +2220,11 @@ var api$1 = {
 };
 
 async function getCurrencies(api, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/currency`;
+    const apiPath = `${api}/currency`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCurrency(api, currency, delegateIP) {
-    const apiPath = `${IP.from(api).toString()}/currency/${CurrencyID.from(currency).toString()}`;
+    const apiPath = `${api}/currency/${CurrencyID.from(currency).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var currency$1 = {
@@ -2217,7 +2232,7 @@ var currency$1 = {
     getCurrency,
 };
 
-const url$6 = (api, contract) => `${IP.from(api).toString()}/nft/${Address.from(contract).toString()}`;
+const url$6 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
 async function getNFT(api, contract, nftIdx, delegateIP) {
     const apiPath = `${url$6(api, contract)}/nftidx/${nftIdx}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2246,7 +2261,7 @@ var nft = {
     getAccountOperators,
 };
 
-const url$5 = (api, contract) => `${IP.from(api).toString()}/did/${Address.from(contract).toString()}`;
+const url$5 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
 async function getModel$4(api, contract, delegateIP) {
     const apiPath = `${url$5(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2275,7 +2290,7 @@ var credential = {
     getCredentialByHolder,
 };
 
-const url$4 = (api, contract) => `${IP.from(api).toString()}/dao/${Address.from(contract).toString()}`;
+const url$4 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
 async function getModel$3(api, contract, delegateIP) {
     const apiPath = `${url$4(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2306,7 +2321,7 @@ var dao = {
 
 var kyc = {};
 
-const url$3 = (api, contract) => `${IP.from(api).toString()}/sto/${Address.from(contract).toString()}`;
+const url$3 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
 async function getService(api, contract, delegateIP) {
     const apiPath = `${url$3(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2324,7 +2339,8 @@ async function getOperatorsByHolder(api, contract, holder, partition, delegateIP
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitionBalance(api, contract, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/partition/${partition}/balance`;
+    const apiPath = `${url$3(api, contract)}/p
+    artition/${partition}/balance`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAuthorized(api, contract, operator, delegateIP) {
@@ -2340,7 +2356,7 @@ var sto = {
     getAuthorized,
 };
 
-const url$2 = (api, contract) => `${IP.from(api).toString()}/timestamp/${Address.from(contract).toString()}`;
+const url$2 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
 async function getModel$2(api, contract, delegateIP) {
     const apiPath = `${url$2(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2354,7 +2370,7 @@ var timestamp = {
     getTimeStamp,
 };
 
-const url$1 = (api, contract) => `${IP.from(api).toString()}/token/${Address.from(contract).toString()}`;
+const url$1 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
 async function getModel$1(api, contract, delegateIP) {
     const apiPath = `${url$1(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2368,7 +2384,7 @@ var token = {
     getTokenBalance,
 };
 
-const url = (api, contract) => `${IP.from(api).toString()}/point/${Address.from(contract).toString()}`;
+const url = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2464,7 +2480,7 @@ class Node extends Generator {
      * - `_hint`: Indicates that the data represents node information.
      */
     async getNodeInfo() {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         return await getAPIData(() => node.getNode(this.api, this.delegateIP));
     }
 }
@@ -2489,7 +2505,7 @@ class Block extends Generator {
      * - `_links`: links to get additional information
      */
     async getAllBlocks(limit, offset, reverse) {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         return await getAPIData(() => block.getBlocks(this.api, this.delegateIP, limit, offset, reverse));
     }
     /**
@@ -2513,7 +2529,7 @@ class Block extends Generator {
      * - `round`: The number of round to manifest
      */
     async getBlockByHash(hash) {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         return await getAPIData(() => block.getBlockByHash(this.api, hash, this.delegateIP));
     }
     /**
@@ -2537,7 +2553,7 @@ class Block extends Generator {
      * - `round`: The number of round to manifest
      */
     async getBlockByHeight(height) {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         return await getAPIData(() => block.getBlockByHeight(this.api, height, this.delegateIP));
     }
     // async getOperationsByHash(hash: string) {
@@ -2568,7 +2584,7 @@ class Block extends Generator {
      * - `_links`: Links to get additional information
      */
     async getOperationsByHeight(height, limit, offset, reverse) {
-        Assert.check(this.api !== undefined || this.api !== null, MitumError.detail(ECODE.NO_API, "no api"));
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         return await getAPIData(() => api$1.getBlockOperationsByHeight(this.api, height, this.delegateIP, limit, offset, reverse));
     }
 }
@@ -3226,6 +3242,7 @@ class Currency extends Generator {
      * @returns `data` of `SuccessResponse` is a array with currency id.
      */
     async getAllCurrencies() {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         const response = await getAPIData(() => api.currency.getCurrencies(this.api, this.delegateIP), true);
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data._links ?
@@ -3248,6 +3265,7 @@ class Currency extends Generator {
      * - `total_supply`: Total supply amount of the currency.
      */
     async getCurrency(currencyID) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         return await getAPIData(() => api.currency.getCurrency(this.api, currencyID, this.delegateIP));
     }
 }
@@ -3400,6 +3418,7 @@ class Account extends KeyG {
      */
     async getAccountInfo(address) {
         Address.from(address);
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         const response = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
         if (isSuccessResponse(response)) {
             response.data = response.data ? response.data : null;
@@ -3430,6 +3449,7 @@ class Account extends KeyG {
      */
     async getOperations(address, limit, offset, reverse) {
         Address.from(address);
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         const response = await getAPIData(() => api.operation.getAccountOperations(this.api, address, this.delegateIP, limit, offset, reverse));
         if (isSuccessResponse(response)) {
             response.data = response.data ? response.data : null;
@@ -3452,6 +3472,7 @@ class Account extends KeyG {
      * - `_links`: Links to get additional information
      */
     async getByPublickey(publickey) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         const s = typeof (publickey) === 'string' ? publickey : publickey.toString();
         StringAssert.with(s, MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid public key"))
             .empty().not()
@@ -3471,6 +3492,7 @@ class Account extends KeyG {
      * **null means that the account has not yet been recorded in the block.**
      */
     async balance(address) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(address);
         const response = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
@@ -3560,6 +3582,7 @@ class Contract extends Generator {
      * **null means that the contract account has not yet been recorded in the block.**
      */
     async getContractInfo(address) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(address);
         const response = await getAPIData(() => api.account.getAccount(this.api, address, this.delegateIP));
         if (isSuccessResponse(response)) {
@@ -3602,6 +3625,7 @@ class Contract extends Generator {
      * touchOperation();
      */
     async touch(privatekey, wallet) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         const op = wallet.operation;
         op.sign(privatekey);
         return await new Operation(this.networkID, this.api, this.delegateIP).send(op);
@@ -4117,6 +4141,7 @@ class NFT extends ContractGenerator {
      * - - `minter_whitelist`: Array of the addresses of accounts who have permissions to mint
      */
     async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.nft.getModel(this.api, contract, this.delegateIP));
     }
@@ -4128,6 +4153,7 @@ class NFT extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is the address of the NFT owner.
      */
     async getOwner(contract, nftIdx) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
@@ -4143,6 +4169,7 @@ class NFT extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is an address of the approved account to manage the NFT.
      */
     async getApproved(contract, nftIdx) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
@@ -4157,6 +4184,7 @@ class NFT extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is the total supply of NFTs in the collection.
      */
     async getTotalSupply(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         const response = await getAPIData(() => contractApi.nft.getNFTCount(this.api, contract, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
@@ -4172,6 +4200,7 @@ class NFT extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is the URI of the NFT.
      */
     async getURI(contract, nftIdx) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
@@ -4189,6 +4218,7 @@ class NFT extends ContractGenerator {
      * - `operators`: Array of the addresses of accounts that have been delegated authority over all of the owner’s NFTs
      */
     async getApprovedAll(contract, owner) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(owner);
         return await getAPIData(() => contractApi.nft.getAccountOperators(this.api, contract, owner, this.delegateIP));
@@ -4209,6 +4239,7 @@ class NFT extends ContractGenerator {
      * - `creators`: Creator object,
      */
     async getNFT(contract, nftIdx) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
     }
@@ -4234,6 +4265,7 @@ class NFT extends ContractGenerator {
      * - `_links`: Links for additional information
      */
     async getNFTs(contract, factHash, limit, offset, reverse) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.nft.getNFTs(this.api, contract, this.delegateIP, factHash, limit, offset, reverse));
     }
@@ -4523,6 +4555,7 @@ class Credential extends ContractGenerator {
      * - - `credential_count`: The total number of credential
      */
     async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.credential.getModel(this.api, contract, this.delegateIP));
     }
@@ -4545,6 +4578,7 @@ class Credential extends ContractGenerator {
      * - `is_active`: Indicates whether the credential is active or revoked
      */
     async getCredential(contract, templateID, credentialID) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(templateID, 'templateID');
         new URIString(credentialID, 'credentialID');
@@ -4568,6 +4602,7 @@ class Credential extends ContractGenerator {
      * - `creator`: The address of the creator of the template.
      */
     async getTemplate(contract, templateID) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(templateID, 'templateID');
         return await getAPIData(() => contractApi.credential.getTemplate(this.api, contract, templateID, this.delegateIP));
@@ -4593,6 +4628,7 @@ class Credential extends ContractGenerator {
      * - `_links`: links to get additional information of the credential,
      */
     async getAllCredentials(contract, templateID) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(templateID, 'templateID');
         return await getAPIData(() => contractApi.credential.getCredentials(this.api, contract, templateID, this.delegateIP));
@@ -4620,6 +4656,7 @@ class Credential extends ContractGenerator {
      * - - `_links`: links to get additional information of the credential
      */
     async getByHolder(contract, holder) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(holder);
         return await getAPIData(() => contractApi.credential.getCredentialByHolder(this.api, contract, holder, this.delegateIP));
@@ -5251,6 +5288,7 @@ class DAO extends ContractGenerator {
      * - `policy`: [Policy]
      */
     async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.dao.getModel(this.api, contract, this.delegateIP));
     }
@@ -5266,6 +5304,7 @@ class DAO extends ContractGenerator {
      * - `policy`: [Policy]
      */
     async getProposal(contract, proposalID) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
         return await getAPIData(() => contractApi.dao.getProposal(this.api, contract, proposalID, this.delegateIP));
@@ -5282,6 +5321,7 @@ class DAO extends ContractGenerator {
      * - `approved`: Address of the approved account,
      */
     async getApproved(contract, proposalID, account) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
         return await getAPIData(() => contractApi.dao.getApproved(this.api, contract, proposalID, account, this.delegateIP));
@@ -5297,6 +5337,7 @@ class DAO extends ContractGenerator {
      * - `votring_power_holders`: List of accounts that have delegated their voting power to voter.
      */
     async getVoters(contract, proposalID) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
         return await getAPIData(() => contractApi.dao.getVoters(this.api, contract, proposalID, this.delegateIP));
@@ -5313,6 +5354,7 @@ class DAO extends ContractGenerator {
      * - `result`: Object consisting of the selected option and the number of votes.
      */
     async getVotingStatus(contract, proposalID) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
         return await getAPIData(() => contractApi.dao.getVotingStatus(this.api, contract, proposalID, this.delegateIP));
@@ -5758,6 +5800,7 @@ class STO extends ContractGenerator {
      * }
      */
     async getServiceInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.sto.getService(this.api, contract, this.delegateIP));
     }
@@ -5769,6 +5812,7 @@ class STO extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is an array of token partition names owned by the holder.
      */
     async getPartitionsInfo(contract, holder) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(holder);
         return await getAPIData(() => contractApi.sto.getPartitions(this.api, contract, holder, this.delegateIP));
@@ -5782,6 +5826,7 @@ class STO extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is the balance of holder for the partition
      */
     async getBalanceByHolder(contract, holder, partition) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(holder);
         return await getAPIData(() => contractApi.sto.getBalanceByHolder(this.api, contract, holder, partition, this.delegateIP));
@@ -5796,6 +5841,7 @@ class STO extends ContractGenerator {
      * - `operators`: Array of the address of operators.
      */
     async getOperatorsByHolder(contract, holder, partition) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(holder);
         return await getAPIData(() => contractApi.sto.getOperatorsByHolder(this.api, contract, holder, partition, this.delegateIP));
@@ -5808,6 +5854,7 @@ class STO extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is the partition balance amount.
      */
     async getPartitionBalanceInfo(contract, partition) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.sto.getPartitionBalance(this.api, contract, partition, this.delegateIP));
     }
@@ -5819,6 +5866,7 @@ class STO extends ContractGenerator {
      * - `holders`: Array of the address of holders.
      */
     async getAuthorizedInfo(contract, operator) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(operator);
         return await getAPIData(() => contractApi.sto.getAuthorized(this.api, contract, operator, this.delegateIP));
@@ -6130,6 +6178,7 @@ class TimeStamp extends ContractGenerator {
      * - `projects`: Array of all project's id
      */
     async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.timestamp.getModel(this.api, contract, this.delegateIP));
     }
@@ -6148,6 +6197,7 @@ class TimeStamp extends ContractGenerator {
      * - `data`: Data string
      */
     async getTimestamp(contract, projectID, timestampIdx) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(projectID, 'projectID');
         return await getAPIData(() => contractApi.timestamp.getTimeStamp(this.api, contract, projectID, timestampIdx, this.delegateIP));
@@ -6462,6 +6512,7 @@ class Token extends ContractGenerator {
      * - `policy`: Token policy object including `_hint`, `total_supply`, `approve_list`
      */
     async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.token.getModel(this.api, contract, this.delegateIP));
     }
@@ -6475,6 +6526,7 @@ class Token extends ContractGenerator {
      * - `amount`: String of allowance amount
      */
     async getAllowance(contract, owner, approved) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(owner);
         Address.from(approved);
@@ -6493,6 +6545,7 @@ class Token extends ContractGenerator {
      * - `amount`: String of amount
      */
     async getBalance(contract, account) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(account);
         return await getAPIData(() => contractApi.token.getTokenBalance(this.api, contract, account, this.delegateIP));
@@ -6789,6 +6842,7 @@ class Point extends ContractGenerator {
      * - `policy`: Point policy object including `_hint`, `total_supply`, `approve_list`
      */
     async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         return await getAPIData(() => contractApi.point.getModel(this.api, contract, this.delegateIP));
     }
@@ -6802,6 +6856,7 @@ class Point extends ContractGenerator {
      * - `amount`: String of allowance amount
      */
     async getAllowance(contract, owner, approved) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(owner);
         Address.from(approved);
@@ -6820,6 +6875,7 @@ class Point extends ContractGenerator {
      * - `amount`: String of amount
      */
     async getBalance(contract, account) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(account);
         return await getAPIData(() => contractApi.point.getPointBalance(this.api, contract, account, this.delegateIP));
@@ -6927,6 +6983,7 @@ class Operation extends Generator {
      * - `_links`: Links to get additional information
      */
     async getAllOperations(limit, offset, reverse) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         return await getAPIData(() => api$1.getOperations(this.api, this.delegateIP, limit, offset, reverse));
     }
     /**
@@ -6950,6 +7007,7 @@ class Operation extends Generator {
      * ***null* means that the account has not yet been recorded in the block.**
      */
     async getOperation(hash) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         const response = await getAPIData(() => api$1.getOperation(this.api, hash, this.delegateIP));
         if (isSuccessResponse(response)) {
             response.data = response.data ? response.data : null;
@@ -6988,19 +7046,19 @@ class Operation extends Generator {
      * sendOperation();
      */
     async send(operation, headers) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Assert.check(isOpFact(operation) || isHintedObject(operation), MitumError.detail(ECODE.INVALID_OPERATION, `input is neither in OP<Fact> nor HintedObject format`));
         operation = isOpFact(operation) ? operation.toHintedObject() : operation;
         Assert.check(operation.signs.length !== 0, MitumError.detail(ECODE.EMPTY_SIGN, `signature is required before sending the operation`));
         Assert.check(Config.OP_SIZE.satisfy(Buffer.byteLength(JSON.stringify(operation), 'utf8')), MitumError.detail(ECODE.OP_SIZE_EXCEEDED, `Operation size exceeds the allowed limit of ${Config.OP_SIZE.max} bytes.`));
         const sendResponse = await getAPIData(() => api$1.send(this.api, operation, this.delegateIP, headers));
-        return new OperationResponse(sendResponse, this.api, this.delegateIP);
+        return new OperationResponse(sendResponse, this.networkID, this.api, this.delegateIP);
     }
 }
-class OperationResponse {
-    constructor(response, api, delegateIP) {
+class OperationResponse extends Operation {
+    constructor(response, networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
         this.response = response;
-        this._api = api;
-        this._delegateIP = delegateIP;
     }
     /**
      * Get receipt when a sent operation is recorded in a block by polling the blockchain network for a certain time.
@@ -7049,7 +7107,7 @@ class OperationResponse {
         let stop = false;
         while (!stop && elapsedTime < maxTimeout) {
             try {
-                const receipt = await getAPIData(() => api$1.getOperation(this._api, this.response.data.fact.hash, this._delegateIP));
+                const receipt = await this.getOperation(this.response.data.fact.hash);
                 if (isSuccessResponse(receipt) && receipt.data !== undefined) {
                     if (receipt.data.in_state) {
                         console.log('\x1b[34m%s\x1b[0m', `operation in_state is true. fact hash: ${this.response.data.fact.hash}`);
@@ -7071,9 +7129,7 @@ class OperationResponse {
             elapsedTime += timeoutInterval;
             await new Promise(resolve => setTimeout(resolve, timeoutInterval));
         }
-        const apiPath = `${IP.from(this._api).toString()}/block/operation/${this.response.data.fact.hash}`;
-        const url = !this._delegateIP ? apiPath : delegateUri(this._delegateIP) + encodeURIComponent(apiPath);
-        Assert.check(stop, MitumError.detail(ECODE.TIME_OUT, `timeout reached (${maxTimeout / 1000} seconds).\nurl: ${url}`));
+        Assert.check(stop, MitumError.detail(ECODE.TIME_OUT, `timeout reached (${maxTimeout / 1000} seconds).`));
     }
 }
 
@@ -7190,17 +7246,17 @@ class Mitum extends Generator {
         this.refresh();
     }
     /**Get the API URL in use.
-     * @returns {string} The API URL.
+     * @returns {string | undefined} The API URL.
     */
     getAPI() {
-        return this.api.toString();
+        return this.api ? this.api.toString() : undefined;
     }
     /**
      * Get the delegate IP in use.
      * @returns {string} The delegate IP address.
      */
     getDelegate() {
-        return this.delegateIP.toString();
+        return this.delegateIP ? this.delegateIP.toString() : undefined;
     }
     /**Get the network ID in use.
      * @returns {string} The network ID (chain).

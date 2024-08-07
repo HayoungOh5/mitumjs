@@ -1,10 +1,9 @@
 import { Address } from "../../key";
-import { IP } from "../../types";
-declare function getModel(api: string | IP, contract: string | Address, delegateIP: string | IP): Promise<import("axios").AxiosResponse<any, any>>;
-declare function getCredential(api: string | IP, contract: string | Address, templateID: string, credentialID: string, delegateIP: string | IP): Promise<import("axios").AxiosResponse<any, any>>;
-declare function getTemplate(api: string | IP, contract: string | Address, templateID: string, delegateIP: string | IP): Promise<import("axios").AxiosResponse<any, any>>;
-declare function getCredentials(api: string | IP, contract: string | Address, templateID: string, delegateIP: string | IP): Promise<import("axios").AxiosResponse<any, any>>;
-declare function getCredentialByHolder(api: string | IP, contract: string | Address, holder: string | Address, delegateIP: string | IP): Promise<import("axios").AxiosResponse<any, any>>;
+declare function getModel(api: string | undefined, contract: string | Address, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
+declare function getCredential(api: string | undefined, contract: string | Address, templateID: string, credentialID: string, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
+declare function getTemplate(api: string | undefined, contract: string | Address, templateID: string, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
+declare function getCredentials(api: string | undefined, contract: string | Address, templateID: string, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
+declare function getCredentialByHolder(api: string | undefined, contract: string | Address, holder: string | Address, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
 declare const _default: {
     getModel: typeof getModel;
     getCredential: typeof getCredential;

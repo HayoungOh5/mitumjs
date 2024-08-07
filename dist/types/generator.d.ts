@@ -8,6 +8,6 @@ export declare abstract class Generator {
     protected setAPI(api?: string | IP): void;
     protected setDelegate(delegateIP?: string | IP): void;
     protected get networkID(): string;
-    protected get api(): string;
-    protected get delegateIP(): string;
+    protected get api(): string | undefined;
+    protected get delegateIP(): string | undefined;
 }
