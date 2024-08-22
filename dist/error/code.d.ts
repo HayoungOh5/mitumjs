@@ -267,7 +267,7 @@ export declare const DCODE: {
         readonly description: "The contract already contains the service.";
         readonly subject: "";
     };
-    readonly EXSIT_STATE: {
+    readonly EXIST_STATE: {
         readonly code: "D508";
         readonly keyword: readonly ["State exist"];
         readonly description: "The state already exists on the blockchain.";

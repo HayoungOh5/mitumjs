@@ -35,14 +35,21 @@ var secp256k1__namespace = /*#__PURE__*/_interopNamespaceDefault(secp256k1);
 var crypto__namespace = /*#__PURE__*/_interopNamespaceDefault(crypto);
 
 const ECODE = {
+    // General Errors
     NO_API: "EC_NO_API",
     UNKNOWN: "EC_UNKNOWN",
+    // Operation Errors
     OP_SIZE_EXCEEDED: "EC_OP_SIZE_EXCEEDED",
     EMPTY_STRING: "EC_EMPTY_STRING",
     EMPTY_SIGN: "EC_EMPTY_SIGN",
+    // Validation Errors
+    /// Date and Time Validation
     INVALID_DATE: "EC_INVALID_DATE",
+    /// IP Address Validation
     INVALID_IP: "EC_INVALID_IP",
+    /// Length Validation
     INVALID_LENGTH: "EC_INVALID_LENGTH",
+    /// Seed and Key Validation
     INVALID_SEED: "EC_INVALID_SEED",
     INVALID_KEY: "EC_INVALID_KEY",
     INVALID_KEYS: "EC_INVALID_KEYS",
@@ -54,10 +61,13 @@ const ECODE = {
     INVALID_ADDRESS: "EC_INVALID_ADDRESS",
     INVALID_ADDRESS_TYPE: "EC_INVALID_ADDRESS_TYPE",
     INVALID_ADDRESS_CHECKSUM: "EC_INVALID_ADDRESS_CHECKSUM",
+    /// Data Validation
+    //// Number
     INVALID_BIG_INTEGER: "EC_INVALID_BIG_INTERGER",
     INVALID_DECIMAL: "EC_INVALID_DECIMAL",
     INVALID_FLOAT: "EC_INVALID_FLOAT",
     INVALID_UINT8: "EC_INVALID_UINT8",
+    //// Operation Contents
     INVALID_HINT: "EC_INVALID_HINT",
     INVALID_TOKEN: "EC_INVALID_TOKEN",
     INVALID_CURRENCY_ID: "EC_INVALID_CURRENCY_ID",
@@ -78,32 +88,40 @@ const ECODE = {
     INVALID_RATIO: "EC_INVALID_RATIO",
     INVALID_DATA_STRUCTURE: "EC_INVALID_DATA_STRUCTURE",
     INVALID_CHARACTER: "EC_NVALID_CHARACTER",
+    // Not Implemented Errors
     NOT_IMPLEMENTED_BUFFER: "EC_NOT_IMPLEMENTED_BUFFER",
     NOT_IMPLEMENTED_HINTED_OBJECT: "EC_NOT_IMPLEMENTED_HINTED_OBJECT",
     NOT_IMPLEMENTED_METHOD: "EC_NOT_IMPLEMENTED_METHOD",
+    // Failure Errors
     FAIL_FILE_CREATION: "EC_FAIL_FILE_CREATION",
     FAIL_SIGN: "EC_FAIL_SIGN",
+    // HDWallet Errors
     HDWALLET: {
         INVALID_PHRASE: "EC_INVALID_PHRASE",
         INVALID_PATH: "EC_INVALID_PATH",
     },
+    // Currency Errors
     CURRENCY: {
         INVALID_CURRENCY_FEEER: "EC_INVALID_CURRENCY_FEEER",
         INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY",
         INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN",
     },
+    // NFT Errors
     NFT: {
         INVALID_NFT_SIGNER: "EC_INVALID_NFT_SIGNER",
         INVALID_NFT_SIGNERS: "EC_INVALID_NFT_SIGNERS",
     },
+    // STO Errors
     STO: {
         INVALID_PARTITION: "EC_INVALID_PARTITION",
     },
+    // DAO Errors
     DAO: {
         INVALID_POLICY: "EC_INVALID_POLICY",
         INVALID_WHITELIST: "EC_INVALID_WHITELIST",
         UNMATCHED_SENDER: "EC_UNMATCHED_SENDER"
     },
+    // Transaction Errors
     TIME_OUT: "EC_TIME_OUT",
     TRANSACTION_REVERTED: "EC_TRANSACTION_REVERTED"
 };
@@ -308,7 +326,7 @@ const DCODE = {
         description: "The contract already contains the service.",
         subject: ""
     },
-    EXSIT_STATE: {
+    EXIST_STATE: {
         code: "D508",
         keyword: ["State exist"],
         description: "The state already exists on the blockchain.",
@@ -328,14 +346,11 @@ const assignCodeFromErrorMessage = (errorMessage) => {
             for (const keyword of obj.keyword) {
                 if (errorMessage.includes(keyword)) {
                     dcodeArr.push(obj.code);
-                }
-                if (obj.code === "D302") {
-                    break;
+                    if (obj.code === "D302") {
+                        break;
+                    }
                 }
             }
-        }
-        if (obj.code === "D302") {
-            break;
         }
     }
     pcodeArr.length === 0 && pcodeArr.push(PCODE.UNDEFINED.code);
