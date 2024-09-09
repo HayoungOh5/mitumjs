@@ -13,6 +13,10 @@ import * as crypto from 'crypto';
 import pkg2 from 'elliptic';
 const { ec } = pkg2;
 
+const fetchAxios = axios.create({
+    adapter: 'fetch'
+});
+
 const ECODE = {
     // General Errors
     NO_API: "EC_NO_API",
@@ -2141,11 +2145,11 @@ class KeyG extends Generator {
 
 async function getAccount(api, address, delegateIP) {
     const apiPath = `${api}/account/${Address.from(address).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountByPublicKey(api, publicKey, delegateIP) {
     const apiPath = `${api}/accounts?publickey=${Key.from(publicKey).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var account = {
     getAccount,
@@ -2154,15 +2158,15 @@ var account = {
 
 async function getBlocks(api, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/manifests`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockByHeight(api, height, delegateIP) {
     const apiPath = `${api}/block/${Big.from(height).toString()}/manifest`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockByHash(api, hash, delegateIP) {
     const apiPath = `${api}/block/${hash}/manifest`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var block = {
     getBlocks,
@@ -2172,7 +2176,7 @@ var block = {
 
 async function getNode(api, delegateIP) {
     const apiPath = `${api}/`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var node = {
     getNode,
@@ -2180,29 +2184,29 @@ var node = {
 
 async function getOperations(api, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParamsExt(`${api}/block/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getOperation(api, hash, delegateIP) {
     const apiPath = `${api}/block/operation/${hash}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockOperationsByHeight(api, height, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 // async function getBlockOperationsByHash(api: string | undefined, hash: string, delegateIP: string | undefined) {
 //     const apiPath = `${api}/block/${hash}/operations`;
-//     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))  
+//     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))  
 // }
 async function getAccountOperations(api, address, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParamsExt(`${api}/account/${Address.from(address).toString()}/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function send(api, operation, delegateIP, config) {
     const apiPath = `${api}/builder/send`;
     return !delegateIP
-        ? await axios.post(apiPath, JSON.stringify(operation), config)
-        : await axios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
+        ? await fetchAxios.post(apiPath, JSON.stringify(operation), config)
+        : await fetchAxios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
 }
 var api$1 = {
     getOperations,
@@ -2215,11 +2219,11 @@ var api$1 = {
 
 async function getCurrencies(api, delegateIP) {
     const apiPath = `${api}/currency`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCurrency(api, currency, delegateIP) {
     const apiPath = `${api}/currency/${CurrencyID.from(currency).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var currency$1 = {
     getCurrencies,
@@ -2229,23 +2233,23 @@ var currency$1 = {
 const url$6 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
 async function getNFT(api, contract, nftIdx, delegateIP) {
     const apiPath = `${url$6(api, contract)}/nftidx/${nftIdx}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTs(api, contract, delegateIP, factHash, limit, offset, reverse) {
     const apiPath = apiPathWithHashParams(`${url$6(api, contract)}/nfts`, factHash, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTCount(api, contract, delegateIP) {
     const apiPath = `${url$6(api, contract)}/totalsupply`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getModel$5(api, contract, delegateIP) {
     const apiPath = `${url$6(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountOperators(api, contract, account, delegateIP) {
     const apiPath = `${url$6(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var nft = {
     getNFT,
@@ -2258,23 +2262,23 @@ var nft = {
 const url$5 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
 async function getModel$4(api, contract, delegateIP) {
     const apiPath = `${url$5(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredential(api, contract, templateID, credentialID, delegateIP) {
     const apiPath = `${url$5(api, contract)}/template/${templateID}/credential/${credentialID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getTemplate(api, contract, templateID, delegateIP) {
     const apiPath = `${url$5(api, contract)}/template/${templateID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredentials(api, contract, templateID, delegateIP) {
     const apiPath = `${url$5(api, contract)}/template/${templateID}/credentials`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredentialByHolder(api, contract, holder, delegateIP) {
     const apiPath = `${url$5(api, contract)}/holder/${Address.from(holder).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var credential = {
     getModel: getModel$4,
@@ -2287,23 +2291,23 @@ var credential = {
 const url$4 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
 async function getModel$3(api, contract, delegateIP) {
     const apiPath = `${url$4(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getProposal(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$4(api, contract)}/proposal/${proposalID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getApproved(api, contract, proposalID, registrant, delegateIP) {
     const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getVoters(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/voter`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getVotingStatus(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/votingpower`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var dao = {
     getModel: getModel$3,
@@ -2318,28 +2322,28 @@ var kyc = {};
 const url$3 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
 async function getService(api, contract, delegateIP) {
     const apiPath = `${url$3(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitions(api, contract, holder, delegateIP) {
     const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBalanceByHolder(api, contract, holder, partition, delegateIP) {
     const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getOperatorsByHolder(api, contract, holder, partition, delegateIP) {
     const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitionBalance(api, contract, partition, delegateIP) {
     const apiPath = `${url$3(api, contract)}/p
     artition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAuthorized(api, contract, operator, delegateIP) {
     const apiPath = `${url$3(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var sto = {
     getService,
@@ -2353,11 +2357,11 @@ var sto = {
 const url$2 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
 async function getModel$2(api, contract, delegateIP) {
     const apiPath = `${url$2(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
     const apiPath = `${url$2(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var timestamp = {
     getModel: getModel$2,
@@ -2367,11 +2371,11 @@ var timestamp = {
 const url$1 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
 async function getModel$1(api, contract, delegateIP) {
     const apiPath = `${url$1(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getTokenBalance(api, contract, account, delegateIP) {
     const apiPath = `${url$1(api, contract)}/account/${Address.from(account).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var token = {
     getModel: getModel$1,
@@ -2381,11 +2385,11 @@ var token = {
 const url = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPointBalance(api, contract, account, delegateIP) {
     const apiPath = `${url(api, contract)}/account/${Address.from(account).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var point = {
     getModel,
