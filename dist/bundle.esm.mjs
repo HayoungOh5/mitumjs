@@ -13,8 +13,10 @@ import * as crypto from 'crypto';
 import pkg2 from 'elliptic';
 const { ec } = pkg2;
 
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+
 const fetchAxios = axios.create({
-    adapter: 'fetch'
+    adapter: isNode ? undefined : 'fetch',
 });
 
 const ECODE = {

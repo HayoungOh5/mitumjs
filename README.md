@@ -13,7 +13,7 @@
 
 ## **Install**    
 - Both commonjs (cjs) and ES2020 (esm) are available.
-    
+- For ESM, the runtime environment is detected automatically: XMLHttpRequests are supported in the browser, and HTTP requests are supported in Node.js.
 This project has been developed in the following environments:
 * node version <code>>=</code> 16
 * npm version <code>>=</code> 8
