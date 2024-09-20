@@ -8,6 +8,7 @@ export declare const ECODE: {
     readonly INVALID_DATE: "EC_INVALID_DATE";
     readonly INVALID_IP: "EC_INVALID_IP";
     readonly INVALID_LENGTH: "EC_INVALID_LENGTH";
+    readonly INVALID_TYPE: "EC_INVALID_TYPE";
     readonly INVALID_SEED: "EC_INVALID_SEED";
     readonly INVALID_KEY: "EC_INVALID_KEY";
     readonly INVALID_KEYS: "EC_INVALID_KEYS";

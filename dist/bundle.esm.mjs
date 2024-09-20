@@ -13,6 +13,12 @@ import * as crypto from 'crypto';
 import pkg2 from 'elliptic';
 const { ec } = pkg2;
 
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+
+const fetchAxios = axios.create({
+    adapter: isNode ? undefined : 'fetch',
+});
+
 const ECODE = {
     // General Errors
     NO_API: "EC_NO_API",
@@ -28,6 +34,8 @@ const ECODE = {
     INVALID_IP: "EC_INVALID_IP",
     /// Length Validation
     INVALID_LENGTH: "EC_INVALID_LENGTH",
+    /// Type Validation
+    INVALID_TYPE: "EC_INVALID_TYPE",
     /// Seed and Key Validation
     INVALID_SEED: "EC_INVALID_SEED",
     INVALID_KEY: "EC_INVALID_KEY",
@@ -313,35 +321,29 @@ const DCODE = {
     },
 };
 const assignCodeFromErrorMessage = (errorMessage) => {
-    const pcodeArr = [];
-    const dcodeArr = [];
-    for (const [_, obj] of Object.entries(PCODE)) {
-        if (obj.keyword[0] !== "" && errorMessage.includes(obj.keyword[0])) {
-            pcodeArr.push(obj.code);
-        }
-    }
-    for (const [_, obj] of Object.entries(DCODE)) {
-        if (obj.keyword[0] !== "") {
-            for (const keyword of obj.keyword) {
-                if (errorMessage.includes(keyword)) {
-                    dcodeArr.push(obj.code);
-                    if (obj.code === "D302") {
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    const findCode = (codeSet, errorMessage) => {
+        return Object.values(codeSet)
+            .filter((obj) => obj.keyword.length > 0 && obj.keyword[0] !== "")
+            .filter((obj) => obj.keyword.some((keyword) => errorMessage.includes(keyword)))
+            .map((obj) => obj.code);
+    };
+    let pcodeArr = findCode(PCODE, errorMessage);
+    let dcodeArr = findCode(DCODE, errorMessage);
     pcodeArr.length === 0 && pcodeArr.push(PCODE.UNDEFINED.code);
-    if (dcodeArr.length > 1) {
-        return pcodeArr.slice(-1) + DCODE.COMPLEX.code;
+    dcodeArr.length === 0 && dcodeArr.push(DCODE.UNDEFINED.code);
+    if (dcodeArr.includes(DCODE.CA_DISALLOW.code)) {
+        dcodeArr = [DCODE.CA_DISALLOW.code];
     }
-    else if (dcodeArr.length == 1) {
-        return pcodeArr.slice(-1) + dcodeArr[0];
+    else if (dcodeArr.length > 1) {
+        dcodeArr = [DCODE.COMPLEX.code];
     }
-    else {
-        return pcodeArr.slice(-1) + DCODE.UNDEFINED.code;
+    if (pcodeArr.includes(PCODE.IV_BASE_NODE_OP.code)) {
+        pcodeArr = [PCODE.IV_BASE_NODE_OP.code];
     }
+    else if (pcodeArr.length > 1) {
+        pcodeArr = [PCODE.AMBIGUOUS.code];
+    }
+    return pcodeArr[0] + dcodeArr[0];
 };
 
 class MitumError extends Error {
@@ -827,245 +829,6 @@ var CURRENCY = {
     }
 };
 
-var NFT = {
-    SIGNER: "mitum-nft-signer",
-    SIGNERS: "mitum-nft-signers",
-    REGISTER_MODEL: {
-        FACT: "mitum-nft-register-model-operation-fact",
-        OPERATION: "mitum-nft-register-model-operation",
-    },
-    UPDATE_MODEL_CONFIG: {
-        FACT: "mitum-nft-update-model-config-operation-fact",
-        OPERATION: "mitum-nft-update-model-config-operation",
-    },
-    MINT: {
-        FORM: "mitum-nft-mint-form",
-        ITEM: "mitum-nft-mint-item",
-        FACT: "mitum-nft-mint-operation-fact",
-        OPERATION: "mitum-nft-mint-operation",
-    },
-    APPROVE_ALL: {
-        ITEM: "mitum-nft-approve-all-item",
-        FACT: "mitum-nft-approve-all-operation-fact",
-        OPERATION: "mitum-nft-approve-all-operation",
-    },
-    APPROVE: {
-        ITEM: "mitum-nft-approve-item",
-        FACT: "mitum-nft-approve-operation-fact",
-        OPERATION: "mitum-nft-approve-operation",
-    },
-    TRANSFER: {
-        ITEM: "mitum-nft-transfer-item",
-        FACT: "mitum-nft-transfer-operation-fact",
-        OPERATION: "mitum-nft-transfer-operation",
-    },
-    ADD_SIGNATURE: {
-        ITEM: "mitum-nft-add-signature-item",
-        FACT: "mitum-nft-add-signature-operation-fact",
-        OPERATION: "mitum-nft-add-signature-operation",
-    }
-};
-
-var CREDENTIAL = {
-    REGISTER_MODEL: {
-        FACT: "mitum-credential-register-model-operation-fact",
-        OPERATION: "mitum-credential-register-model-operation",
-    },
-    ADD_TEMPLATE: {
-        FACT: "mitum-credential-add-template-operation-fact",
-        OPERATION: "mitum-credential-add-template-operation",
-    },
-    ISSUE: {
-        ITEM: "mitum-credential-issue-item",
-        FACT: "mitum-credential-issue-operation-fact",
-        OPERATION: "mitum-credential-issue-operation",
-    },
-    REVOKE: {
-        ITEM: "mitum-credential-revoke-item",
-        FACT: "mitum-credential-revoke-operation-fact",
-        OPERATION: "mitum-credential-revoke-operation",
-    },
-};
-
-var DAO = {
-    DESIGN: "mitum-dao-design",
-    POLICY: "mitum-dao-policy",
-    CALLDATA: {
-        TRANSFER: "mitum-dao-transfer-calldata",
-        GOVERNANCE: "mitum-dao-governance-calldata",
-    },
-    PROPOSAL: {
-        CRYPTO: "mitum-dao-crypto-proposal",
-        BIZ: "mitum-dao-biz-proposal",
-    },
-    WHITELIST: "mitum-dao-whitelist",
-    REGISTER_MODEL: {
-        FACT: "mitum-dao-register-model-operation-fact",
-        OPERATION: "mitum-dao-register-model-operation",
-    },
-    UPDATE_MODEL_CONFIG: {
-        FACT: "mitum-dao-update-model-config-operation-fact",
-        OPERATION: "mitum-dao-update-model-config-operation",
-    },
-    PROPOSE: {
-        FACT: "mitum-dao-propose-operation-fact",
-        OPERATION: "mitum-dao-propose-operation",
-    },
-    CANCEL_PROPOSAL: {
-        FACT: "mitum-dao-cancel-proposal-operation-fact",
-        OPERATION: "mitum-dao-cancel-proposal-operation",
-    },
-    REGISTER: {
-        FACT: "mitum-dao-register-operation-fact",
-        OPERATION: "mitum-dao-register-operation",
-    },
-    PRE_SNAP: {
-        FACT: "mitum-dao-pre-snap-operation-fact",
-        OPERATION: "mitum-dao-pre-snap-operation",
-    },
-    POST_SNAP: {
-        FACT: "mitum-dao-post-snap-operation-fact",
-        OPERATION: "mitum-dao-post-snap-operation",
-    },
-    VOTE: {
-        FACT: "mitum-dao-vote-operation-fact",
-        OPERATION: "mitum-dao-vote-operation",
-    },
-    EXECUTE: {
-        FACT: "mitum-dao-execute-operation-fact",
-        OPERATION: "mitum-dao-execute-operation",
-    }
-};
-
-var KYC = {
-    CREATE_SERVICE: {
-        FACT: "mitum-kyc-create-service-operation-fact",
-        OPERATION: "mitum-kyc-create-service-operation",
-    },
-    ADD_CONTROLLER: {
-        ITEM: "mitum-kyc-add-controller-item",
-        FACT: "mitum-kyc-add-controller-operation-fact",
-        OPERATION: "mitum-kyc-add-controller-operation",
-    },
-    REMOVE_CONTROLLER: {
-        ITEM: "mitum-kyc-remove-controller-item",
-        FACT: "mitum-kyc-remove-controller-operation-fact",
-        OPERATION: "mitum-kyc-remove-controller-operation",
-    },
-    ADD_CUSTOMER: {
-        ITEM: "mitum-kyc-add-customer-item",
-        FACT: "mitum-kyc-add-customer-operation-fact",
-        OPERATION: "mitum-kyc-add-customer-operation",
-    },
-    UPDATE_CUSTOMER: {
-        ITEM: "mitum-kyc-update-customers-item",
-        FACT: "mitum-kyc-update-customers-operation-fact",
-        OPERATION: "mitum-kyc-update-customers-operation",
-    }
-};
-
-var STO = {
-    CREATE_SECURITY_TOKEN: {
-        ITEM: "mitum-sto-create-security-token-item",
-        FACT: "mitum-sto-create-security-token-operation-fact",
-        OPERATION: "mitum-sto-create-security-token-operation",
-    },
-    ISSUE: {
-        ITEM: "mitum-sto-issue-item",
-        FACT: "mitum-sto-issue-operation-fact",
-        OPERATION: "mitum-sto-issue-operation",
-    },
-    AUTHORIZE_OPERATOR: {
-        ITEM: "mitum-sto-authorize-operator-item",
-        FACT: "mitum-sto-authorize-operator-operation-fact",
-        OPERATION: "mitum-sto-authorize-operator-operation",
-    },
-    REVOKE_OPERATOR: {
-        ITEM: "mitum-sto-revoke-operator-item",
-        FACT: "mitum-sto-revoke-operator-operation-fact",
-        OPERATION: "mitum-sto-revoke-operator-operation",
-    },
-    SET_DOCUMENT: {
-        FACT: "mitum-sto-set-document-operation-fact",
-        OPERATION: "mitum-sto-set-document-operation",
-    },
-    TRANSFER_BY_PARTITION: {
-        ITEM: "mitum-sto-transfer-by-partition-item",
-        FACT: "mitum-sto-transfer-by-partition-operation-fact",
-        OPERATION: "mitum-sto-transfer-by-partition-operation",
-    },
-    REDEEM: {
-        ITEM: "mitum-sto-redeem-item",
-        FACT: "mitum-sto-redeem-operation-fact",
-        OPERATION: "mitum-sto-redeem-operation",
-    },
-};
-
-var TIMESTAMP = {
-    REGISTER_MODEL: {
-        FACT: "mitum-timestamp-register-model-operation-fact",
-        OPERATION: "mitum-timestamp-register-model-operation",
-    },
-    ISSUE: {
-        FACT: "mitum-timestamp-issue-operation-fact",
-        OPERATION: "mitum-timestamp-issue-operation",
-    },
-};
-
-var TOKEN = {
-    REGISTER_MODEL: {
-        FACT: "mitum-token-register-model-operation-fact",
-        OPERATION: "mitum-token-register-model-operation",
-    },
-    MINT: {
-        FACT: "mitum-token-mint-operation-fact",
-        OPERATION: "mitum-token-mint-operation",
-    },
-    TRANSFER: {
-        FACT: "mitum-token-transfer-operation-fact",
-        OPERATION: "mitum-token-transfer-operation",
-    },
-    APPROVE: {
-        FACT: "mitum-token-approve-operation-fact",
-        OPERATION: "mitum-token-approve-operation",
-    },
-    BURN: {
-        FACT: "mitum-token-burn-operation-fact",
-        OPERATION: "mitum-token-burn-operation",
-    },
-    TRANSFER_FROM: {
-        FACT: "mitum-token-transfer-from-operation-fact",
-        OPERATION: "mitum-token-transfer-from-operation",
-    }
-};
-
-var POINT = {
-    REGISTER_MODEL: {
-        FACT: "mitum-point-register-model-operation-fact",
-        OPERATION: "mitum-point-register-model-operation",
-    },
-    MINT: {
-        FACT: "mitum-point-mint-operation-fact",
-        OPERATION: "mitum-point-mint-operation",
-    },
-    TRANSFER: {
-        FACT: "mitum-point-transfer-operation-fact",
-        OPERATION: "mitum-point-transfer-operation",
-    },
-    APPROVE: {
-        FACT: "mitum-point-approve-operation-fact",
-        OPERATION: "mitum-point-approve-operation",
-    },
-    BURN: {
-        FACT: "mitum-point-burn-operation-fact",
-        OPERATION: "mitum-point-burn-operation",
-    },
-    TRANSFER_FROM: {
-        FACT: "mitum-point-transfer-from-operation-fact",
-        OPERATION: "mitum-point-transfer-from-operation",
-    }
-};
-
 var STORAGE = {
     REGISTER_MODEL: {
         FACT: "mitum-storage-register-model-operation-fact",
@@ -1088,14 +851,6 @@ var STORAGE = {
 var HINT = {
     FACT_SIGN: "base-fact-sign",
     CURRENCY,
-    NFT,
-    CREDENTIAL,
-    DAO,
-    KYC,
-    STO,
-    TIMESTAMP,
-    TOKEN,
-    POINT,
     STORAGE,
 };
 
@@ -2093,11 +1848,11 @@ class KeyG extends Generator {
 
 async function getAccount(api, address, delegateIP) {
     const apiPath = `${api}/account/${Address.from(address).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountByPublicKey(api, publicKey, delegateIP) {
     const apiPath = `${api}/accounts?publickey=${Key.from(publicKey).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var account = {
     getAccount,
@@ -2106,15 +1861,15 @@ var account = {
 
 async function getBlocks(api, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/manifests`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockByHeight(api, height, delegateIP) {
     const apiPath = `${api}/block/${Big.from(height).toString()}/manifest`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockByHash(api, hash, delegateIP) {
     const apiPath = `${api}/block/${hash}/manifest`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var block = {
     getBlocks,
@@ -2124,7 +1879,7 @@ var block = {
 
 async function getNode(api, delegateIP) {
     const apiPath = `${api}/`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var node = {
     getNode,
@@ -2132,29 +1887,29 @@ var node = {
 
 async function getOperations(api, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParamsExt(`${api}/block/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getOperation(api, hash, delegateIP) {
     const apiPath = `${api}/block/operation/${hash}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockOperationsByHeight(api, height, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 // async function getBlockOperationsByHash(api: string | undefined, hash: string, delegateIP: string | undefined) {
 //     const apiPath = `${api}/block/${hash}/operations`;
-//     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))  
+//     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))  
 // }
 async function getAccountOperations(api, address, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParamsExt(`${api}/account/${Address.from(address).toString()}/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function send(api, operation, delegateIP, config) {
     const apiPath = `${api}/builder/send`;
     return !delegateIP
-        ? await axios.post(apiPath, JSON.stringify(operation), config)
-        : await axios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
+        ? await fetchAxios.post(apiPath, JSON.stringify(operation), config)
+        : await fetchAxios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
 }
 var api$1 = {
     getOperations,
@@ -2167,11 +1922,11 @@ var api$1 = {
 
 async function getCurrencies(api, delegateIP) {
     const apiPath = `${api}/currency`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCurrency(api, currency, delegateIP) {
     const apiPath = `${api}/currency/${CurrencyID.from(currency).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var currency$1 = {
     getCurrencies,
@@ -2181,23 +1936,23 @@ var currency$1 = {
 const url$7 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
 async function getNFT(api, contract, nftIdx, delegateIP) {
     const apiPath = `${url$7(api, contract)}/nftidx/${nftIdx}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTs(api, contract, delegateIP, factHash, limit, offset, reverse) {
     const apiPath = apiPathWithHashParams(`${url$7(api, contract)}/nfts`, factHash, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTCount(api, contract, delegateIP) {
     const apiPath = `${url$7(api, contract)}/totalsupply`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getModel$6(api, contract, delegateIP) {
     const apiPath = `${url$7(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountOperators(api, contract, account, delegateIP) {
     const apiPath = `${url$7(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var nft = {
     getNFT,
@@ -2210,23 +1965,23 @@ var nft = {
 const url$6 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
 async function getModel$5(api, contract, delegateIP) {
     const apiPath = `${url$6(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredential(api, contract, templateID, credentialID, delegateIP) {
     const apiPath = `${url$6(api, contract)}/template/${templateID}/credential/${credentialID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getTemplate(api, contract, templateID, delegateIP) {
     const apiPath = `${url$6(api, contract)}/template/${templateID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredentials(api, contract, templateID, delegateIP) {
     const apiPath = `${url$6(api, contract)}/template/${templateID}/credentials`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredentialByHolder(api, contract, holder, delegateIP) {
     const apiPath = `${url$6(api, contract)}/holder/${Address.from(holder).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var credential = {
     getModel: getModel$5,
@@ -2239,23 +1994,23 @@ var credential = {
 const url$5 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
 async function getModel$4(api, contract, delegateIP) {
     const apiPath = `${url$5(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getProposal(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$5(api, contract)}/proposal/${proposalID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getApproved(api, contract, proposalID, registrant, delegateIP) {
     const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getVoters(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/voter`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getVotingStatus(api, contract, proposalID, delegateIP) {
     const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/votingpower`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var dao = {
     getModel: getModel$4,
@@ -2270,28 +2025,28 @@ var kyc = {};
 const url$4 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
 async function getService(api, contract, delegateIP) {
     const apiPath = `${url$4(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitions(api, contract, holder, delegateIP) {
     const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBalanceByHolder(api, contract, holder, partition, delegateIP) {
     const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getOperatorsByHolder(api, contract, holder, partition, delegateIP) {
     const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitionBalance(api, contract, partition, delegateIP) {
     const apiPath = `${url$4(api, contract)}/p
     artition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAuthorized(api, contract, operator, delegateIP) {
     const apiPath = `${url$4(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var sto = {
     getService,
@@ -2305,11 +2060,11 @@ var sto = {
 const url$3 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
 async function getModel$3(api, contract, delegateIP) {
     const apiPath = `${url$3(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
     const apiPath = `${url$3(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var timestamp = {
     getModel: getModel$3,
@@ -2319,11 +2074,11 @@ var timestamp = {
 const url$2 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
 async function getModel$2(api, contract, delegateIP) {
     const apiPath = `${url$2(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getTokenBalance(api, contract, account, delegateIP) {
     const apiPath = `${url$2(api, contract)}/account/${Address.from(account).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var token = {
     getModel: getModel$2,
@@ -2333,11 +2088,11 @@ var token = {
 const url$1 = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
 async function getModel$1(api, contract, delegateIP) {
     const apiPath = `${url$1(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPointBalance(api, contract, account, delegateIP) {
     const apiPath = `${url$1(api, contract)}/account/${Address.from(account).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var point = {
     getModel: getModel$1,
@@ -2347,15 +2102,15 @@ var point = {
 const url = (api, contract) => `${api}/storage/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getData(api, contract, dataKey, delegateIP) {
     const apiPath = `${url(api, contract)}/datakey/${dataKey}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getDataHistory(api, contract, dataKey, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${url(api, contract)}/datakey/${dataKey}/history`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var storage = {
     getModel,

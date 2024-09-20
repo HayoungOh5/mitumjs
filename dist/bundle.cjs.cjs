@@ -49,6 +49,8 @@ const ECODE = {
     INVALID_IP: "EC_INVALID_IP",
     /// Length Validation
     INVALID_LENGTH: "EC_INVALID_LENGTH",
+    /// Type Validation
+    INVALID_TYPE: "EC_INVALID_TYPE",
     /// Seed and Key Validation
     INVALID_SEED: "EC_INVALID_SEED",
     INVALID_KEY: "EC_INVALID_KEY",
@@ -334,35 +336,29 @@ const DCODE = {
     },
 };
 const assignCodeFromErrorMessage = (errorMessage) => {
-    const pcodeArr = [];
-    const dcodeArr = [];
-    for (const [_, obj] of Object.entries(PCODE)) {
-        if (obj.keyword[0] !== "" && errorMessage.includes(obj.keyword[0])) {
-            pcodeArr.push(obj.code);
-        }
-    }
-    for (const [_, obj] of Object.entries(DCODE)) {
-        if (obj.keyword[0] !== "") {
-            for (const keyword of obj.keyword) {
-                if (errorMessage.includes(keyword)) {
-                    dcodeArr.push(obj.code);
-                    if (obj.code === "D302") {
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    const findCode = (codeSet, errorMessage) => {
+        return Object.values(codeSet)
+            .filter((obj) => obj.keyword.length > 0 && obj.keyword[0] !== "")
+            .filter((obj) => obj.keyword.some((keyword) => errorMessage.includes(keyword)))
+            .map((obj) => obj.code);
+    };
+    let pcodeArr = findCode(PCODE, errorMessage);
+    let dcodeArr = findCode(DCODE, errorMessage);
     pcodeArr.length === 0 && pcodeArr.push(PCODE.UNDEFINED.code);
-    if (dcodeArr.length > 1) {
-        return pcodeArr.slice(-1) + DCODE.COMPLEX.code;
+    dcodeArr.length === 0 && dcodeArr.push(DCODE.UNDEFINED.code);
+    if (dcodeArr.includes(DCODE.CA_DISALLOW.code)) {
+        dcodeArr = [DCODE.CA_DISALLOW.code];
     }
-    else if (dcodeArr.length == 1) {
-        return pcodeArr.slice(-1) + dcodeArr[0];
+    else if (dcodeArr.length > 1) {
+        dcodeArr = [DCODE.COMPLEX.code];
     }
-    else {
-        return pcodeArr.slice(-1) + DCODE.UNDEFINED.code;
+    if (pcodeArr.includes(PCODE.IV_BASE_NODE_OP.code)) {
+        pcodeArr = [PCODE.IV_BASE_NODE_OP.code];
     }
+    else if (pcodeArr.length > 1) {
+        pcodeArr = [PCODE.AMBIGUOUS.code];
+    }
+    return pcodeArr[0] + dcodeArr[0];
 };
 
 class MitumError extends Error {
@@ -848,245 +844,6 @@ var CURRENCY = {
     }
 };
 
-var NFT = {
-    SIGNER: "mitum-nft-signer",
-    SIGNERS: "mitum-nft-signers",
-    REGISTER_MODEL: {
-        FACT: "mitum-nft-register-model-operation-fact",
-        OPERATION: "mitum-nft-register-model-operation",
-    },
-    UPDATE_MODEL_CONFIG: {
-        FACT: "mitum-nft-update-model-config-operation-fact",
-        OPERATION: "mitum-nft-update-model-config-operation",
-    },
-    MINT: {
-        FORM: "mitum-nft-mint-form",
-        ITEM: "mitum-nft-mint-item",
-        FACT: "mitum-nft-mint-operation-fact",
-        OPERATION: "mitum-nft-mint-operation",
-    },
-    APPROVE_ALL: {
-        ITEM: "mitum-nft-approve-all-item",
-        FACT: "mitum-nft-approve-all-operation-fact",
-        OPERATION: "mitum-nft-approve-all-operation",
-    },
-    APPROVE: {
-        ITEM: "mitum-nft-approve-item",
-        FACT: "mitum-nft-approve-operation-fact",
-        OPERATION: "mitum-nft-approve-operation",
-    },
-    TRANSFER: {
-        ITEM: "mitum-nft-transfer-item",
-        FACT: "mitum-nft-transfer-operation-fact",
-        OPERATION: "mitum-nft-transfer-operation",
-    },
-    ADD_SIGNATURE: {
-        ITEM: "mitum-nft-add-signature-item",
-        FACT: "mitum-nft-add-signature-operation-fact",
-        OPERATION: "mitum-nft-add-signature-operation",
-    }
-};
-
-var CREDENTIAL = {
-    REGISTER_MODEL: {
-        FACT: "mitum-credential-register-model-operation-fact",
-        OPERATION: "mitum-credential-register-model-operation",
-    },
-    ADD_TEMPLATE: {
-        FACT: "mitum-credential-add-template-operation-fact",
-        OPERATION: "mitum-credential-add-template-operation",
-    },
-    ISSUE: {
-        ITEM: "mitum-credential-issue-item",
-        FACT: "mitum-credential-issue-operation-fact",
-        OPERATION: "mitum-credential-issue-operation",
-    },
-    REVOKE: {
-        ITEM: "mitum-credential-revoke-item",
-        FACT: "mitum-credential-revoke-operation-fact",
-        OPERATION: "mitum-credential-revoke-operation",
-    },
-};
-
-var DAO = {
-    DESIGN: "mitum-dao-design",
-    POLICY: "mitum-dao-policy",
-    CALLDATA: {
-        TRANSFER: "mitum-dao-transfer-calldata",
-        GOVERNANCE: "mitum-dao-governance-calldata",
-    },
-    PROPOSAL: {
-        CRYPTO: "mitum-dao-crypto-proposal",
-        BIZ: "mitum-dao-biz-proposal",
-    },
-    WHITELIST: "mitum-dao-whitelist",
-    REGISTER_MODEL: {
-        FACT: "mitum-dao-register-model-operation-fact",
-        OPERATION: "mitum-dao-register-model-operation",
-    },
-    UPDATE_MODEL_CONFIG: {
-        FACT: "mitum-dao-update-model-config-operation-fact",
-        OPERATION: "mitum-dao-update-model-config-operation",
-    },
-    PROPOSE: {
-        FACT: "mitum-dao-propose-operation-fact",
-        OPERATION: "mitum-dao-propose-operation",
-    },
-    CANCEL_PROPOSAL: {
-        FACT: "mitum-dao-cancel-proposal-operation-fact",
-        OPERATION: "mitum-dao-cancel-proposal-operation",
-    },
-    REGISTER: {
-        FACT: "mitum-dao-register-operation-fact",
-        OPERATION: "mitum-dao-register-operation",
-    },
-    PRE_SNAP: {
-        FACT: "mitum-dao-pre-snap-operation-fact",
-        OPERATION: "mitum-dao-pre-snap-operation",
-    },
-    POST_SNAP: {
-        FACT: "mitum-dao-post-snap-operation-fact",
-        OPERATION: "mitum-dao-post-snap-operation",
-    },
-    VOTE: {
-        FACT: "mitum-dao-vote-operation-fact",
-        OPERATION: "mitum-dao-vote-operation",
-    },
-    EXECUTE: {
-        FACT: "mitum-dao-execute-operation-fact",
-        OPERATION: "mitum-dao-execute-operation",
-    }
-};
-
-var KYC = {
-    CREATE_SERVICE: {
-        FACT: "mitum-kyc-create-service-operation-fact",
-        OPERATION: "mitum-kyc-create-service-operation",
-    },
-    ADD_CONTROLLER: {
-        ITEM: "mitum-kyc-add-controller-item",
-        FACT: "mitum-kyc-add-controller-operation-fact",
-        OPERATION: "mitum-kyc-add-controller-operation",
-    },
-    REMOVE_CONTROLLER: {
-        ITEM: "mitum-kyc-remove-controller-item",
-        FACT: "mitum-kyc-remove-controller-operation-fact",
-        OPERATION: "mitum-kyc-remove-controller-operation",
-    },
-    ADD_CUSTOMER: {
-        ITEM: "mitum-kyc-add-customer-item",
-        FACT: "mitum-kyc-add-customer-operation-fact",
-        OPERATION: "mitum-kyc-add-customer-operation",
-    },
-    UPDATE_CUSTOMER: {
-        ITEM: "mitum-kyc-update-customers-item",
-        FACT: "mitum-kyc-update-customers-operation-fact",
-        OPERATION: "mitum-kyc-update-customers-operation",
-    }
-};
-
-var STO = {
-    CREATE_SECURITY_TOKEN: {
-        ITEM: "mitum-sto-create-security-token-item",
-        FACT: "mitum-sto-create-security-token-operation-fact",
-        OPERATION: "mitum-sto-create-security-token-operation",
-    },
-    ISSUE: {
-        ITEM: "mitum-sto-issue-item",
-        FACT: "mitum-sto-issue-operation-fact",
-        OPERATION: "mitum-sto-issue-operation",
-    },
-    AUTHORIZE_OPERATOR: {
-        ITEM: "mitum-sto-authorize-operator-item",
-        FACT: "mitum-sto-authorize-operator-operation-fact",
-        OPERATION: "mitum-sto-authorize-operator-operation",
-    },
-    REVOKE_OPERATOR: {
-        ITEM: "mitum-sto-revoke-operator-item",
-        FACT: "mitum-sto-revoke-operator-operation-fact",
-        OPERATION: "mitum-sto-revoke-operator-operation",
-    },
-    SET_DOCUMENT: {
-        FACT: "mitum-sto-set-document-operation-fact",
-        OPERATION: "mitum-sto-set-document-operation",
-    },
-    TRANSFER_BY_PARTITION: {
-        ITEM: "mitum-sto-transfer-by-partition-item",
-        FACT: "mitum-sto-transfer-by-partition-operation-fact",
-        OPERATION: "mitum-sto-transfer-by-partition-operation",
-    },
-    REDEEM: {
-        ITEM: "mitum-sto-redeem-item",
-        FACT: "mitum-sto-redeem-operation-fact",
-        OPERATION: "mitum-sto-redeem-operation",
-    },
-};
-
-var TIMESTAMP = {
-    REGISTER_MODEL: {
-        FACT: "mitum-timestamp-register-model-operation-fact",
-        OPERATION: "mitum-timestamp-register-model-operation",
-    },
-    ISSUE: {
-        FACT: "mitum-timestamp-issue-operation-fact",
-        OPERATION: "mitum-timestamp-issue-operation",
-    },
-};
-
-var TOKEN = {
-    REGISTER_MODEL: {
-        FACT: "mitum-token-register-model-operation-fact",
-        OPERATION: "mitum-token-register-model-operation",
-    },
-    MINT: {
-        FACT: "mitum-token-mint-operation-fact",
-        OPERATION: "mitum-token-mint-operation",
-    },
-    TRANSFER: {
-        FACT: "mitum-token-transfer-operation-fact",
-        OPERATION: "mitum-token-transfer-operation",
-    },
-    APPROVE: {
-        FACT: "mitum-token-approve-operation-fact",
-        OPERATION: "mitum-token-approve-operation",
-    },
-    BURN: {
-        FACT: "mitum-token-burn-operation-fact",
-        OPERATION: "mitum-token-burn-operation",
-    },
-    TRANSFER_FROM: {
-        FACT: "mitum-token-transfer-from-operation-fact",
-        OPERATION: "mitum-token-transfer-from-operation",
-    }
-};
-
-var POINT = {
-    REGISTER_MODEL: {
-        FACT: "mitum-point-register-model-operation-fact",
-        OPERATION: "mitum-point-register-model-operation",
-    },
-    MINT: {
-        FACT: "mitum-point-mint-operation-fact",
-        OPERATION: "mitum-point-mint-operation",
-    },
-    TRANSFER: {
-        FACT: "mitum-point-transfer-operation-fact",
-        OPERATION: "mitum-point-transfer-operation",
-    },
-    APPROVE: {
-        FACT: "mitum-point-approve-operation-fact",
-        OPERATION: "mitum-point-approve-operation",
-    },
-    BURN: {
-        FACT: "mitum-point-burn-operation-fact",
-        OPERATION: "mitum-point-burn-operation",
-    },
-    TRANSFER_FROM: {
-        FACT: "mitum-point-transfer-from-operation-fact",
-        OPERATION: "mitum-point-transfer-from-operation",
-    }
-};
-
 var STORAGE = {
     REGISTER_MODEL: {
         FACT: "mitum-storage-register-model-operation-fact",
@@ -1109,14 +866,6 @@ var STORAGE = {
 var HINT = {
     FACT_SIGN: "base-fact-sign",
     CURRENCY,
-    NFT,
-    CREDENTIAL,
-    DAO,
-    KYC,
-    STO,
-    TIMESTAMP,
-    TOKEN,
-    POINT,
     STORAGE,
 };
 
