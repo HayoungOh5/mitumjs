@@ -13,6 +13,12 @@ import * as crypto from 'crypto';
 import pkg2 from 'elliptic';
 const { ec } = pkg2;
 
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+
+const fetchAxios = axios.create({
+    adapter: isNode ? undefined : 'fetch',
+});
+
 const ECODE = {
     // General Errors
     NO_API: "EC_NO_API",
@@ -28,6 +34,8 @@ const ECODE = {
     INVALID_IP: "EC_INVALID_IP",
     /// Length Validation
     INVALID_LENGTH: "EC_INVALID_LENGTH",
+    /// Type Validation
+    INVALID_TYPE: "EC_INVALID_TYPE",
     /// Seed and Key Validation
     INVALID_SEED: "EC_INVALID_SEED",
     INVALID_KEY: "EC_INVALID_KEY",
@@ -313,35 +321,29 @@ const DCODE = {
     },
 };
 const assignCodeFromErrorMessage = (errorMessage) => {
-    const pcodeArr = [];
-    const dcodeArr = [];
-    for (const [_, obj] of Object.entries(PCODE)) {
-        if (obj.keyword[0] !== "" && errorMessage.includes(obj.keyword[0])) {
-            pcodeArr.push(obj.code);
-        }
-    }
-    for (const [_, obj] of Object.entries(DCODE)) {
-        if (obj.keyword[0] !== "") {
-            for (const keyword of obj.keyword) {
-                if (errorMessage.includes(keyword)) {
-                    dcodeArr.push(obj.code);
-                    if (obj.code === "D302") {
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    const findCode = (codeSet, errorMessage) => {
+        return Object.values(codeSet)
+            .filter((obj) => obj.keyword.length > 0 && obj.keyword[0] !== "")
+            .filter((obj) => obj.keyword.some((keyword) => errorMessage.includes(keyword)))
+            .map((obj) => obj.code);
+    };
+    let pcodeArr = findCode(PCODE, errorMessage);
+    let dcodeArr = findCode(DCODE, errorMessage);
     pcodeArr.length === 0 && pcodeArr.push(PCODE.UNDEFINED.code);
-    if (dcodeArr.length > 1) {
-        return pcodeArr.slice(-1) + DCODE.COMPLEX.code;
+    dcodeArr.length === 0 && dcodeArr.push(DCODE.UNDEFINED.code);
+    if (dcodeArr.includes(DCODE.CA_DISALLOW.code)) {
+        dcodeArr = [DCODE.CA_DISALLOW.code];
     }
-    else if (dcodeArr.length == 1) {
-        return pcodeArr.slice(-1) + dcodeArr[0];
+    else if (dcodeArr.length > 1) {
+        dcodeArr = [DCODE.COMPLEX.code];
     }
-    else {
-        return pcodeArr.slice(-1) + DCODE.UNDEFINED.code;
+    if (pcodeArr.includes(PCODE.IV_BASE_NODE_OP.code)) {
+        pcodeArr = [PCODE.IV_BASE_NODE_OP.code];
     }
+    else if (pcodeArr.length > 1) {
+        pcodeArr = [PCODE.AMBIGUOUS.code];
+    }
+    return pcodeArr[0] + dcodeArr[0];
 };
 
 class MitumError extends Error {
@@ -1812,11 +1814,11 @@ class KeyG extends Generator {
 
 async function getAccount(api, address, delegateIP) {
     const apiPath = `${api}/account/${Address.from(address).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountByPublicKey(api, publicKey, delegateIP) {
     const apiPath = `${api}/accounts?publickey=${Key.from(publicKey).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var account = {
     getAccount,
@@ -1825,15 +1827,15 @@ var account = {
 
 async function getBlocks(api, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/manifests`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockByHeight(api, height, delegateIP) {
     const apiPath = `${api}/block/${Big.from(height).toString()}/manifest`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockByHash(api, hash, delegateIP) {
     const apiPath = `${api}/block/${hash}/manifest`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var block = {
     getBlocks,
@@ -1843,7 +1845,7 @@ var block = {
 
 async function getNode(api, delegateIP) {
     const apiPath = `${api}/`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var node = {
     getNode,
@@ -1851,29 +1853,29 @@ var node = {
 
 async function getOperations(api, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParamsExt(`${api}/block/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getOperation(api, hash, delegateIP) {
     const apiPath = `${api}/block/operation/${hash}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBlockOperationsByHeight(api, height, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 // async function getBlockOperationsByHash(api: string | undefined, hash: string, delegateIP: string | undefined) {
 //     const apiPath = `${api}/block/${hash}/operations`;
-//     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))  
+//     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))  
 // }
 async function getAccountOperations(api, address, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParamsExt(`${api}/account/${Address.from(address).toString()}/operations`, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function send(api, operation, delegateIP, config) {
     const apiPath = `${api}/builder/send`;
     return !delegateIP
-        ? await axios.post(apiPath, JSON.stringify(operation), config)
-        : await axios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
+        ? await fetchAxios.post(apiPath, JSON.stringify(operation), config)
+        : await fetchAxios.post(delegateIP.toString(), { ...Object(operation), uri: apiPath }, config);
 }
 var api$1 = {
     getOperations,
@@ -1886,11 +1888,11 @@ var api$1 = {
 
 async function getCurrencies(api, delegateIP) {
     const apiPath = `${api}/currency`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCurrency(api, currency, delegateIP) {
     const apiPath = `${api}/currency/${CurrencyID.from(currency).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var currency$1 = {
     getCurrencies,
@@ -1900,11 +1902,11 @@ var currency$1 = {
 const url = (api, contract) => `${api}/prescription/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPrescription(api, contract, hash, delegateIP) {
     const apiPath = `${url(api, contract)}/hash/${hash}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var prescription = {
     getModel,

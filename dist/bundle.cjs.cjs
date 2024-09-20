@@ -49,6 +49,8 @@ const ECODE = {
     INVALID_IP: "EC_INVALID_IP",
     /// Length Validation
     INVALID_LENGTH: "EC_INVALID_LENGTH",
+    /// Type Validation
+    INVALID_TYPE: "EC_INVALID_TYPE",
     /// Seed and Key Validation
     INVALID_SEED: "EC_INVALID_SEED",
     INVALID_KEY: "EC_INVALID_KEY",
@@ -334,35 +336,29 @@ const DCODE = {
     },
 };
 const assignCodeFromErrorMessage = (errorMessage) => {
-    const pcodeArr = [];
-    const dcodeArr = [];
-    for (const [_, obj] of Object.entries(PCODE)) {
-        if (obj.keyword[0] !== "" && errorMessage.includes(obj.keyword[0])) {
-            pcodeArr.push(obj.code);
-        }
-    }
-    for (const [_, obj] of Object.entries(DCODE)) {
-        if (obj.keyword[0] !== "") {
-            for (const keyword of obj.keyword) {
-                if (errorMessage.includes(keyword)) {
-                    dcodeArr.push(obj.code);
-                    if (obj.code === "D302") {
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    const findCode = (codeSet, errorMessage) => {
+        return Object.values(codeSet)
+            .filter((obj) => obj.keyword.length > 0 && obj.keyword[0] !== "")
+            .filter((obj) => obj.keyword.some((keyword) => errorMessage.includes(keyword)))
+            .map((obj) => obj.code);
+    };
+    let pcodeArr = findCode(PCODE, errorMessage);
+    let dcodeArr = findCode(DCODE, errorMessage);
     pcodeArr.length === 0 && pcodeArr.push(PCODE.UNDEFINED.code);
-    if (dcodeArr.length > 1) {
-        return pcodeArr.slice(-1) + DCODE.COMPLEX.code;
+    dcodeArr.length === 0 && dcodeArr.push(DCODE.UNDEFINED.code);
+    if (dcodeArr.includes(DCODE.CA_DISALLOW.code)) {
+        dcodeArr = [DCODE.CA_DISALLOW.code];
     }
-    else if (dcodeArr.length == 1) {
-        return pcodeArr.slice(-1) + dcodeArr[0];
+    else if (dcodeArr.length > 1) {
+        dcodeArr = [DCODE.COMPLEX.code];
     }
-    else {
-        return pcodeArr.slice(-1) + DCODE.UNDEFINED.code;
+    if (pcodeArr.includes(PCODE.IV_BASE_NODE_OP.code)) {
+        pcodeArr = [PCODE.IV_BASE_NODE_OP.code];
     }
+    else if (pcodeArr.length > 1) {
+        pcodeArr = [PCODE.AMBIGUOUS.code];
+    }
+    return pcodeArr[0] + dcodeArr[0];
 };
 
 class MitumError extends Error {
