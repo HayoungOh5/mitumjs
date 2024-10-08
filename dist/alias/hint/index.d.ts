@@ -53,7 +53,7 @@ declare const _default: {
             OPERATION: string;
         };
     };
-    STORAGE: {
+    DMILE: {
         REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
@@ -62,11 +62,21 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
-        DELETE_DATA: {
+    };
+    DID: {
+        REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
         };
-        UPDATE_DATA: {
+        CREATE_DID: {
+            FACT: string;
+            OPERATION: string;
+        };
+        DEACTIVATE_DID: {
+            FACT: string;
+            OPERATION: string;
+        };
+        REACTIVATE_DID: {
             FACT: string;
             OPERATION: string;
         };

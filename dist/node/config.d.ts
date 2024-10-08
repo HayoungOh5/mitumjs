@@ -35,9 +35,7 @@ export declare const Config: {
             PUBLIC: RangeConfig;
         };
     };
-    STORAGE: {
-        PROJECT: RangeConfig;
-        DATA_KEY: RangeConfig;
-        DATA_VALUE: RangeConfig;
+    DID: {
+        PUBLIC_KEY: RangeConfig;
     };
 };

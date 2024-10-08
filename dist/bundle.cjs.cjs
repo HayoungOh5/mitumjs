@@ -108,20 +108,9 @@ const ECODE = {
         INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY",
         INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN",
     },
-    // NFT Errors
-    NFT: {
-        INVALID_NFT_SIGNER: "EC_INVALID_NFT_SIGNER",
-        INVALID_NFT_SIGNERS: "EC_INVALID_NFT_SIGNERS",
-    },
-    // STO Errors
-    STO: {
-        INVALID_PARTITION: "EC_INVALID_PARTITION",
-    },
-    // DAO Errors
-    DAO: {
-        INVALID_POLICY: "EC_INVALID_POLICY",
-        INVALID_WHITELIST: "EC_INVALID_WHITELIST",
-        UNMATCHED_SENDER: "EC_UNMATCHED_SENDER"
+    // DID Errors
+    DID: {
+        INVALID_DID: "EC_INVALID_DID",
     },
     // Transaction Errors
     TIME_OUT: "EC_TIME_OUT",
@@ -783,10 +772,8 @@ const Config = {
             PUBLIC: getRangeConfig(69),
         }
     },
-    STORAGE: {
-        PROJECT: getRangeConfig(1, 10),
-        DATA_KEY: getRangeConfig(1, 200),
-        DATA_VALUE: getRangeConfig(1, 20000)
+    DID: {
+        PUBLIC_KEY: getRangeConfig(128, Number.MAX_SAFE_INTEGER),
     }
 };
 
@@ -844,29 +831,41 @@ var CURRENCY = {
     }
 };
 
-var STORAGE = {
+var DMILE = {
     REGISTER_MODEL: {
-        FACT: "mitum-storage-register-model-operation-fact",
-        OPERATION: "mitum-storage-register-model-operation",
+        FACT: "mitum-d-mile-register-model-operation-fact",
+        OPERATION: "mitum-d-mile-register-model-operation",
     },
     CREATE_DATA: {
-        FACT: "mitum-storage-create-data-operation-fact",
-        OPERATION: "mitum-storage-create-data-operation",
+        FACT: "mitum-d-mile-create-data-operation-fact",
+        OPERATION: "mitum-d-mile-create-data-operation",
+    }
+};
+
+var DID$1 = {
+    REGISTER_MODEL: {
+        FACT: "mitum-did-register-model-operation-fact",
+        OPERATION: "mitum-did-register-model-operation",
     },
-    DELETE_DATA: {
-        FACT: "mitum-storage-delete-data-operation-fact",
-        OPERATION: "mitum-storage-delete-data-operation",
+    CREATE_DID: {
+        FACT: "mitum-did-create-did-operation-fact",
+        OPERATION: "mitum-did-create-did-operation",
     },
-    UPDATE_DATA: {
-        FACT: "mitum-storage-update-data-operation-fact",
-        OPERATION: "mitum-storage-update-data-operation",
+    DEACTIVATE_DID: {
+        FACT: "mitum-did-deactivate-did-operation-fact",
+        OPERATION: "mitum-did-deactivate-did-operation",
     },
+    REACTIVATE_DID: {
+        FACT: "mitum-did-reactivate-did-operation-fact",
+        OPERATION: "mitum-did-reactivate-did-operation",
+    }
 };
 
 var HINT = {
     FACT_SIGN: "base-fact-sign",
     CURRENCY,
-    STORAGE,
+    DMILE,
+    DID: DID$1
 };
 
 const KEY = {
@@ -1007,36 +1006,6 @@ const apiPathWithParams = (apiPath, limit, offset, reverse) => {
         query3 = `reverse=1`;
     }
     const query = [query1, query2, query3].filter(str => str !== undefined).join("&");
-    return query == "" ? apiPath : apiPath + "?" + query;
-};
-const apiPathWithHashParams = (apiPath, factHash, limit, offset, reverse) => {
-    let hash;
-    let query1;
-    let query2;
-    let query3;
-    if (factHash !== undefined) {
-        if (typeof (factHash) !== "string") {
-            {
-                throw new Error("factHash must be a string");
-            }
-        }
-        hash = `facthash=${factHash}`;
-    }
-    if (limit !== undefined) {
-        validatePositiveInteger(limit, "limit");
-        query1 = `limit=${limit}`;
-    }
-    if (offset !== undefined) {
-        validatePositiveInteger(offset, "offset");
-        query2 = `offset=${offset}`;
-    }
-    if (reverse !== undefined) {
-        if (reverse !== true) {
-            throw new Error("reverse must be true(bool)");
-        }
-        query3 = `reverse=1`;
-    }
-    const query = [hash, query1, query2, query3].filter(str => str !== undefined).join("&");
     return query == "" ? apiPath : apiPath + "?" + query;
 };
 const apiPathWithParamsExt = (apiPath, limit, offset, reverse) => {
@@ -1948,203 +1917,49 @@ var currency$1 = {
     getCurrency,
 };
 
-const url$7 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
-async function getNFT(api, contract, nftIdx, delegateIP) {
-    const apiPath = `${url$7(api, contract)}/nftidx/${nftIdx}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getNFTs(api, contract, delegateIP, factHash, limit, offset, reverse) {
-    const apiPath = apiPathWithHashParams(`${url$7(api, contract)}/nfts`, factHash, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getNFTCount(api, contract, delegateIP) {
-    const apiPath = `${url$7(api, contract)}/totalsupply`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getModel$6(api, contract, delegateIP) {
-    const apiPath = `${url$7(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getAccountOperators(api, contract, account, delegateIP) {
-    const apiPath = `${url$7(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var nft = {
-    getNFT,
-    getNFTs,
-    getNFTCount,
-    getModel: getModel$6,
-    getAccountOperators,
-};
-
-const url$6 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
-async function getModel$5(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredential(api, contract, templateID, credentialID, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/template/${templateID}/credential/${credentialID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getTemplate(api, contract, templateID, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/template/${templateID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredentials(api, contract, templateID, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/template/${templateID}/credentials`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredentialByHolder(api, contract, holder, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/holder/${Address.from(holder).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var credential = {
-    getModel: getModel$5,
-    getCredential,
-    getTemplate,
-    getCredentials,
-    getCredentialByHolder,
-};
-
-const url$5 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
-async function getModel$4(api, contract, delegateIP) {
-    const apiPath = `${url$5(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getProposal(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/proposal/${proposalID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getApproved(api, contract, proposalID, registrant, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getVoters(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/voter`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getVotingStatus(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/votingpower`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var dao = {
-    getModel: getModel$4,
-    getProposal,
-    getApproved,
-    getVoters,
-    getVotingStatus,
-};
-
-var kyc = {};
-
-const url$4 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
-async function getService(api, contract, delegateIP) {
-    const apiPath = `${url$4(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getPartitions(api, contract, holder, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getBalanceByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getOperatorsByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getPartitionBalance(api, contract, partition, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/p
-    artition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getAuthorized(api, contract, operator, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var sto = {
-    getService,
-    getPartitions,
-    getBalanceByHolder,
-    getOperatorsByHolder,
-    getPartitionBalance,
-    getAuthorized,
-};
-
-const url$3 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
-async function getModel$3(api, contract, delegateIP) {
-    const apiPath = `${url$3(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var timestamp = {
-    getModel: getModel$3,
-    getTimeStamp,
-};
-
-const url$2 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
-async function getModel$2(api, contract, delegateIP) {
-    const apiPath = `${url$2(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getTokenBalance(api, contract, account, delegateIP) {
-    const apiPath = `${url$2(api, contract)}/account/${Address.from(account).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var token = {
-    getModel: getModel$2,
-    getTokenBalance,
-};
-
-const url$1 = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
+const url$1 = (api, contract) => `${api}/dmile/${Address.from(contract).toString()}`;
 async function getModel$1(api, contract, delegateIP) {
     const apiPath = `${url$1(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getPointBalance(api, contract, account, delegateIP) {
-    const apiPath = `${url$1(api, contract)}/account/${Address.from(account).toString()}`;
+async function getByMerkleRoot(api, contract, merkleRoot, delegateIP) {
+    const apiPath = `${url$1(api, contract)}/merkleroot/${merkleRoot}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var point = {
+async function getByTxId(api, contract, txId, delegateIP) {
+    const apiPath = `${url$1(api, contract)}/txid/${txId}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var dmile = {
     getModel: getModel$1,
-    getPointBalance,
+    getByMerkleRoot,
+    getByTxId
 };
 
-const url = (api, contract) => `${api}/storage/${Address.from(contract).toString()}`;
+const url = (api, contract) => `${api}/did-service/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getData(api, contract, dataKey, delegateIP) {
-    const apiPath = `${url(api, contract)}/datakey/${dataKey}`;
+async function getByPubKey(api, contract, publicKey, delegateIP) {
+    const apiPath = `${url(api, contract)}/did/${publicKey}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getDataHistory(api, contract, dataKey, delegateIP, limit, offset, reverse) {
-    const apiPath = apiPathWithParams(`${url(api, contract)}/datakey/${dataKey}/history`, limit, offset, reverse);
+async function getByDID(api, contract, did, delegateIP) {
+    const apiPath = `${url(api, contract)}/document?did=${did}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var storage = {
+var did = {
     getModel,
-    getData,
-    getDataHistory
+    getByPubKey,
+    getByDID
 };
 
 var models = {
     currency: currency$1,
     contract: {
-        nft,
-        credential,
-        dao,
-        kyc,
-        sto,
-        timestamp,
-        token,
-        point,
-        storage
+        dmile,
+        did
     },
 };
 
@@ -3368,6 +3183,392 @@ class Contract extends Generator {
     }
 }
 
+// import { Config } from "../../node"
+// import { Assert, ECODE, MitumError } from "../../error"
+let RegisterModelFact$1 = class RegisterModelFact extends ContractFact {
+    constructor(token, sender, contract, project, currency) {
+        super(HINT.DMILE.REGISTER_MODEL.FACT, token, sender, contract, currency);
+        // Assert.check(
+        //     Config.DMILE.PROJECT.satisfy(project.toString().length),
+        //     MitumError.detail(ECODE.INVALID_FACT, `project length out of range, should be between ${Config.DMILE.PROJECT.min} to ${Config.DMILE.PROJECT.max}`),
+        // )
+        this.project = LongString.from(project);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.project.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            project: this.project.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.DMILE.REGISTER_MODEL.OPERATION;
+    }
+};
+
+// import { Assert, ECODE, MitumError } from "../../error"
+class CreateDataFact extends ContractFact {
+    constructor(token, sender, contract, merkleRoot, currency) {
+        super(HINT.DMILE.CREATE_DATA.FACT, token, sender, contract, currency);
+        this.merkleRoot = LongString.from(merkleRoot);
+        // Assert.check(
+        //     Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length),
+        //     MitumError.detail(ECODE.INVALID_FACT, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`),
+        // )
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.merkleRoot.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            merkleRoot: this.merkleRoot.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.DMILE.CREATE_DATA.OPERATION;
+    }
+}
+
+class Dmile extends ContractGenerator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    /**
+     * Generate a `register-model` operation to register new dmile model on the contract.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | LongString} [project] - The project's name
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `register-model` operation.
+     */
+    registerModel(contract, sender, project, currency) {
+        return new Operation$1(this.networkID, new RegisterModelFact$1(TimeStamp.new().UTC(), sender, contract, project, currency));
+    }
+    /**
+     * Generate `create-data` operation to create data with new merkle root on the dmile model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | LongString} [merkleRoot] - Value of the merkle root to record.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-data` operation
+     */
+    createData(contract, sender, merkleRoot, currency) {
+        new URIString(merkleRoot.toString(), 'merkleRoot');
+        const fact = new CreateDataFact(TimeStamp.new().UTC(), sender, contract, merkleRoot, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Get information about a dmile model on the contract.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information about the dmile service:
+     * - `_hint`: Hint for dmile design,
+     * - `project`: Project's name
+     */
+    async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        return await getAPIData(() => contractApi.dmile.getModel(this.api, contract, this.delegateIP));
+    }
+    /**
+     * Get tx id by merkle root.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [merkleRoot] - The value of merkle root.
+     * @returns `data` of `SuccessResponse` is information about the data with certain merkle root on the project:
+     * - `_hint`: Hint for d-mile data,
+     * - `merkleRoot`: The merkle root value,
+     * - `txid`: The id of create-data transaction,
+     */
+    async getByMerkleRoot(contract, merkleRoot) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        new URIString(merkleRoot, 'merkleRoot');
+        return await getAPIData(() => contractApi.dmile.getByMerkleRoot(this.api, contract, merkleRoot, this.delegateIP));
+    }
+    /**
+     * Get mekle root by tx id.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [txId] - The Id of create-data transaction.
+     * @returns `data` of `SuccessResponse` is an array of the history information about the data:
+     * - `_hint`: Hint for d-mile data,
+     * - `merkleRoot`: The merkle root value,
+     * - `txid`: The id of create-data transaction,
+     */
+    async getByTxId(contract, txId) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        new URIString(txId, 'txId');
+        return await getAPIData(() => contractApi.dmile.getByTxId(this.api, contract, txId, this.delegateIP));
+    }
+}
+
+// import { Config } from "../../node"
+// import { Assert, ECODE, MitumError } from "../../error"
+class RegisterModelFact extends ContractFact {
+    constructor(token, sender, contract, didMethod, docContext, docAuthType, docSvcType, docSvcEndPoint, currency) {
+        super(HINT.DID.REGISTER_MODEL.FACT, token, sender, contract, currency);
+        // Assert.check(
+        //     Config.DMILE.PROJECT.satisfy(project.toString().length),
+        //     MitumError.detail(ECODE.INVALID_FACT, `project length out of range, should be between ${Config.DMILE.PROJECT.min} to ${Config.DMILE.PROJECT.max}`),
+        // )
+        this.didMethod = LongString.from(didMethod);
+        this.docContext = LongString.from(docContext);
+        this.docAuthType = LongString.from(docAuthType);
+        this.docSvcType = LongString.from(docSvcType);
+        this.docSvcEndPoint = LongString.from(docSvcEndPoint);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.didMethod.toBuffer(),
+            this.docContext.toBuffer(),
+            this.docAuthType.toBuffer(),
+            this.docSvcType.toBuffer(),
+            this.docSvcEndPoint.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            didMethod: this.didMethod.toString(),
+            docContext: this.docContext.toString(),
+            docAuthType: this.docAuthType.toString(),
+            docSvcType: this.docSvcType.toString(),
+            docSvcEndPoint: this.docSvcEndPoint.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.REGISTER_MODEL.OPERATION;
+    }
+}
+
+class CreateDidFact extends ContractFact {
+    constructor(token, sender, contract, publicKey, currency) {
+        super(HINT.DID.CREATE_DID.FACT, token, sender, contract, currency);
+        this.publicKey = LongString.from(publicKey);
+        Assert.check(/^[0-9a-fA-F]+$/.test(publicKey.toString().slice(-128)), MitumError.detail(ECODE.INVALID_FACT, `${this.publicKey.toString()} is not a hexadecimal number`));
+        Assert.check(Config.DID.PUBLIC_KEY.satisfy(publicKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `publickey length out of range, should be over ${Config.DID.PUBLIC_KEY.min}`));
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.publicKey.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            publicKey: this.publicKey.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.CREATE_DID.OPERATION;
+    }
+}
+
+class DidFact extends ContractFact {
+    constructor(hint, token, sender, contract, did, currency) {
+        super(hint, token, sender, contract, currency);
+        this.did = LongString.from(did);
+        StringAssert.with(did.toString(), MitumError.detail(ECODE.DID.INVALID_DID, `The did must be starting with 'did:'`))
+            .startsWith('did:')
+            .excute();
+        const splited = did.toString().split(":");
+        Assert.check(splited.length === 3, MitumError.detail(ECODE.DID.INVALID_DID, "The did format must follow the standard."));
+        Assert.check(/^[0-9a-f]+$/.test(splited[2]), MitumError.detail(ECODE.INVALID_ADDRESS, `${splited[2]} is not a hexadecimal number`));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.did.toBuffer()
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            did: this.did.toString(),
+        };
+    }
+}
+
+class ReactivateDidFact extends DidFact {
+    constructor(token, sender, contract, did, currency) {
+        super(HINT.DID.REACTIVATE_DID.FACT, token, sender, contract, did, currency);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.REACTIVATE_DID.OPERATION;
+    }
+}
+
+class DeactivateDidFact extends DidFact {
+    constructor(token, sender, contract, did, currency) {
+        super(HINT.DID.DEACTIVATE_DID.FACT, token, sender, contract, did, currency);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.DEACTIVATE_DID.OPERATION;
+    }
+}
+
+class DID extends ContractGenerator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    /**
+     * Generate a `register-model` operation to register new did model on the contract.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | LongString} [didMethod] - The did method
+     * @param {string | LongString} [docContext] - The context of did document
+     * @param {string | LongString} [docAuthType] - The type of authentication of did document
+     * @param {string | LongString} [docSvcType] - The type of service of did document
+     * @param {string | LongString} [docSvcEndPoint] - The end point of service of did document
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `register-model` operation.
+     */
+    registerModel(contract, sender, didMethod, docContext, docAuthType, docSvcType, docSvcEndPoint, currency) {
+        return new Operation$1(this.networkID, new RegisterModelFact(TimeStamp.new().UTC(), sender, contract, didMethod, docContext, docAuthType, docSvcType, docSvcEndPoint, currency));
+    }
+    /**
+     * Generate `create-did` operation to create new did.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [publicKey] - The publicKey for the did to create. // Must be longer than 128 digits. If the length over 128, only the 128 characters from the end will be used.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-did` operation
+     */
+    create(contract, sender, publicKey, currency) {
+        const fact = new CreateDidFact(TimeStamp.new().UTC(), sender, contract, publicKey, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `deactivate-did` operation to deactivate the did.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [did] - The did to deactivate.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `deactivate-did` operation
+     */
+    deactivate(contract, sender, did, currency) {
+        const fact = new DeactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `reactivate-did` operation to reactivate the did.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [did] - The did to reactivate.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `reactivate-did` operation
+     */
+    reactivate(contract, sender, did, currency) {
+        const fact = new ReactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Get information for did model.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information of did model:
+     * - `_hint`: hint for did model design,
+     * - `didMethod`: The did method,
+     * - `docContext`: The context of did,
+     * - `docAuthType`: The type of authentication,
+     * - `docSvcType`: The type of did service,
+     * - `docSvcEndPoint`: The end point of did service
+     */
+    async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        return await getAPIData(() => contractApi.did.getModel(this.api, contract, this.delegateIP));
+    }
+    /**
+     * Get did data with publickey
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [publicKey] - The publicKey, // Must be longer than 128 digits. If the length over 128, only the 128 characters from the end will be used.
+     * @returns `data` of `SuccessResponse` is did data:
+     * - `_hint`: hint for did data,
+     * - `publicKey`: The publickey with prefix '04',
+     * - `did`: The did value,
+     */
+    async getByPubKey(contract, publicKey) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        new URIString(publicKey, 'publicKey');
+        return await getAPIData(() => contractApi.did.getByPubKey(this.api, contract, publicKey, this.delegateIP));
+    }
+    /**
+     * Get did document with certain did.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [did] - The did value.
+     * @returns `data` of `SuccessResponse` is did document:
+     * - `_hint`: Hint for did data,
+     * - `did_doc`: object
+     * - - `'@context'`: The context of did,
+     * - - `id`: The did value,
+     * - - `created`: The fact hash of create-did operation,
+     * - - `status`: 0 means deactive, 1 means active,
+     * - - `authentication`: object,
+     * - - - `id`: The did value,
+     * - - - `type`: The type of authentication
+     * - - - `controller`: The did value
+     * - - - `publicKeyHex`: The publickey used when did create, '04' is prefix
+     * - - `service`: object
+     * - - - `id`: The did value
+     * - - - `type`: The type of did service,
+     * - - - `service_end_point`: The end point of did service,
+     */
+    async getByDID(contract, did) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        return await getAPIData(() => contractApi.did.getByDID(this.api, contract, did, this.delegateIP));
+    }
+}
+
 class Signer extends Generator {
     constructor(networkID, api) {
         super(networkID, api);
@@ -3442,245 +3643,6 @@ class Signer extends Generator {
         ]);
         operation.hash = base58.encode(sha3(msg));
         return operation;
-    }
-}
-
-class RegisterModelFact extends ContractFact {
-    constructor(token, sender, contract, project, currency) {
-        super(HINT.STORAGE.REGISTER_MODEL.FACT, token, sender, contract, currency);
-        Assert.check(Config.STORAGE.PROJECT.satisfy(project.toString().length), MitumError.detail(ECODE.INVALID_FACT, `project length out of range, should be between ${Config.STORAGE.PROJECT.min} to ${Config.STORAGE.PROJECT.max}`));
-        this.project = LongString.from(project);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.project.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            project: this.project.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.STORAGE.REGISTER_MODEL.OPERATION;
-    }
-}
-
-class StorageFact extends ContractFact {
-    constructor(hint, token, sender, contract, dataKey, currency) {
-        super(hint, token, sender, contract, currency);
-        this.dataKey = LongString.from(dataKey);
-        // Assert.check(
-        //     this.decimal.compare(0) >= 0,
-        //     MitumError.detail(ECODE.INVALID_FACT, "decimal number under zero"),
-        // )
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.dataKey.toBuffer()
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            dataKey: this.dataKey.toString(),
-        };
-    }
-}
-
-class CreateDataFact extends StorageFact {
-    constructor(token, sender, contract, dataKey, dataValue, currency) {
-        super(HINT.STORAGE.CREATE_DATA.FACT, token, sender, contract, dataKey, currency);
-        this.dataValue = LongString.from(dataValue);
-        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
-        Assert.check(Config.STORAGE.DATA_VALUE.satisfy(dataValue.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataValue out of range, should be between ${Config.STORAGE.DATA_VALUE.min} to ${Config.STORAGE.DATA_VALUE.max}`));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.dataValue.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            dataValue: this.dataValue.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.STORAGE.CREATE_DATA.OPERATION;
-    }
-}
-
-class UpdateDataFact extends StorageFact {
-    constructor(token, sender, contract, dataKey, dataValue, currency) {
-        super(HINT.STORAGE.UPDATE_DATA.FACT, token, sender, contract, dataKey, currency);
-        this.dataValue = LongString.from(dataValue);
-        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
-        Assert.check(Config.STORAGE.DATA_VALUE.satisfy(dataValue.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataValue out of range, should be between ${Config.STORAGE.DATA_VALUE.min} to ${Config.STORAGE.DATA_VALUE.max}`));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.dataValue.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            dataValue: this.dataValue.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.STORAGE.UPDATE_DATA.OPERATION;
-    }
-}
-
-class DeleteDataFact extends StorageFact {
-    constructor(token, sender, contract, dataKey, currency) {
-        super(HINT.STORAGE.DELETE_DATA.FACT, token, sender, contract, dataKey, currency);
-        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-        };
-    }
-    get operationHint() {
-        return HINT.STORAGE.DELETE_DATA.OPERATION;
-    }
-}
-
-class Storage extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    /**
-     * Generate a `register-model` operation to register new storage model on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | LongString} [project] - The project's name
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `register-model` operation.
-     */
-    registerModel(contract, sender, project, currency) {
-        return new Operation$1(this.networkID, new RegisterModelFact(TimeStamp.new().UTC(), sender, contract, project, currency));
-    }
-    /**
-     * Generate `create-data` operation to create data with new data key on the storage model.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [dataKey] - The key of data to create.
-     * @param {string | LongString} [dataValue] - Value of the data to record.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `create-data` operation
-     */
-    createData(contract, sender, dataKey, dataValue, currency) {
-        new URIString(dataKey, 'dataKey');
-        const fact = new CreateDataFact(TimeStamp.new().UTC(), sender, contract, dataKey, dataValue, currency);
-        return new Operation$1(this.networkID, fact);
-    }
-    /**
-     * Generate `update-data` operation to update data with exist data key on the storage model.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [dataKey] - The key of data to update.
-     * @param {string | LongString} [dataValue] - Value of the data to be updated.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `update-data` operation
-     */
-    updateData(contract, sender, dataKey, dataValue, currency) {
-        new URIString(dataKey, 'dataKey');
-        const fact = new UpdateDataFact(TimeStamp.new().UTC(), sender, contract, dataKey, dataValue, currency);
-        return new Operation$1(this.networkID, fact);
-    }
-    /**
-     * Generate `delete-data` operation to delete data on the storage model.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [dataKey] - The key of data to delete.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `delete-data` operation
-     */
-    deleteData(contract, sender, dataKey, currency) {
-        new URIString(dataKey, 'dataKey');
-        const fact = new DeleteDataFact(TimeStamp.new().UTC(), sender, contract, dataKey, currency);
-        return new Operation$1(this.networkID, fact);
-    }
-    /**
-     * Get information about a storage model on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is information about the storage service:
-     * - `_hint`: Hint for storage design,
-     * - `project`: Project's name
-     */
-    async getModelInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.storage.getModel(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get detailed information about a specific data on the project.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | LongString} [dataKey] - The key of the data to search.
-     * @returns `data` of `SuccessResponse` is information about the data with certain dataKey on the project:
-     * - `data`: Object containing below information
-     * - - `dataKey`: The key associated with the data,
-     * - - `dataValue`: The current value of the data ,
-     * - - `deleted`: Indicates whether the data has been deleted
-     * - `height`: The block number where the latest related operation is recorded,
-     * - `operation`: The fact hash of the latest related operation,
-     * - `timestamp`: The timestamp of the latest related operation (prposed_at of block manifest)
-     */
-    async getData(contract, dataKey) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(dataKey, 'dataKey');
-        return await getAPIData(() => contractApi.storage.getData(this.api, contract, dataKey, this.delegateIP));
-    }
-    /**
-     * Get all history information about a specific data on the project.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | LongString} [dataKey] - The key of the data to search.
-     * @param {number} [limit] - (Optional) The maximum number of history to retrieve.
-     * @param {number} [offset] - (Optional) The Offset setting value based on block height
-     * @param {boolean} [reverse] - (Optional) Whether to return the history in reverse newest order.
-     * @returns `data` of `SuccessResponse` is an array of the history information about the data:
-     * - `_hint`: Hint for currency,
-     * - `_embedded`:
-     * - - `data`: Object containing below information
-     * - - - `dataKey`: The key associated with the data,
-     * - - - `dataValue`: The current value of the data ,
-     * - - - `deleted`: Indicates whether the data has been deleted
-     * - - `height`: The block number where the latest related operation is recorded,
-     * - - `operation`: The fact hash of the latest related operation,
-     * - - `timestamp`: The timestamp of the latest related operation (prposed_at of block manifest),
-     * - `_links`: Links for additional information
-     */
-    async getDataHistory(contract, dataKey, limit, offset, reverse) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(dataKey, 'dataKey');
-        return await getAPIData(() => contractApi.storage.getDataHistory(this.api, contract, dataKey, this.delegateIP, limit, offset, reverse));
     }
 }
 
@@ -3868,7 +3830,8 @@ class Mitum extends Generator {
         this._operation = new Operation(this.networkID, this.api, this.delegateIP);
         this._signer = new Signer(this.networkID, this.api);
         this._contract = new Contract(this.networkID, this.api, this.delegateIP);
-        this._storage = new Storage(this.networkID, this.api, this.delegateIP);
+        this._dmile = new Dmile(this.networkID, this.api, this.delegateIP);
+        this._did = new DID(this.networkID, this.api, this.delegateIP);
         this.ECODE = ECODE;
         this.PCODE = PCODE;
         this.DCODE = DCODE;
@@ -3881,7 +3844,8 @@ class Mitum extends Generator {
         this._block = new Block(this.api, this.delegateIP);
         this._operation = new Operation(this.networkID, this.api, this.delegateIP);
         this._contract = new Contract(this.networkID, this.api, this.delegateIP);
-        this._storage = new Storage(this.networkID, this.api, this.delegateIP);
+        this._dmile = new Dmile(this.networkID, this.api, this.delegateIP);
+        this._did = new DID(this.networkID, this.api, this.delegateIP);
         this._utils = new Utils();
     }
     get node() {
@@ -3905,8 +3869,11 @@ class Mitum extends Generator {
     get contract() {
         return this._contract;
     }
-    get storage() {
-        return this._storage;
+    get dmile() {
+        return this._dmile;
+    }
+    get did() {
+        return this._did;
     }
     get utils() {
         return this._utils;
