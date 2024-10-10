@@ -7,6 +7,11 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
+    MIGRATE_DID: {
+        ITEM: string;
+        FACT: string;
+        OPERATION: string;
+    };
     DEACTIVATE_DID: {
         FACT: string;
         OPERATION: string;

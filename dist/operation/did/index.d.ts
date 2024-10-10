@@ -1,11 +1,12 @@
 import { RegisterModelFact } from "./register-model";
 import { CreateDidFact } from "./create-did";
+import { MigrateDidFact } from "./migrate-did";
 import { ReactivateDidFact } from "./reactive-did";
 import { DeactivateDidFact } from "./deactive-did";
 import { ContractGenerator, Operation } from "../base";
 import { Address } from "../../key";
 import { CurrencyID } from "../../common";
-import { IP } from "../../types";
+import { IP, LongString } from "../../types";
 export declare class DID extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
@@ -30,6 +31,16 @@ export declare class DID extends ContractGenerator {
      * @returns `create-did` operation
      */
     create(contract: string | Address, sender: string | Address, publicKey: string, currency: string | CurrencyID): Operation<CreateDidFact>;
+    /**
+     * Generate `migrate-did` operation to migrate did with publicKey and tx id to the did model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | LongString[]} [publicKeys] - array with multiple publicKey to record.
+     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `migrate-did` operation
+     */
+    migrateDID(contract: string | Address, sender: string | Address, publicKeys: string[] | LongString[], txIds: string[] | LongString[], currency: string | CurrencyID): Operation<MigrateDidFact>;
     /**
      * Generate `deactivate-did` operation to deactivate the did.
      * @param {string | Address} [contract] - The contract's address.

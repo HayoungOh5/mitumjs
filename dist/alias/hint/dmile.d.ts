@@ -7,5 +7,10 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
+    MIGRATE_DATA: {
+        ITEM: string;
+        FACT: string;
+        OPERATION: string;
+    };
 };
 export default _default;

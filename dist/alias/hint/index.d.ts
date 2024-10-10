@@ -62,6 +62,11 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
+        MIGRATE_DATA: {
+            ITEM: string;
+            FACT: string;
+            OPERATION: string;
+        };
     };
     DID: {
         REGISTER_MODEL: {
@@ -69,6 +74,11 @@ declare const _default: {
             OPERATION: string;
         };
         CREATE_DID: {
+            FACT: string;
+            OPERATION: string;
+        };
+        MIGRATE_DID: {
+            ITEM: string;
             FACT: string;
             OPERATION: string;
         };

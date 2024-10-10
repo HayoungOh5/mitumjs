@@ -1,5 +1,6 @@
 import { RegisterModelFact } from "./register-model";
 import { CreateDataFact } from "./create-data";
+import { MigrateDataFact } from "./migrate-data";
 import { ContractGenerator, Operation } from "../base";
 import { Address } from "../../key";
 import { CurrencyID } from "../../common";
@@ -24,6 +25,16 @@ export declare class Dmile extends ContractGenerator {
      * @returns `create-data` operation
      */
     createData(contract: string | Address, sender: string | Address, merkleRoot: string | LongString, currency: string | CurrencyID): Operation<CreateDataFact>;
+    /**
+     * Generate `migrate-data` operation to migrate data with multiple merkle root and tx id to the dmile model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | LongString[]} [merkleRoots] - array with multiple merkle root to record.
+     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `migrate-data` operation
+     */
+    migrateData(contract: string | Address, sender: string | Address, merkleRoots: string[] | LongString[], txIds: string[] | LongString[], currency: string | CurrencyID): Operation<MigrateDataFact>;
     /**
      * Get information about a dmile model on the contract.
      * @async

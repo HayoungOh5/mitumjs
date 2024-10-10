@@ -19,7 +19,6 @@ const fetchAxios = axios.create({
     adapter: isNode ? undefined : 'fetch',
 });
 
-
 const ECODE = {
     // General Errors
     NO_API: "EC_NO_API",
@@ -825,6 +824,11 @@ var DMILE = {
     CREATE_DATA: {
         FACT: "mitum-d-mile-create-data-operation-fact",
         OPERATION: "mitum-d-mile-create-data-operation",
+    },
+    MIGRATE_DATA: {
+        ITEM: "mitum-d-mile-migrate-data-item",
+        FACT: "mitum-d-mile-migrate-data-operation-fact",
+        OPERATION: "mitum-d-mile-migrate-data-operation",
     }
 };
 
@@ -836,6 +840,11 @@ var DID$1 = {
     CREATE_DID: {
         FACT: "mitum-did-create-did-operation-fact",
         OPERATION: "mitum-did-create-did-operation",
+    },
+    MIGRATE_DID: {
+        ITEM: "mitum-did-migrate-did-item",
+        FACT: "mitum-did-migrate-did-operation-fact",
+        OPERATION: "mitum-did-migrate-did-operation",
     },
     DEACTIVATE_DID: {
         FACT: "mitum-did-deactivate-did-operation-fact",
@@ -3228,6 +3237,47 @@ class CreateDataFact extends ContractFact {
     }
 }
 
+class MigrateDataItem extends Item {
+    constructor(contract, currency, merkleRoot, txId) {
+        super(HINT.DMILE.MIGRATE_DATA.ITEM);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.merkleRoot = LongString.from(merkleRoot);
+        this.txId = LongString.from(txId);
+        new URIString(merkleRoot.toString(), 'merkleRoot');
+        new URIString(txId.toString(), 'txId');
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            this.merkleRoot.toBuffer(),
+            this.txId.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+            merkleRoot: this.merkleRoot.toString(),
+            txid: this.txId.toString(),
+            currency: this.currency.toString()
+        };
+    }
+    toString() {
+        return this.merkleRoot.toString();
+    }
+}
+class MigrateDataFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.DMILE.MIGRATE_DATA.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated item founded"));
+    }
+    get operationHint() {
+        return HINT.DMILE.MIGRATE_DATA.OPERATION;
+    }
+}
+
 class Dmile extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
@@ -3255,6 +3305,22 @@ class Dmile extends ContractGenerator {
         new URIString(merkleRoot.toString(), 'merkleRoot');
         const fact = new CreateDataFact(TimeStamp.new().UTC(), sender, contract, merkleRoot, currency);
         return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `migrate-data` operation to migrate data with multiple merkle root and tx id to the dmile model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | LongString[]} [merkleRoots] - array with multiple merkle root to record.
+     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `migrate-data` operation
+     */
+    migrateData(contract, sender, merkleRoots, txIds, currency) {
+        Assert.check(merkleRoots.length !== 0 && txIds.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
+        Assert.check(new Set(merkleRoots.map(it => it.toString())).size === merkleRoots.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated merkleRoot founded"));
+        Assert.check(new Set(txIds.map(it => it.toString())).size === txIds.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated txId founded"));
+        Assert.check(merkleRoots.length === txIds.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the merkleRoots and txIds must be the same."));
+        return new Operation$1(this.networkID, new MigrateDataFact(TimeStamp.new().UTC(), sender, merkleRoots.map((merkleRoot, idx) => new MigrateDataItem(contract, currency, merkleRoot.toString(), txIds[idx].toString()))));
     }
     /**
      * Get information about a dmile model on the contract.
@@ -3371,6 +3437,49 @@ class CreateDidFact extends ContractFact {
     }
 }
 
+class MigrateDidItem extends Item {
+    constructor(contract, currency, publicKey, txId) {
+        super(HINT.DID.MIGRATE_DID.ITEM);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.publicKey = LongString.from(publicKey);
+        this.txId = LongString.from(txId);
+        new URIString(publicKey.toString(), 'merkleRoot');
+        new URIString(txId.toString(), 'txId');
+        Assert.check(/^[0-9a-fA-F]+$/.test(publicKey.toString().slice(-128)), MitumError.detail(ECODE.INVALID_FACT, `${this.publicKey.toString()} is not a hexadecimal number`));
+        Assert.check(Config.DID.PUBLIC_KEY.satisfy(publicKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `publickey length out of range, should be over ${Config.DID.PUBLIC_KEY.min}`));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            this.publicKey.toBuffer(),
+            this.txId.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+            publicKey: this.publicKey.toString(),
+            txid: this.txId.toString(),
+            currency: this.currency.toString()
+        };
+    }
+    toString() {
+        return this.publicKey.toString();
+    }
+}
+class MigrateDidFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.DID.MIGRATE_DID.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated item founded"));
+    }
+    get operationHint() {
+        return HINT.DID.MIGRATE_DID.OPERATION;
+    }
+}
+
 class DidFact extends ContractFact {
     constructor(hint, token, sender, contract, did, currency) {
         super(hint, token, sender, contract, currency);
@@ -3468,6 +3577,22 @@ class DID extends ContractGenerator {
     create(contract, sender, publicKey, currency) {
         const fact = new CreateDidFact(TimeStamp.new().UTC(), sender, contract, publicKey, currency);
         return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `migrate-did` operation to migrate did with publicKey and tx id to the did model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | LongString[]} [publicKeys] - array with multiple publicKey to record.
+     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `migrate-did` operation
+     */
+    migrateDID(contract, sender, publicKeys, txIds, currency) {
+        Assert.check(publicKeys.length !== 0 && txIds.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
+        Assert.check(new Set(publicKeys.map(it => it.toString())).size === publicKeys.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated merkleRoot founded"));
+        Assert.check(new Set(txIds.map(it => it.toString())).size === txIds.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated txId founded"));
+        Assert.check(publicKeys.length === txIds.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the publicKeys and txIds must be the same."));
+        return new Operation$1(this.networkID, new MigrateDidFact(TimeStamp.new().UTC(), sender, publicKeys.map((publicKey, idx) => new MigrateDidItem(contract, currency, publicKey.toString(), txIds[idx].toString()))));
     }
     /**
      * Generate `deactivate-did` operation to deactivate the did.
