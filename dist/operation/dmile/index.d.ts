@@ -26,15 +26,15 @@ export declare class Dmile extends ContractGenerator {
      */
     createData(contract: string | Address, sender: string | Address, merkleRoot: string | LongString, currency: string | CurrencyID): Operation<CreateDataFact>;
     /**
-     * Generate `migrate-data` operation to migrate data with multiple merkle root and tx id to the dmile model.
+     * Generate `migrate-data` operation to migrate data with multiple merkle root and tx hash to the dmile model.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {string[] | LongString[]} [merkleRoots] - array with multiple merkle root to record.
-     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
+     * @param {string[] | LongString[]} [merkleRoots] - array with multiple merkle roots to record.
+     * @param {string[] | LongString[]} [txHashes] - array with multiple tx hashes.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `migrate-data` operation
      */
-    migrateData(contract: string | Address, sender: string | Address, merkleRoots: string[] | LongString[], txIds: string[] | LongString[], currency: string | CurrencyID): Operation<MigrateDataFact>;
+    migrateData(contract: string | Address, sender: string | Address, merkleRoots: string[] | LongString[], txHashes: string[] | LongString[], currency: string | CurrencyID): Operation<MigrateDataFact>;
     /**
      * Get information about a dmile model on the contract.
      * @async
@@ -45,25 +45,30 @@ export declare class Dmile extends ContractGenerator {
      */
     getModelInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
-     * Get tx id by merkle root.
+     * Get tx hash by merkle root.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | LongString} [merkleRoot] - The value of merkle root.
-     * @returns `data` of `SuccessResponse` is information about the data with certain merkle root on the project:
-     * - `_hint`: Hint for d-mile data,
-     * - `merkleRoot`: The merkle root value,
-     * - `txid`: The id of create-data transaction,
+     * @returns `data` of `SuccessResponse` is tx hash related to the merkle root:
+     * - `tx_hash`: The fact hash of create-data operation.
      */
-    getByMerkleRoot(contract: string | Address, merkleRoot: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getTxHashByByMerkleRoot(contract: string | Address, merkleRoot: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
-     * Get mekle root by tx id.
+     * Get mekle root by tx hash.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | LongString} [txId] - The Id of create-data transaction.
-     * @returns `data` of `SuccessResponse` is an array of the history information about the data:
-     * - `_hint`: Hint for d-mile data,
-     * - `merkleRoot`: The merkle root value,
-     * - `txid`: The id of create-data transaction,
+     * @param {string | LongString} [txHash] - The hash of create-data transaction.
+     * @returns `data` of `SuccessResponse` is merkle root related to the tx hash:
+     * - `merkle_root`: The merkle root value
      */
-    getByTxId(contract: string | Address, txId: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getMerkleRootByTxHash(contract: string | Address, txHash: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    /**
+     * Get mekle root existence.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [merkleRoot] - The value of merkle root.
+     * @returns If the data does not exist, an `ErrorResponse` is returned. Otherwise, a `SuccessResponse` is returned with `data` as shown below:
+     * - `result`: "1"
+     */
+    getMerkleRootExistence(contract: string | Address, merkleRoot: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }

@@ -757,6 +757,9 @@ const Config = {
             PUBLIC: getRangeConfig(69),
         }
     },
+    DMILE: {
+        MERKLE_ROOT: getRangeConfig(64, 64),
+    },
     DID: {
         PUBLIC_KEY: getRangeConfig(128, Number.MAX_SAFE_INTEGER),
     }
@@ -1921,14 +1924,14 @@ async function getByMerkleRoot(api, contract, merkleRoot, delegateIP) {
     const apiPath = `${url$1(api, contract)}/merkleroot/${merkleRoot}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getByTxId(api, contract, txId, delegateIP) {
-    const apiPath = `${url$1(api, contract)}/txid/${txId}`;
+async function getByTxHash(api, contract, txId, delegateIP) {
+    const apiPath = `${url$1(api, contract)}/txhash/${txId}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var dmile = {
     getModel: getModel$1,
     getByMerkleRoot,
-    getByTxId
+    getByTxHash
 };
 
 const url = (api, contract) => `${api}/did-service/${Address.from(contract).toString()}`;
@@ -3208,15 +3211,11 @@ let RegisterModelFact$1 = class RegisterModelFact extends ContractFact {
     }
 };
 
-// import { Assert, ECODE, MitumError } from "../../error"
 class CreateDataFact extends ContractFact {
     constructor(token, sender, contract, merkleRoot, currency) {
         super(HINT.DMILE.CREATE_DATA.FACT, token, sender, contract, currency);
         this.merkleRoot = LongString.from(merkleRoot);
-        // Assert.check(
-        //     Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length),
-        //     MitumError.detail(ECODE.INVALID_FACT, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`),
-        // )
+        Assert.check(Config.DMILE.MERKLE_ROOT.satisfy(merkleRoot.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, `merkleRoot length must be ${Config.DMILE.MERKLE_ROOT.min}`));
         this._hash = this.hashing();
     }
     toBuffer() {
@@ -3229,7 +3228,7 @@ class CreateDataFact extends ContractFact {
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            merkleRoot: this.merkleRoot.toString(),
+            merkle_root: this.merkleRoot.toString(),
         };
     }
     get operationHint() {
@@ -3238,20 +3237,21 @@ class CreateDataFact extends ContractFact {
 }
 
 class MigrateDataItem extends Item {
-    constructor(contract, currency, merkleRoot, txId) {
+    constructor(contract, currency, merkleRoot, txHash) {
         super(HINT.DMILE.MIGRATE_DATA.ITEM);
         this.contract = Address.from(contract);
         this.currency = CurrencyID.from(currency);
         this.merkleRoot = LongString.from(merkleRoot);
-        this.txId = LongString.from(txId);
+        this.txHash = LongString.from(txHash);
         new URIString(merkleRoot.toString(), 'merkleRoot');
-        new URIString(txId.toString(), 'txId');
+        new URIString(txHash.toString(), 'txHash');
+        Assert.check(Config.DMILE.MERKLE_ROOT.satisfy(merkleRoot.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, `merkleRoot length must be ${Config.DMILE.MERKLE_ROOT.min}`));
     }
     toBuffer() {
         return Buffer.concat([
             this.contract.toBuffer(),
             this.merkleRoot.toBuffer(),
-            this.txId.toBuffer(),
+            this.txHash.toBuffer(),
             this.currency.toBuffer(),
         ]);
     }
@@ -3259,8 +3259,8 @@ class MigrateDataItem extends Item {
         return {
             ...super.toHintedObject(),
             contract: this.contract.toString(),
-            merkleRoot: this.merkleRoot.toString(),
-            txid: this.txId.toString(),
+            merkle_root: this.merkleRoot.toString(),
+            tx_hash: this.txHash.toString(),
             currency: this.currency.toString()
         };
     }
@@ -3307,20 +3307,20 @@ class Dmile extends ContractGenerator {
         return new Operation$1(this.networkID, fact);
     }
     /**
-     * Generate `migrate-data` operation to migrate data with multiple merkle root and tx id to the dmile model.
+     * Generate `migrate-data` operation to migrate data with multiple merkle root and tx hash to the dmile model.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {string[] | LongString[]} [merkleRoots] - array with multiple merkle root to record.
-     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
+     * @param {string[] | LongString[]} [merkleRoots] - array with multiple merkle roots to record.
+     * @param {string[] | LongString[]} [txHashes] - array with multiple tx hashes.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `migrate-data` operation
      */
-    migrateData(contract, sender, merkleRoots, txIds, currency) {
-        Assert.check(merkleRoots.length !== 0 && txIds.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
+    migrateData(contract, sender, merkleRoots, txHashes, currency) {
+        Assert.check(merkleRoots.length !== 0 && txHashes.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
         Assert.check(new Set(merkleRoots.map(it => it.toString())).size === merkleRoots.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated merkleRoot founded"));
-        Assert.check(new Set(txIds.map(it => it.toString())).size === txIds.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated txId founded"));
-        Assert.check(merkleRoots.length === txIds.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the merkleRoots and txIds must be the same."));
-        return new Operation$1(this.networkID, new MigrateDataFact(TimeStamp.new().UTC(), sender, merkleRoots.map((merkleRoot, idx) => new MigrateDataItem(contract, currency, merkleRoot.toString(), txIds[idx].toString()))));
+        Assert.check(new Set(txHashes.map(it => it.toString())).size === txHashes.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated tx hash founded"));
+        Assert.check(merkleRoots.length === txHashes.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the merkleRoots and txHashes must be the same."));
+        return new Operation$1(this.networkID, new MigrateDataFact(TimeStamp.new().UTC(), sender, merkleRoots.map((merkleRoot, idx) => new MigrateDataItem(contract, currency, merkleRoot.toString(), txHashes[idx].toString()))));
     }
     /**
      * Get information about a dmile model on the contract.
@@ -3336,36 +3336,60 @@ class Dmile extends ContractGenerator {
         return await getAPIData(() => contractApi.dmile.getModel(this.api, contract, this.delegateIP));
     }
     /**
-     * Get tx id by merkle root.
+     * Get tx hash by merkle root.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | LongString} [merkleRoot] - The value of merkle root.
-     * @returns `data` of `SuccessResponse` is information about the data with certain merkle root on the project:
-     * - `_hint`: Hint for d-mile data,
-     * - `merkleRoot`: The merkle root value,
-     * - `txid`: The id of create-data transaction,
+     * @returns `data` of `SuccessResponse` is tx hash related to the merkle root:
+     * - `tx_hash`: The fact hash of create-data operation.
      */
-    async getByMerkleRoot(contract, merkleRoot) {
+    async getTxHashByByMerkleRoot(contract, merkleRoot) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
+        Assert.check(Config.DMILE.MERKLE_ROOT.satisfy(merkleRoot.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, `merkleRoot length must be ${Config.DMILE.MERKLE_ROOT.min}`));
         new URIString(merkleRoot, 'merkleRoot');
-        return await getAPIData(() => contractApi.dmile.getByMerkleRoot(this.api, contract, merkleRoot, this.delegateIP));
+        const response = await getAPIData(() => contractApi.dmile.getByMerkleRoot(this.api, contract, merkleRoot, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.tx_hash ? { tx_hash: response.data.tx_hash } : null;
+        }
+        return response;
     }
     /**
-     * Get mekle root by tx id.
+     * Get mekle root by tx hash.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | LongString} [txId] - The Id of create-data transaction.
-     * @returns `data` of `SuccessResponse` is an array of the history information about the data:
-     * - `_hint`: Hint for d-mile data,
-     * - `merkleRoot`: The merkle root value,
-     * - `txid`: The id of create-data transaction,
+     * @param {string | LongString} [txHash] - The hash of create-data transaction.
+     * @returns `data` of `SuccessResponse` is merkle root related to the tx hash:
+     * - `merkle_root`: The merkle root value
      */
-    async getByTxId(contract, txId) {
+    async getMerkleRootByTxHash(contract, txHash) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
-        new URIString(txId, 'txId');
-        return await getAPIData(() => contractApi.dmile.getByTxId(this.api, contract, txId, this.delegateIP));
+        new URIString(txHash, 'txHash');
+        const response = await getAPIData(() => contractApi.dmile.getByTxHash(this.api, contract, txHash, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.merkle_root ? { merkle_root: response.data.merkle_root } : null;
+        }
+        return response;
+    }
+    /**
+     * Get mekle root existence.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [merkleRoot] - The value of merkle root.
+     * @returns If the data does not exist, an `ErrorResponse` is returned. Otherwise, a `SuccessResponse` is returned with `data` as shown below:
+     * - `result`: "1"
+     */
+    async getMerkleRootExistence(contract, merkleRoot) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        Assert.check(Config.DMILE.MERKLE_ROOT.satisfy(merkleRoot.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, `merkleRoot length must be ${Config.DMILE.MERKLE_ROOT.min}`));
+        new URIString(merkleRoot, 'merkleRoot');
+        const response = await getAPIData(() => contractApi.dmile.getByMerkleRoot(this.api, contract, merkleRoot, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = { result: "1" };
+        }
+        return response;
     }
 }
 
@@ -3462,7 +3486,7 @@ class MigrateDidItem extends Item {
             ...super.toHintedObject(),
             contract: this.contract.toString(),
             publicKey: this.publicKey.toString(),
-            txid: this.txId.toString(),
+            tx_hash: this.txId.toString(),
             currency: this.currency.toString()
         };
     }
@@ -3636,29 +3660,30 @@ class DID extends ContractGenerator {
         return await getAPIData(() => contractApi.did.getModel(this.api, contract, this.delegateIP));
     }
     /**
-     * Get did data with publickey
+     * Get did by publickey.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | LongString} [publicKey] - The publicKey, // Must be longer than 128 digits. If the length over 128, only the 128 characters from the end will be used.
-     * @returns `data` of `SuccessResponse` is did data:
-     * - `_hint`: hint for did data,
-     * - `publicKey`: The publickey with prefix '04',
+     * @returns `data` of `SuccessResponse` is did:
      * - `did`: The did value,
      */
-    async getByPubKey(contract, publicKey) {
+    async getDIDByPublicKey(contract, publicKey) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         new URIString(publicKey, 'publicKey');
-        return await getAPIData(() => contractApi.did.getByPubKey(this.api, contract, publicKey, this.delegateIP));
+        const response = await getAPIData(() => contractApi.did.getByPubKey(this.api, contract, publicKey, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.did ? { did: response.data.did } : null;
+        }
+        return response;
     }
     /**
-     * Get did document with certain did.
+     * Get did document by did.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | LongString} [did] - The did value.
      * @returns `data` of `SuccessResponse` is did document:
-     * - `_hint`: Hint for did data,
-     * - `did_doc`: object
+     * - `did_document`: object
      * - - `'@context'`: The context of did,
      * - - `id`: The did value,
      * - - `created`: The fact hash of create-did operation,
@@ -3673,10 +3698,14 @@ class DID extends ContractGenerator {
      * - - - `type`: The type of did service,
      * - - - `service_end_point`: The end point of did service,
      */
-    async getByDID(contract, did) {
+    async getDDocByDID(contract, did) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
-        return await getAPIData(() => contractApi.did.getByDID(this.api, contract, did, this.delegateIP));
+        const response = await getAPIData(() => contractApi.did.getByDID(this.api, contract, did, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.did_document ? { did_document: response.data.did_document } : null;
+        }
+        return response;
     }
 }
 

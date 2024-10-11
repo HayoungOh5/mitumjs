@@ -73,24 +73,21 @@ export declare class DID extends ContractGenerator {
      */
     getModelInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
-     * Get did data with publickey
+     * Get did by publickey.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | LongString} [publicKey] - The publicKey, // Must be longer than 128 digits. If the length over 128, only the 128 characters from the end will be used.
-     * @returns `data` of `SuccessResponse` is did data:
-     * - `_hint`: hint for did data,
-     * - `publicKey`: The publickey with prefix '04',
+     * @returns `data` of `SuccessResponse` is did:
      * - `did`: The did value,
      */
-    getByPubKey(contract: string | Address, publicKey: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getDIDByPublicKey(contract: string | Address, publicKey: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
-     * Get did document with certain did.
+     * Get did document by did.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | LongString} [did] - The did value.
      * @returns `data` of `SuccessResponse` is did document:
-     * - `_hint`: Hint for did data,
-     * - `did_doc`: object
+     * - `did_document`: object
      * - - `'@context'`: The context of did,
      * - - `id`: The did value,
      * - - `created`: The fact hash of create-did operation,
@@ -105,5 +102,5 @@ export declare class DID extends ContractGenerator {
      * - - - `type`: The type of did service,
      * - - - `service_end_point`: The end point of did service,
      */
-    getByDID(contract: string | Address, did: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getDDocByDID(contract: string | Address, did: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }

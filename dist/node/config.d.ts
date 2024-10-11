@@ -35,6 +35,9 @@ export declare const Config: {
             PUBLIC: RangeConfig;
         };
     };
+    DMILE: {
+        MERKLE_ROOT: RangeConfig;
+    };
     DID: {
         PUBLIC_KEY: RangeConfig;
     };
