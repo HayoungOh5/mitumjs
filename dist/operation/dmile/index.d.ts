@@ -52,7 +52,7 @@ export declare class Dmile extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is tx hash related to the merkle root:
      * - `tx_hash`: The fact hash of create-data operation.
      */
-    getTxHashByByMerkleRoot(contract: string | Address, merkleRoot: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getTxHashByMerkleRoot(contract: string | Address, merkleRoot: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get mekle root by tx hash.
      * @async

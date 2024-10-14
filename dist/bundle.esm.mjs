@@ -1934,7 +1934,7 @@ var dmile = {
     getByTxHash
 };
 
-const url = (api, contract) => `${api}/did-service/${Address.from(contract).toString()}`;
+const url = (api, contract) => `${api}/did-registry/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -3343,7 +3343,7 @@ class Dmile extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is tx hash related to the merkle root:
      * - `tx_hash`: The fact hash of create-data operation.
      */
-    async getTxHashByByMerkleRoot(contract, merkleRoot) {
+    async getTxHashByMerkleRoot(contract, merkleRoot) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Assert.check(Config.DMILE.MERKLE_ROOT.satisfy(merkleRoot.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, `merkleRoot length must be ${Config.DMILE.MERKLE_ROOT.min}`));
