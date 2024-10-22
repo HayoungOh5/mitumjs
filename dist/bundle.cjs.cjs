@@ -853,6 +853,11 @@ var STORAGE = {
         FACT: "mitum-storage-create-data-operation-fact",
         OPERATION: "mitum-storage-create-data-operation",
     },
+    CREATE_DATAS: {
+        ITEM: "mitum-storage-create-datas-item",
+        FACT: "mitum-storage-create-datas-operation-fact",
+        OPERATION: "mitum-storage-create-datas-operation",
+    },
     DELETE_DATA: {
         FACT: "mitum-storage-delete-data-operation-fact",
         OPERATION: "mitum-storage-delete-data-operation",
@@ -2124,13 +2129,18 @@ async function getData(api, contract, dataKey, delegateIP) {
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getDataHistory(api, contract, dataKey, delegateIP, limit, offset, reverse) {
-    const apiPath = apiPathWithParams(`${url(api, contract)}/datakey/${dataKey}/history`, limit, offset, reverse);
+    const apiPath = apiPathWithParams(`${url(api, contract)}/datacount/${dataKey}/history`, limit, offset, reverse);
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getDataCount(api, contract, delegateIP, deleted) {
+    const apiPath = `${url(api, contract)}/datacount?deleted=${deleted ? 1 : 0}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var storage = {
     getModel,
     getData,
-    getDataHistory
+    getDataHistory,
+    getDataCount
 };
 
 var models = {
@@ -3519,6 +3529,51 @@ class CreateDataFact extends StorageFact {
     }
 }
 
+class CreateDatasItem extends Item {
+    constructor(contract, currency, dataKey, dataValue) {
+        super(HINT.STORAGE.CREATE_DATAS.ITEM);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.dataKey = LongString.from(dataKey);
+        this.dataValue = LongString.from(dataValue);
+        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_ITEM, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
+        Assert.check(Config.STORAGE.DATA_VALUE.satisfy(dataValue.toString().length), MitumError.detail(ECODE.INVALID_ITEM, `dataValue out of range, should be between ${Config.STORAGE.DATA_VALUE.min} to ${Config.STORAGE.DATA_VALUE.max}`));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            this.dataKey.toBuffer(),
+            this.dataValue.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+            dataKey: this.dataKey.toString(),
+            dataValue: this.dataValue.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return this.dataKey.toString();
+    }
+}
+class CreateDatasFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.STORAGE.CREATE_DATAS.FACT, token, sender, items);
+        this.items.forEach(it => {
+            new URIString(it.dataKey.toString(), 'dataKey');
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
+        Assert.check(new Set(items.map(item => item.dataKey.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate dataKey found in items"));
+    }
+    get operationHint() {
+        return HINT.STORAGE.CREATE_DATAS.OPERATION;
+    }
+}
+
 class UpdateDataFact extends StorageFact {
     constructor(token, sender, contract, dataKey, dataValue, currency) {
         super(HINT.STORAGE.UPDATE_DATA.FACT, token, sender, contract, dataKey, currency);
@@ -3571,6 +3626,11 @@ class Storage extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    checkTwoArrayLength(array1, array2, arrayName1, arrayName2) {
+        Assert.check(Array.isArray(array1), MitumError.detail(ECODE.INVALID_TYPE, `the ${arrayName1} must be in array type`));
+        Assert.check(Array.isArray(array2), MitumError.detail(ECODE.INVALID_TYPE, `the ${arrayName2} must be in array type`));
+        Assert.check(array1.length === array2.length, MitumError.detail(ECODE.INVALID_LENGTH, `the lengths of two arrays ${arrayName1}, ${arrayName2} are not the same`));
+    }
     /**
      * Generate a `register-model` operation to register new storage model on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -3595,6 +3655,20 @@ class Storage extends ContractGenerator {
         new URIString(dataKey, 'dataKey');
         const fact = new CreateDataFact(TimeStamp.new().UTC(), sender, contract, dataKey, dataValue, currency);
         return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `create-datas` operation to create multiple data on the storage model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[]} [dataKeys] - The array with key of multiple data to create.
+     * @param {string[] | LongString[]} [dataValues] - The array with value of the multiple data to record.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-datas` operation
+     */
+    createMultiData(contract, sender, dataKeys, dataValues, currency) {
+        this.checkTwoArrayLength(dataKeys, dataValues, "dataKeys", "dataValues");
+        const items = dataKeys.map((_, idx) => new CreateDatasItem(contract, currency, dataKeys[idx], dataValues[idx]));
+        return new Operation$1(this.networkID, new CreateDatasFact(TimeStamp.new().UTC(), sender, items));
     }
     /**
      * Generate `update-data` operation to update data with exist data key on the storage model.
@@ -3644,7 +3718,7 @@ class Storage extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is information about the data with certain dataKey on the project:
      * - `data`: Object containing below information
      * - - `dataKey`: The key associated with the data,
-     * - - `dataValue`: The current value of the data ,
+     * - - `dataValue`: The current value of the data,
      * - - `deleted`: Indicates whether the data has been deleted
      * - `height`: The block number where the latest related operation is recorded,
      * - `operation`: The fact hash of the latest related operation,
@@ -3669,7 +3743,7 @@ class Storage extends ContractGenerator {
      * - `_embedded`:
      * - - `data`: Object containing below information
      * - - - `dataKey`: The key associated with the data,
-     * - - - `dataValue`: The current value of the data ,
+     * - - - `dataValue`: The current value of the data,
      * - - - `deleted`: Indicates whether the data has been deleted
      * - - `height`: The block number where the latest related operation is recorded,
      * - - `operation`: The fact hash of the latest related operation,
@@ -3681,6 +3755,19 @@ class Storage extends ContractGenerator {
         Address.from(contract);
         new URIString(dataKey, 'dataKey');
         return await getAPIData(() => contractApi.storage.getDataHistory(this.api, contract, dataKey, this.delegateIP, limit, offset, reverse));
+    }
+    /**
+     * Get the number of data (not deleted). If `deleted` is true, the number including deleted data.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {boolean} [deleted] - (Optional) Whether to include deleted data.
+     * @returns `data` of `SuccessResponse` is an array of the history information about the data:
+     * - `contract`: The address of contract account,
+     * - `data_count`: The number of created data on the contract
+     */
+    async getDataCount(contract, deleted) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.storage.getDataCount(this.api, contract, this.delegateIP, deleted));
     }
 }
 

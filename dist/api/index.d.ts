@@ -55,6 +55,7 @@ declare const contractApi: {
         getModel: (api: string | undefined, contract: string | import("../key").Address, delegateIP: string | undefined) => Promise<AxiosResponse<any, any>>;
         getData: (api: string | undefined, contract: string | import("../key").Address, dataKey: string, delegateIP: string | undefined) => Promise<AxiosResponse<any, any>>;
         getDataHistory: (api: string | undefined, contract: string | import("../key").Address, dataKey: string, delegateIP: string | undefined, limit?: number | undefined, offset?: number | undefined, reverse?: true | undefined) => Promise<AxiosResponse<any, any>>;
+        getDataCount: (api: string | undefined, contract: string | import("../key").Address, delegateIP: string | undefined, deleted?: true | undefined) => Promise<AxiosResponse<any, any>>;
     };
 };
 export { account, block, node, operation, currency, contractApi, };
@@ -131,6 +132,7 @@ declare const _default: {
             getModel: (api: string | undefined, contract: string | import("../key").Address, delegateIP: string | undefined) => Promise<AxiosResponse<any, any>>;
             getData: (api: string | undefined, contract: string | import("../key").Address, dataKey: string, delegateIP: string | undefined) => Promise<AxiosResponse<any, any>>;
             getDataHistory: (api: string | undefined, contract: string | import("../key").Address, dataKey: string, delegateIP: string | undefined, limit?: number | undefined, offset?: number | undefined, reverse?: true | undefined) => Promise<AxiosResponse<any, any>>;
+            getDataCount: (api: string | undefined, contract: string | import("../key").Address, delegateIP: string | undefined, deleted?: true | undefined) => Promise<AxiosResponse<any, any>>;
         };
     };
 };

@@ -7,6 +7,11 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
+    CREATE_DATAS: {
+        ITEM: string;
+        FACT: string;
+        OPERATION: string;
+    };
     DELETE_DATA: {
         FACT: string;
         OPERATION: string;
