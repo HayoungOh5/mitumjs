@@ -851,6 +851,11 @@ var STORAGE = {
         FACT: "mitum-storage-update-data-operation-fact",
         OPERATION: "mitum-storage-update-data-operation",
     },
+    UPDATE_DATAS: {
+        ITEM: "mitum-storage-update-datas-item",
+        FACT: "mitum-storage-update-datas-operation-fact",
+        OPERATION: "mitum-storage-update-datas-operation",
+    },
 };
 
 var HINT = {
@@ -2114,7 +2119,7 @@ async function getData(api, contract, dataKey, delegateIP) {
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getDataHistory(api, contract, dataKey, delegateIP, limit, offset, reverse) {
-    const apiPath = apiPathWithParams(`${url(api, contract)}/datacount/${dataKey}/history`, limit, offset, reverse);
+    const apiPath = apiPathWithParams(`${url(api, contract)}/datakey/${dataKey}/history`, limit, offset, reverse);
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getDataCount(api, contract, delegateIP, deleted) {
@@ -3585,6 +3590,51 @@ class UpdateDataFact extends StorageFact {
     }
 }
 
+class UpdateDatasItem extends Item {
+    constructor(contract, currency, dataKey, dataValue) {
+        super(HINT.STORAGE.UPDATE_DATAS.ITEM);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.dataKey = LongString.from(dataKey);
+        this.dataValue = LongString.from(dataValue);
+        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_ITEM, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
+        Assert.check(Config.STORAGE.DATA_VALUE.satisfy(dataValue.toString().length), MitumError.detail(ECODE.INVALID_ITEM, `dataValue out of range, should be between ${Config.STORAGE.DATA_VALUE.min} to ${Config.STORAGE.DATA_VALUE.max}`));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            this.dataKey.toBuffer(),
+            this.dataValue.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+            dataKey: this.dataKey.toString(),
+            dataValue: this.dataValue.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return this.dataKey.toString();
+    }
+}
+class UpdateDatasFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.STORAGE.UPDATE_DATAS.FACT, token, sender, items);
+        this.items.forEach(it => {
+            new URIString(it.dataKey.toString(), 'dataKey');
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
+        Assert.check(new Set(items.map(item => item.dataKey.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate dataKey found in items"));
+    }
+    get operationHint() {
+        return HINT.STORAGE.UPDATE_DATAS.OPERATION;
+    }
+}
+
 class DeleteDataFact extends StorageFact {
     constructor(token, sender, contract, dataKey, currency) {
         super(HINT.STORAGE.DELETE_DATA.FACT, token, sender, contract, dataKey, currency);
@@ -3643,16 +3693,17 @@ class Storage extends ContractGenerator {
     }
     /**
      * Generate `create-datas` operation to create multiple data on the storage model.
-     * @param {string | Address} [contract] - The contract's address.
+     * @param {string[] | Address[]} [contracts] - The array of contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string[]} [dataKeys] - The array with key of multiple data to create.
      * @param {string[] | LongString[]} [dataValues] - The array with value of the multiple data to record.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-datas` operation
      */
-    createMultiData(contract, sender, dataKeys, dataValues, currency) {
+    createMultiData(contracts, sender, dataKeys, dataValues, currency) {
         this.checkTwoArrayLength(dataKeys, dataValues, "dataKeys", "dataValues");
-        const items = dataKeys.map((_, idx) => new CreateDatasItem(contract, currency, dataKeys[idx], dataValues[idx]));
+        this.checkTwoArrayLength(contracts.map((el) => { return el.toString(); }), dataKeys, "contracts", "dataKeys");
+        const items = dataKeys.map((_, idx) => new CreateDatasItem(contracts[idx], currency, dataKeys[idx], dataValues[idx]));
         return new Operation$1(this.networkID, new CreateDatasFact(TimeStamp.new().UTC(), sender, items));
     }
     /**
@@ -3668,6 +3719,21 @@ class Storage extends ContractGenerator {
         new URIString(dataKey, 'dataKey');
         const fact = new UpdateDataFact(TimeStamp.new().UTC(), sender, contract, dataKey, dataValue, currency);
         return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `update-datas` operation to update multiple data on the storage model.
+     * @param {string[] | Address[]} [contracts] - The array of contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[]} [dataKeys] - The array with key of multiple data to update.
+     * @param {string[] | LongString[]} [dataValues] - The array with value of the multiple data to update.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `update-datas` operation
+     */
+    updateMultiData(contracts, sender, dataKeys, dataValues, currency) {
+        this.checkTwoArrayLength(dataKeys, dataValues, "dataKeys", "dataValues");
+        this.checkTwoArrayLength(contracts.map((el) => { return el.toString(); }), dataKeys, "contracts", "dataKeys");
+        const items = dataKeys.map((_, idx) => new UpdateDatasItem(contracts[idx], currency, dataKeys[idx], dataValues[idx]));
+        return new Operation$1(this.networkID, new UpdateDatasFact(TimeStamp.new().UTC(), sender, items));
     }
     /**
      * Generate `delete-data` operation to delete data on the storage model.

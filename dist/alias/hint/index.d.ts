@@ -75,6 +75,11 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
+        UPDATE_DATAS: {
+            ITEM: string;
+            FACT: string;
+            OPERATION: string;
+        };
     };
 };
 export default _default;
