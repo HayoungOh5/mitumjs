@@ -4,6 +4,7 @@ import { TransferFact } from "./transfer";
 import { CreateContractAccountFact } from "./create-contract-account";
 import { WithdrawFact } from "./withdraw";
 import { UpdateHandlerFact } from "./update-handler";
+import { UpdateRecipientFact } from "./update-recipient";
 import { RegisterCurrencyFact } from "./register-currency";
 import { UpdateCurrencyFact } from "./update-currency";
 import { MintFact } from "./mint";
@@ -348,6 +349,15 @@ export declare class Contract extends Generator {
      * @returns `update-handler` operation.
      */
     updateHandler(sender: string | Address, contract: string | Address, currency: string | CurrencyID, handlers: (string | Address)[]): Operation<UpdateHandlerFact>;
+    /**
+  * Generate an `update-recipient` operation to update recipients of contract to given accounts.
+  * @param {string | Address} [sender] - The sender's address.
+  * @param {string | Address} [contract] - The contract account address.
+  * @param {string | CurrencyID} [currency] - The currency ID.
+  * @param {(string | Address)[]} [recipients] - The array of addresses to be updated as recipients.
+  * @returns `update-recipient` operation.
+  */
+    updateRecipient(sender: string | Address, contract: string | Address, currency: string | CurrencyID, recipients: (string | Address)[]): Operation<UpdateRecipientFact>;
     /**
      * Sign and send the `create-contract-account` operation to blockchain network.
      * @async

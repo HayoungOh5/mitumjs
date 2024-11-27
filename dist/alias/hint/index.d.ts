@@ -52,237 +52,45 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
+        UPDATE_RECIPIENT: {
+            FACT: string;
+            OPERATION: string;
+        };
     };
-    NFT: {
-        SIGNER: string;
-        SIGNERS: string;
+    DID: {
         REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
         };
-        UPDATE_MODEL_CONFIG: {
+        CREATE_DID: {
             FACT: string;
             OPERATION: string;
         };
-        MINT: {
-            FORM: string;
+        MIGRATE_DID: {
             ITEM: string;
             FACT: string;
             OPERATION: string;
         };
-        APPROVE_ALL: {
-            ITEM: string;
+        DEACTIVATE_DID: {
             FACT: string;
             OPERATION: string;
         };
-        APPROVE: {
-            ITEM: string;
+        REACTIVATE_DID: {
             FACT: string;
             OPERATION: string;
         };
-        TRANSFER: {
-            ITEM: string;
+        UPDATE_DID_DOCUMENT: {
             FACT: string;
             OPERATION: string;
         };
-        ADD_SIGNATURE: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
+        DATA: string;
+        RESOURCE: string;
+        DOCUMENT: string;
+        AUTHENTICATION: {
+            ASYMMETRIC_KEY: string;
+            SOCIAL_LOGIN: string;
         };
-    };
-    CREDENTIAL: {
-        REGISTER_MODEL: {
-            FACT: string;
-            OPERATION: string;
-        };
-        ADD_TEMPLATE: {
-            FACT: string;
-            OPERATION: string;
-        };
-        ISSUE: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        REVOKE: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-    };
-    DAO: {
-        DESIGN: string;
-        POLICY: string;
-        CALLDATA: {
-            TRANSFER: string;
-            GOVERNANCE: string;
-        };
-        PROPOSAL: {
-            CRYPTO: string;
-            BIZ: string;
-        };
-        WHITELIST: string;
-        REGISTER_MODEL: {
-            FACT: string;
-            OPERATION: string;
-        };
-        UPDATE_MODEL_CONFIG: {
-            FACT: string;
-            OPERATION: string;
-        };
-        PROPOSE: {
-            FACT: string;
-            OPERATION: string;
-        };
-        CANCEL_PROPOSAL: {
-            FACT: string;
-            OPERATION: string;
-        };
-        REGISTER: {
-            FACT: string;
-            OPERATION: string;
-        };
-        PRE_SNAP: {
-            FACT: string;
-            OPERATION: string;
-        };
-        POST_SNAP: {
-            FACT: string;
-            OPERATION: string;
-        };
-        VOTE: {
-            FACT: string;
-            OPERATION: string;
-        };
-        EXECUTE: {
-            FACT: string;
-            OPERATION: string;
-        };
-    };
-    KYC: {
-        CREATE_SERVICE: {
-            FACT: string;
-            OPERATION: string;
-        };
-        ADD_CONTROLLER: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        REMOVE_CONTROLLER: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        ADD_CUSTOMER: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        UPDATE_CUSTOMER: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-    };
-    STO: {
-        CREATE_SECURITY_TOKEN: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        ISSUE: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        AUTHORIZE_OPERATOR: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        REVOKE_OPERATOR: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        SET_DOCUMENT: {
-            FACT: string;
-            OPERATION: string;
-        };
-        TRANSFER_BY_PARTITION: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-        REDEEM: {
-            ITEM: string;
-            FACT: string;
-            OPERATION: string;
-        };
-    };
-    TIMESTAMP: {
-        REGISTER_MODEL: {
-            FACT: string;
-            OPERATION: string;
-        };
-        ISSUE: {
-            FACT: string;
-            OPERATION: string;
-        };
-    };
-    TOKEN: {
-        REGISTER_MODEL: {
-            FACT: string;
-            OPERATION: string;
-        };
-        MINT: {
-            FACT: string;
-            OPERATION: string;
-        };
-        TRANSFER: {
-            FACT: string;
-            OPERATION: string;
-        };
-        APPROVE: {
-            FACT: string;
-            OPERATION: string;
-        };
-        BURN: {
-            FACT: string;
-            OPERATION: string;
-        };
-        TRANSFER_FROM: {
-            FACT: string;
-            OPERATION: string;
-        };
-    };
-    POINT: {
-        REGISTER_MODEL: {
-            FACT: string;
-            OPERATION: string;
-        };
-        MINT: {
-            FACT: string;
-            OPERATION: string;
-        };
-        TRANSFER: {
-            FACT: string;
-            OPERATION: string;
-        };
-        APPROVE: {
-            FACT: string;
-            OPERATION: string;
-        };
-        BURN: {
-            FACT: string;
-            OPERATION: string;
-        };
-        TRANSFER_FROM: {
-            FACT: string;
-            OPERATION: string;
-        };
+        VERIFICATION_METHOD: string;
     };
 };
 export default _default;

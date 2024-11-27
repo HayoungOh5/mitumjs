@@ -1,13 +1,7 @@
 import { SignOption, Operation as OP, Fact } from "./base";
 import { Currency, Account, Contract } from "./currency";
-import { NFT } from "./nft";
-import { Credential } from "./credential";
-import { DAO } from "./dao";
-import { STO } from "./sto";
-import { KYC } from "./kyc";
-import { TimeStamp } from "./timestamp";
-import { Token } from "./token";
-import { Point } from "./point";
+import { AccountAbstraction } from "./accountAbstraction";
+import { DID } from "./did";
 import { Signer } from "./signer";
 import { Key, KeyPair } from "../key";
 import { Generator, HintedObject, IP, SuccessResponse, ErrorResponse } from "../types";
@@ -112,4 +106,4 @@ export declare class OperationResponse extends Operation {
      */
     wait(timeout?: number, interval?: number): Promise<any>;
 }
-export { Currency, Account, Contract, NFT, Credential, DAO, STO, KYC, TimeStamp, Token, Point, Signer, Base, };
+export { Currency, Account, Contract, DID, AccountAbstraction, Signer, Base, };

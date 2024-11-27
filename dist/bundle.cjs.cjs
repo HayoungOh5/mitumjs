@@ -84,6 +84,7 @@ const ECODE = {
     INVALID_FACT: "EC_INVALID_FACT",
     INVALID_OPERATION: "EC_INVALID_OPERATION",
     INVALID_OPERATIONS: "EC_INVALID_OPERATIONS",
+    INVALID_USER_OPERATION: "EC_INVALID_USER_OPERATION",
     INVALID_SEAL: "EC_INVALID_SEAL",
     INVALID_AMOUNT: "EC_INVALID_AMOUNT",
     INVALID_AMOUNTS: "EC_INVALID_AMOUNTS",
@@ -108,20 +109,9 @@ const ECODE = {
         INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY",
         INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN",
     },
-    // NFT Errors
-    NFT: {
-        INVALID_NFT_SIGNER: "EC_INVALID_NFT_SIGNER",
-        INVALID_NFT_SIGNERS: "EC_INVALID_NFT_SIGNERS",
-    },
-    // STO Errors
-    STO: {
-        INVALID_PARTITION: "EC_INVALID_PARTITION",
-    },
-    // DAO Errors
-    DAO: {
-        INVALID_POLICY: "EC_INVALID_POLICY",
-        INVALID_WHITELIST: "EC_INVALID_WHITELIST",
-        UNMATCHED_SENDER: "EC_UNMATCHED_SENDER"
+    // DID Errors
+    DID: {
+        INVALID_DID: "EC_INVALID_DID",
     },
     // Transaction Errors
     TIME_OUT: "EC_TIME_OUT",
@@ -473,15 +463,6 @@ class LongString {
         return this.s;
     }
 }
-class ShortDate extends LongString {
-    constructor(s) {
-        super(s);
-        Assert.check(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/.test(s), MitumError.detail(ECODE.INVALID_DATE, "invalid simple string date"));
-    }
-    static from(s) {
-        return s instanceof ShortDate ? s : new ShortDate(s);
-    }
-}
 class IP extends LongString {
     constructor(s) {
         super(s);
@@ -631,22 +612,8 @@ class Float {
         return "" + this.n;
     }
 }
-class Bool {
-    constructor(b) {
-        this.b = b;
-    }
-    static from(b) {
-        return b instanceof Bool ? b : new Bool(b);
-    }
-    toBuffer() {
-        return this.b ? Buffer.from([1]) : Buffer.from([0]);
-    }
-    get v() {
-        return this.b;
-    }
-}
 
-let TimeStamp$1 = class TimeStamp {
+class TimeStamp {
     constructor(t) {
         if (t === undefined) {
             this.t = new Date();
@@ -716,8 +683,8 @@ let TimeStamp$1 = class TimeStamp {
         }
         return iso.substring(0, t) + " " + rtime + " +0000 UTC";
     }
-};
-class FullTimeStamp extends TimeStamp$1 {
+}
+class FullTimeStamp extends TimeStamp {
     constructor(s) {
         super(s);
         const dot = s.indexOf(".");
@@ -806,34 +773,11 @@ const Config = {
             PUBLIC: getRangeConfig(69),
         }
     },
-    NFT: {
-        ROYALTY: getRangeConfig(0, 99),
-        SHARE: getRangeConfig(0, 100),
-        ADDRESS_IN_MINTER_WHITELIST: getRangeConfig(0, 10),
-        SIGNERS_IN_SIGNERS: getRangeConfig(0, 10),
-        HASH: getRangeConfig(1, 1024),
-        URI: getRangeConfig(1, 1000),
+    DMILE: {
+        MERKLE_ROOT: getRangeConfig(64, 64),
     },
-    CREDENTIAL: {
-        ID: getRangeConfig(1, 20),
-        VALUE: getRangeConfig(1, 1024),
-        TEMPLATE_ID: getRangeConfig(1, 20),
-        TEMPLATE_NAME: getRangeConfig(1, 20),
-        DISPLAY_NAME: getRangeConfig(1, 20),
-        SUBJECT_KEY: getRangeConfig(1, 20),
-        DESCRIPTION: getRangeConfig(1, 1024),
-    },
-    TIMESTAMP: {
-        PROJECT_ID: getRangeConfig(1, 10),
-        DATA: getRangeConfig(1, 1024),
-    },
-    STO: {
-        PARTITION: getRangeConfig(3, 10),
-    },
-    DAO: {
-        ADDRESS_IN_WHITELIST: getRangeConfig(0, 10),
-        QUORUM: getRangeConfig(1, 100),
-        VOTE: getRangeConfig(0, 255),
+    DID: {
+        PUBLIC_KEY: getRangeConfig(128, Number.MAX_SAFE_INTEGER),
     }
 };
 
@@ -888,259 +832,53 @@ var CURRENCY = {
     UPDATE_HANDLER: {
         FACT: "mitum-extension-update-handler-operation-fact",
         OPERATION: "mitum-extension-update-handler-operation",
+    },
+    UPDATE_RECIPIENT: {
+        FACT: "mitum-extension-update-recipient-operation-fact",
+        OPERATION: "mitum-extension-update-recipient-operation",
     }
 };
 
-var NFT$1 = {
-    SIGNER: "mitum-nft-signer",
-    SIGNERS: "mitum-nft-signers",
+var DID$1 = {
     REGISTER_MODEL: {
-        FACT: "mitum-nft-register-model-operation-fact",
-        OPERATION: "mitum-nft-register-model-operation",
+        FACT: "mitum-did-register-model-operation-fact",
+        OPERATION: "mitum-did-register-model-operation",
     },
-    UPDATE_MODEL_CONFIG: {
-        FACT: "mitum-nft-update-model-config-operation-fact",
-        OPERATION: "mitum-nft-update-model-config-operation",
+    CREATE_DID: {
+        FACT: "mitum-did-create-did-operation-fact",
+        OPERATION: "mitum-did-create-did-operation",
     },
-    MINT: {
-        FORM: "mitum-nft-mint-form",
-        ITEM: "mitum-nft-mint-item",
-        FACT: "mitum-nft-mint-operation-fact",
-        OPERATION: "mitum-nft-mint-operation",
+    MIGRATE_DID: {
+        ITEM: "mitum-did-migrate-did-item",
+        FACT: "mitum-did-migrate-did-operation-fact",
+        OPERATION: "mitum-did-migrate-did-operation",
     },
-    APPROVE_ALL: {
-        ITEM: "mitum-nft-approve-all-item",
-        FACT: "mitum-nft-approve-all-operation-fact",
-        OPERATION: "mitum-nft-approve-all-operation",
+    DEACTIVATE_DID: {
+        FACT: "mitum-did-deactivate-did-operation-fact",
+        OPERATION: "mitum-did-deactivate-did-operation",
     },
-    APPROVE: {
-        ITEM: "mitum-nft-approve-item",
-        FACT: "mitum-nft-approve-operation-fact",
-        OPERATION: "mitum-nft-approve-operation",
+    REACTIVATE_DID: {
+        FACT: "mitum-did-reactivate-did-operation-fact",
+        OPERATION: "mitum-did-reactivate-did-operation",
     },
-    TRANSFER: {
-        ITEM: "mitum-nft-transfer-item",
-        FACT: "mitum-nft-transfer-operation-fact",
-        OPERATION: "mitum-nft-transfer-operation",
+    UPDATE_DID_DOCUMENT: {
+        FACT: "mitum-did-update-did-document-operation-fact",
+        OPERATION: "mitum-did-update-did-document-operation",
     },
-    ADD_SIGNATURE: {
-        ITEM: "mitum-nft-add-signature-item",
-        FACT: "mitum-nft-add-signature-operation-fact",
-        OPERATION: "mitum-nft-add-signature-operation",
-    }
-};
-
-var CREDENTIAL = {
-    REGISTER_MODEL: {
-        FACT: "mitum-credential-register-model-operation-fact",
-        OPERATION: "mitum-credential-register-model-operation",
+    DATA: "mitum-did-data",
+    RESOURCE: "mitum-did-resource",
+    DOCUMENT: "mitum-did-document",
+    AUTHENTICATION: {
+        ASYMMETRIC_KEY: "mitum-did-asymmetric-key-authentication",
+        SOCIAL_LOGIN: "mitum-did-social-login-authentication",
     },
-    ADD_TEMPLATE: {
-        FACT: "mitum-credential-add-template-operation-fact",
-        OPERATION: "mitum-credential-add-template-operation",
-    },
-    ISSUE: {
-        ITEM: "mitum-credential-issue-item",
-        FACT: "mitum-credential-issue-operation-fact",
-        OPERATION: "mitum-credential-issue-operation",
-    },
-    REVOKE: {
-        ITEM: "mitum-credential-revoke-item",
-        FACT: "mitum-credential-revoke-operation-fact",
-        OPERATION: "mitum-credential-revoke-operation",
-    },
-};
-
-var DAO$1 = {
-    DESIGN: "mitum-dao-design",
-    POLICY: "mitum-dao-policy",
-    CALLDATA: {
-        TRANSFER: "mitum-dao-transfer-calldata",
-        GOVERNANCE: "mitum-dao-governance-calldata",
-    },
-    PROPOSAL: {
-        CRYPTO: "mitum-dao-crypto-proposal",
-        BIZ: "mitum-dao-biz-proposal",
-    },
-    WHITELIST: "mitum-dao-whitelist",
-    REGISTER_MODEL: {
-        FACT: "mitum-dao-register-model-operation-fact",
-        OPERATION: "mitum-dao-register-model-operation",
-    },
-    UPDATE_MODEL_CONFIG: {
-        FACT: "mitum-dao-update-model-config-operation-fact",
-        OPERATION: "mitum-dao-update-model-config-operation",
-    },
-    PROPOSE: {
-        FACT: "mitum-dao-propose-operation-fact",
-        OPERATION: "mitum-dao-propose-operation",
-    },
-    CANCEL_PROPOSAL: {
-        FACT: "mitum-dao-cancel-proposal-operation-fact",
-        OPERATION: "mitum-dao-cancel-proposal-operation",
-    },
-    REGISTER: {
-        FACT: "mitum-dao-register-operation-fact",
-        OPERATION: "mitum-dao-register-operation",
-    },
-    PRE_SNAP: {
-        FACT: "mitum-dao-pre-snap-operation-fact",
-        OPERATION: "mitum-dao-pre-snap-operation",
-    },
-    POST_SNAP: {
-        FACT: "mitum-dao-post-snap-operation-fact",
-        OPERATION: "mitum-dao-post-snap-operation",
-    },
-    VOTE: {
-        FACT: "mitum-dao-vote-operation-fact",
-        OPERATION: "mitum-dao-vote-operation",
-    },
-    EXECUTE: {
-        FACT: "mitum-dao-execute-operation-fact",
-        OPERATION: "mitum-dao-execute-operation",
-    }
-};
-
-var KYC$1 = {
-    CREATE_SERVICE: {
-        FACT: "mitum-kyc-create-service-operation-fact",
-        OPERATION: "mitum-kyc-create-service-operation",
-    },
-    ADD_CONTROLLER: {
-        ITEM: "mitum-kyc-add-controller-item",
-        FACT: "mitum-kyc-add-controller-operation-fact",
-        OPERATION: "mitum-kyc-add-controller-operation",
-    },
-    REMOVE_CONTROLLER: {
-        ITEM: "mitum-kyc-remove-controller-item",
-        FACT: "mitum-kyc-remove-controller-operation-fact",
-        OPERATION: "mitum-kyc-remove-controller-operation",
-    },
-    ADD_CUSTOMER: {
-        ITEM: "mitum-kyc-add-customer-item",
-        FACT: "mitum-kyc-add-customer-operation-fact",
-        OPERATION: "mitum-kyc-add-customer-operation",
-    },
-    UPDATE_CUSTOMER: {
-        ITEM: "mitum-kyc-update-customers-item",
-        FACT: "mitum-kyc-update-customers-operation-fact",
-        OPERATION: "mitum-kyc-update-customers-operation",
-    }
-};
-
-var STO$1 = {
-    CREATE_SECURITY_TOKEN: {
-        ITEM: "mitum-sto-create-security-token-item",
-        FACT: "mitum-sto-create-security-token-operation-fact",
-        OPERATION: "mitum-sto-create-security-token-operation",
-    },
-    ISSUE: {
-        ITEM: "mitum-sto-issue-item",
-        FACT: "mitum-sto-issue-operation-fact",
-        OPERATION: "mitum-sto-issue-operation",
-    },
-    AUTHORIZE_OPERATOR: {
-        ITEM: "mitum-sto-authorize-operator-item",
-        FACT: "mitum-sto-authorize-operator-operation-fact",
-        OPERATION: "mitum-sto-authorize-operator-operation",
-    },
-    REVOKE_OPERATOR: {
-        ITEM: "mitum-sto-revoke-operator-item",
-        FACT: "mitum-sto-revoke-operator-operation-fact",
-        OPERATION: "mitum-sto-revoke-operator-operation",
-    },
-    SET_DOCUMENT: {
-        FACT: "mitum-sto-set-document-operation-fact",
-        OPERATION: "mitum-sto-set-document-operation",
-    },
-    TRANSFER_BY_PARTITION: {
-        ITEM: "mitum-sto-transfer-by-partition-item",
-        FACT: "mitum-sto-transfer-by-partition-operation-fact",
-        OPERATION: "mitum-sto-transfer-by-partition-operation",
-    },
-    REDEEM: {
-        ITEM: "mitum-sto-redeem-item",
-        FACT: "mitum-sto-redeem-operation-fact",
-        OPERATION: "mitum-sto-redeem-operation",
-    },
-};
-
-var TIMESTAMP = {
-    REGISTER_MODEL: {
-        FACT: "mitum-timestamp-register-model-operation-fact",
-        OPERATION: "mitum-timestamp-register-model-operation",
-    },
-    ISSUE: {
-        FACT: "mitum-timestamp-issue-operation-fact",
-        OPERATION: "mitum-timestamp-issue-operation",
-    },
-};
-
-var TOKEN = {
-    REGISTER_MODEL: {
-        FACT: "mitum-token-register-model-operation-fact",
-        OPERATION: "mitum-token-register-model-operation",
-    },
-    MINT: {
-        FACT: "mitum-token-mint-operation-fact",
-        OPERATION: "mitum-token-mint-operation",
-    },
-    TRANSFER: {
-        FACT: "mitum-token-transfer-operation-fact",
-        OPERATION: "mitum-token-transfer-operation",
-    },
-    APPROVE: {
-        FACT: "mitum-token-approve-operation-fact",
-        OPERATION: "mitum-token-approve-operation",
-    },
-    BURN: {
-        FACT: "mitum-token-burn-operation-fact",
-        OPERATION: "mitum-token-burn-operation",
-    },
-    TRANSFER_FROM: {
-        FACT: "mitum-token-transfer-from-operation-fact",
-        OPERATION: "mitum-token-transfer-from-operation",
-    }
-};
-
-var POINT = {
-    REGISTER_MODEL: {
-        FACT: "mitum-point-register-model-operation-fact",
-        OPERATION: "mitum-point-register-model-operation",
-    },
-    MINT: {
-        FACT: "mitum-point-mint-operation-fact",
-        OPERATION: "mitum-point-mint-operation",
-    },
-    TRANSFER: {
-        FACT: "mitum-point-transfer-operation-fact",
-        OPERATION: "mitum-point-transfer-operation",
-    },
-    APPROVE: {
-        FACT: "mitum-point-approve-operation-fact",
-        OPERATION: "mitum-point-approve-operation",
-    },
-    BURN: {
-        FACT: "mitum-point-burn-operation-fact",
-        OPERATION: "mitum-point-burn-operation",
-    },
-    TRANSFER_FROM: {
-        FACT: "mitum-point-transfer-from-operation-fact",
-        OPERATION: "mitum-point-transfer-from-operation",
-    }
+    VERIFICATION_METHOD: "mitum-did-verification-method-authentication"
 };
 
 var HINT = {
     FACT_SIGN: "base-fact-sign",
     CURRENCY,
-    NFT: NFT$1,
-    CREDENTIAL,
-    DAO: DAO$1,
-    KYC: KYC$1,
-    STO: STO$1,
-    TIMESTAMP,
-    TOKEN,
-    POINT,
+    DID: DID$1
 };
 
 const KEY = {
@@ -1168,7 +906,7 @@ class Hint {
     }
 }
 
-let Token$1 = class Token {
+class Token {
     constructor(s) {
         Assert.check(s !== "", MitumError.detail(ECODE.INVALID_TOKEN, "empty token"));
         this.s = s;
@@ -1182,7 +920,7 @@ let Token$1 = class Token {
     toString() {
         return Buffer.from(this.s, "utf8").toString("base64");
     }
-};
+}
 
 class ID {
     constructor(s) {
@@ -1215,27 +953,6 @@ class Amount {
         this.currency = CurrencyID.from(currency);
         this.big = Big.from(big);
         Assert.check(this.big.big > 0, MitumError.detail(ECODE.INVALID_AMOUNT, "amount must be over zero"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            this.big.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            currency: this.currency.toString(),
-            amount: this.big.toString(),
-        };
-    }
-}
-class Fee {
-    constructor(currency, big) {
-        this.hint = new Hint(HINT.CURRENCY.AMOUNT);
-        this.currency = CurrencyID.from(currency);
-        this.big = Big.from(big);
-        Assert.check(0 <= this.big.big, MitumError.detail(ECODE.INVALID_FACT, "fee must not be under zero"));
     }
     toBuffer() {
         return Buffer.concat([
@@ -1302,36 +1019,6 @@ const apiPathWithParams = (apiPath, limit, offset, reverse) => {
         query3 = `reverse=1`;
     }
     const query = [query1, query2, query3].filter(str => str !== undefined).join("&");
-    return query == "" ? apiPath : apiPath + "?" + query;
-};
-const apiPathWithHashParams = (apiPath, factHash, limit, offset, reverse) => {
-    let hash;
-    let query1;
-    let query2;
-    let query3;
-    if (factHash !== undefined) {
-        if (typeof (factHash) !== "string") {
-            {
-                throw new Error("factHash must be a string");
-            }
-        }
-        hash = `facthash=${factHash}`;
-    }
-    if (limit !== undefined) {
-        validatePositiveInteger(limit, "limit");
-        query1 = `limit=${limit}`;
-    }
-    if (offset !== undefined) {
-        validatePositiveInteger(offset, "offset");
-        query2 = `offset=${offset}`;
-    }
-    if (reverse !== undefined) {
-        if (reverse !== true) {
-            throw new Error("reverse must be true(bool)");
-        }
-        query3 = `reverse=1`;
-    }
-    const query = [hash, query1, query2, query3].filter(str => str !== undefined).join("&");
     return query == "" ? apiPath : apiPath + "?" + query;
 };
 const apiPathWithParamsExt = (apiPath, limit, offset, reverse) => {
@@ -1484,11 +1171,11 @@ let Operation$1 = class Operation {
     }
     signWithSigType(sigType, keypair, node) {
         const getFactSign = (keypair, hash) => {
-            const now = TimeStamp$1.new();
+            const now = TimeStamp.new();
             return new GeneralFactSign(keypair.publicKey, keypair.sign(Buffer.concat([Buffer.from(this.id), hash, now.toBuffer()])), now.toString());
         };
         const getNodeFactSign = (node, keypair, hash) => {
-            const now = TimeStamp$1.new();
+            const now = TimeStamp.new();
             return new NodeFactSign(node.toString(), keypair.publicKey, keypair.sign(Buffer.concat([
                 Buffer.from(this.id),
                 node.toBuffer(),
@@ -1535,6 +1222,151 @@ let Operation$1 = class Operation {
     }
 };
 
+// type SigType = "FactSign" | "NodeFactSign" | null
+let Authentication$1 = class Authentication {
+    constructor(contract, authenticationId, proofData) {
+        this.contract = Address.from(contract);
+        this.authenticationId = authenticationId;
+        if (proofData) {
+            Assert.check(isBase58Encoded(proofData), MitumError.detail(ECODE.INVALID_USER_OPERATION, `proof_data must in base58 encoded`));
+        }
+        this.proofData = proofData ? proofData : "";
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            Buffer.from(this.authenticationId),
+            Buffer.from(this.proofData),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            contract: this.contract.toString(),
+            authentication_id: this.authenticationId,
+            proof_data: this.proofData,
+        };
+    }
+};
+class Settlement {
+    constructor(opSender, proxyPayer) {
+        this.opSender = opSender ? Address.from(opSender) : "";
+        this.proxyPayer = proxyPayer ? Address.from(proxyPayer) : "";
+    }
+    toBuffer() {
+        return Buffer.concat([
+            Buffer.from(this.opSender.toString()),
+            Buffer.from(this.proxyPayer.toString()),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            op_sender: this.opSender.toString(),
+            proxy_payer: this.proxyPayer.toString(),
+        };
+    }
+}
+class UserOperation extends Operation$1 {
+    constructor(networkID, fact, auth, settlement) {
+        super(networkID, fact);
+        this.id = networkID;
+        this.fact = fact;
+        this.auth = auth;
+        this.settlement = settlement;
+        this.hint = new Hint(fact.operationHint);
+        this._factSigns = [];
+        this._hash = Buffer.from([]);
+    }
+    get hash() {
+        return this._hash;
+    }
+    toBuffer() {
+        if (!this._factSigns) {
+            return this.fact.hash;
+        }
+        this._factSigns = this._factSigns.sort(SortFunc);
+        return Buffer.concat([
+            this.fact.hash,
+            Buffer.concat(this._factSigns.map((fs) => fs.toBuffer())),
+            this.auth.toBuffer(),
+            this.settlement.toBuffer()
+        ]);
+    }
+    toHintedObject() {
+        const operation = {
+            _hint: this.hint.toString(),
+            fact: this.fact.toHintedObject(),
+            authentication: this.auth.toHintedObject(),
+            settlement: this.settlement.toHintedObject(),
+            hash: this._hash.length === 0 ? "" : base58.encode(this._hash)
+        };
+        const factSigns = this._factSigns.length === 0 ? [] : this._factSigns.sort(SortFunc);
+        return {
+            ...operation,
+            signs: factSigns.map(fs => fs.toHintedObject())
+        };
+    }
+    toHintedObjectWithOutFact(_hint, fact) {
+        const operation = {
+            _hint: _hint,
+            fact: fact,
+            authentication: this.auth.toHintedObject(),
+            settlement: this.settlement.toHintedObject(),
+            hash: this._hash.length === 0 ? "" : base58.encode(this._hash)
+        };
+        const factSigns = this._factSigns.length === 0 ? [] : this._factSigns.sort(SortFunc);
+        return {
+            ...operation,
+            signs: factSigns.map(fs => fs.toHintedObject())
+        };
+    }
+    /**
+     * Add alternative signature for userOperation, fill `proof_data` item of `authentication` object.
+     * @param {string | Key | KeyPair} [privateKey] - The private key or key pair for signing.
+     * @returns void
+     */
+    // addAlterSign(privateKey: string | Key, type?: "ed25519" | "ecdsa") {
+    addAlterSign(privateKey) {
+        privateKey = Key.from(privateKey);
+        const keypair = KeyPair.fromPrivateKey(privateKey);
+        const alterSign = keypair.sign(Buffer.from(this.fact.hash));
+        this.auth = new Authentication$1(this.auth.contract, this.auth.authenticationId, base58.encode(alterSign)); // base58 인코딩 후 저장
+    }
+    /**
+     * Updates the settlement details of a userOperation.
+     * @param {string | Address} opSender - The opseration sender's address (Bundler's address).
+     * @param {string | Address} proxyPayer - The proxy payer's address. (address of CA)
+     * @returns void.
+     **/
+    setSettlement(opSender, proxyPayer) {
+        Address.from(opSender);
+        if (proxyPayer !== undefined) {
+            Address.from(proxyPayer);
+        }
+        this.settlement = new Settlement(opSender, proxyPayer ? proxyPayer : "");
+    }
+    /**
+     * Sign the given userOperation in JSON format using given private key.
+     * @param {string | Key} [privatekey] - The private key used for signing.
+     * @returns void.
+     */
+    sign(privatekey) {
+        Key.from(privatekey);
+        const keypair = KeyPair.fromPrivateKey(privatekey);
+        const now = TimeStamp.new();
+        const factSign = new GeneralFactSign(keypair.publicKey, keypair.sign(Buffer.concat([Buffer.from(this.id), this.fact.hash, now.toBuffer()])), now.toString());
+        const idx = this._factSigns
+            .map((fs) => fs.signer.toString())
+            .indexOf(keypair.publicKey.toString());
+        if (idx < 0) {
+            this._factSigns.push(factSign);
+        }
+        else {
+            this._factSigns[idx] = factSign;
+        }
+        this._hash = this.hashing();
+    }
+}
+
 // import { Address } from "../../key"
 class ContractGenerator extends Generator {
     constructor(networkID, api, delegateIP) {
@@ -1545,7 +1377,7 @@ class ContractGenerator extends Generator {
 class Fact {
     constructor(hint, token) {
         this.hint = new Hint(hint);
-        this.token = new Token$1(token);
+        this.token = new Token(token);
         this._hash = Buffer.from([]);
     }
     get hash() {
@@ -1627,8 +1459,33 @@ const isOpFact = (operation) => {
 const isHintedObject = (object) => {
     return '_hint' in object && 'fact' in object && 'hash' in object;
 };
+const isUserOp = (userOperation) => {
+    return userOperation instanceof UserOperation;
+};
+const isHintedObjectFromUserOp = (object) => {
+    if ('_hint' in object &&
+        'fact' in object &&
+        'hash' in object &&
+        'authentication' in object &&
+        'settlement' in object) {
+        const { authentication, settlement } = object;
+        return ('contract' in authentication &&
+            'authentication_id' in authentication &&
+            'proof_data' in authentication &&
+            'op_sender' in settlement &&
+            'proxy_payer' in settlement);
+    }
+    return false;
+};
 const isSuccessResponse = (response) => {
     return 'data' in response;
+};
+const isBase58Encoded = (value) => {
+    if (!value || typeof value !== 'string') {
+        return false;
+    }
+    const base58Chars = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
+    return base58Chars.test(value);
 };
 
 class BaseAddress {
@@ -2243,183 +2100,49 @@ var currency$1 = {
     getCurrency,
 };
 
-const url$6 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
-async function getNFT(api, contract, nftIdx, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/nftidx/${nftIdx}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getNFTs(api, contract, delegateIP, factHash, limit, offset, reverse) {
-    const apiPath = apiPathWithHashParams(`${url$6(api, contract)}/nfts`, factHash, limit, offset, reverse);
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getNFTCount(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/totalsupply`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getModel$5(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getAccountOperators(api, contract, account, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var nft = {
-    getNFT,
-    getNFTs,
-    getNFTCount,
-    getModel: getModel$5,
-    getAccountOperators,
-};
-
-const url$5 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
-async function getModel$4(api, contract, delegateIP) {
-    const apiPath = `${url$5(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredential(api, contract, templateID, credentialID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}/credential/${credentialID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getTemplate(api, contract, templateID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredentials(api, contract, templateID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}/credentials`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getCredentialByHolder(api, contract, holder, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/holder/${Address.from(holder).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var credential = {
-    getModel: getModel$4,
-    getCredential,
-    getTemplate,
-    getCredentials,
-    getCredentialByHolder,
-};
-
-const url$4 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
-async function getModel$3(api, contract, delegateIP) {
-    const apiPath = `${url$4(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getProposal(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getApproved(api, contract, proposalID, registrant, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getVoters(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/voter`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getVotingStatus(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/votingpower`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var dao = {
-    getModel: getModel$3,
-    getProposal,
-    getApproved,
-    getVoters,
-    getVotingStatus,
-};
-
-var kyc = {};
-
-const url$3 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
-async function getService(api, contract, delegateIP) {
-    const apiPath = `${url$3(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getPartitions(api, contract, holder, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getBalanceByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getOperatorsByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getPartitionBalance(api, contract, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/p
-    artition/${partition}/balance`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getAuthorized(api, contract, operator, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var sto = {
-    getService,
-    getPartitions,
-    getBalanceByHolder,
-    getOperatorsByHolder,
-    getPartitionBalance,
-    getAuthorized,
-};
-
-const url$2 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
-async function getModel$2(api, contract, delegateIP) {
-    const apiPath = `${url$2(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
-    const apiPath = `${url$2(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var timestamp = {
-    getModel: getModel$2,
-    getTimeStamp,
-};
-
-const url$1 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
+const url$1 = (api, contract) => `${api}/dmile/${Address.from(contract).toString()}`;
 async function getModel$1(api, contract, delegateIP) {
     const apiPath = `${url$1(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getTokenBalance(api, contract, account, delegateIP) {
-    const apiPath = `${url$1(api, contract)}/account/${Address.from(account).toString()}`;
+async function getByMerkleRoot(api, contract, merkleRoot, delegateIP) {
+    const apiPath = `${url$1(api, contract)}/merkleroot/${merkleRoot}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var token = {
+async function getByTxHash(api, contract, txId, delegateIP) {
+    const apiPath = `${url$1(api, contract)}/txhash/${txId}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var dmile = {
     getModel: getModel$1,
-    getTokenBalance,
+    getByMerkleRoot,
+    getByTxHash
 };
 
-const url = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
+const url = (api, contract) => `${api}/did-registry/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getPointBalance(api, contract, account, delegateIP) {
-    const apiPath = `${url(api, contract)}/account/${Address.from(account).toString()}`;
+async function getByPubKey(api, contract, publicKey, delegateIP) {
+    const apiPath = `${url(api, contract)}/did/${publicKey}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var point = {
+async function getByDID(api, contract, did, delegateIP) {
+    const apiPath = `${url(api, contract)}/document?did=${did}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var did = {
     getModel,
-    getPointBalance,
+    getByPubKey,
+    getByDID
 };
 
 var models = {
     currency: currency$1,
     contract: {
-        nft,
-        credential,
-        dao,
-        kyc,
-        sto,
-        timestamp,
-        token,
-        point,
+        dmile,
+        did
     },
 };
 
@@ -2761,7 +2484,7 @@ class UpdateKeyFact extends Fact {
     }
 }
 
-let TransferItem$1 = class TransferItem extends CurrencyItem {
+class TransferItem extends CurrencyItem {
     constructor(receiver, amounts) {
         super(HINT.CURRENCY.TRANSFER.ITEM, amounts);
         if (typeof receiver === "string") {
@@ -2796,8 +2519,8 @@ let TransferItem$1 = class TransferItem extends CurrencyItem {
     toString() {
         return this.receiver.toString();
     }
-};
-let TransferFact$3 = class TransferFact extends OperationFact {
+}
+class TransferFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.CURRENCY.TRANSFER.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate receiver found in items"));
@@ -2806,7 +2529,7 @@ let TransferFact$3 = class TransferFact extends OperationFact {
     get operationHint() {
         return HINT.CURRENCY.TRANSFER.OPERATION;
     }
-};
+}
 
 class CreateContractAccountItem extends CurrencyItem {
     constructor(keys, amounts) {
@@ -2905,6 +2628,43 @@ class UpdateHandlerFact extends Fact {
     }
 }
 
+class UpdateRecipientFact extends Fact {
+    constructor(token, sender, contract, currency, recipients) {
+        super(HINT.CURRENCY.UPDATE_RECIPIENT.FACT, token);
+        this.sender = Address.from(sender);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.recipients = recipients.map(a => Address.from(a));
+        this._hash = this.hashing();
+        // Assert.check(
+        //     (this.recipients.length !== 0),
+        //     MitumError.detail(ECODE.INVALID_FACT, "empty recipients"),
+        // )
+        Assert.check(hasOverlappingAddress(this.recipients), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in recipients"));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.sender.toBuffer(),
+            this.contract.toBuffer(),
+            this.currency.toBuffer(),
+            Buffer.concat(this.recipients.sort(SortFunc).map(a => a.toBuffer())),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            sender: this.sender.toString(),
+            contract: this.contract.toString(),
+            currency: this.currency.toString(),
+            recipients: this.recipients.sort(SortFunc).map((w) => w.toString()),
+        };
+    }
+    get operationHint() {
+        return HINT.CURRENCY.UPDATE_RECIPIENT.OPERATION;
+    }
+}
+
 class RegisterCurrencyFact extends NodeFact {
     constructor(token, design) {
         super(HINT.CURRENCY.REGISTER_CURRENCY.FACT, token);
@@ -2954,7 +2714,7 @@ class UpdateCurrencyFact extends NodeFact {
     }
 }
 
-let MintItem$1 = class MintItem extends Item {
+class MintItem extends Item {
     constructor(receiver, amount) {
         super(HINT.CURRENCY.MINT.ITEM);
         this.amount = amount;
@@ -2976,8 +2736,8 @@ let MintItem$1 = class MintItem extends Item {
     toString() {
         return `${this.receiver.toString()}-${this.amount.currency.toString()}`;
     }
-};
-let MintFact$3 = class MintFact extends NodeFact {
+}
+class MintFact extends NodeFact {
     constructor(token, items) {
         super(HINT.CURRENCY.MINT.FACT, token);
         Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length), MitumError.detail(ECODE.INVALID_ITEMS, "items length out of range"));
@@ -3000,7 +2760,7 @@ let MintFact$3 = class MintFact extends NodeFact {
     get operationHint() {
         return HINT.CURRENCY.MINT.OPERATION;
     }
-};
+}
 
 class CurrencyDesign {
     constructor(initialSupply, currencyID, genesisAccount, decimal, policy) {
@@ -3160,7 +2920,7 @@ class Currency extends Generator {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the currencyPolicyData structure`));
         });
         const design = new CurrencyDesign(initialSupply, currencyID, genesisAddress, decimal, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee));
-        return new Operation$1(this.networkID, new RegisterCurrencyFact(TimeStamp$1.new().UTC(), design));
+        return new Operation$1(this.networkID, new RegisterCurrencyFact(TimeStamp.new().UTC(), design));
     }
     /**
      * Generate an `update-currency` operation for updating an existing Mitum currency.
@@ -3174,7 +2934,7 @@ class Currency extends Generator {
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the currencyPolicyData structure`));
         });
-        return new Operation$1(this.networkID, new UpdateCurrencyFact(TimeStamp$1.new().UTC(), currency, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee)));
+        return new Operation$1(this.networkID, new UpdateCurrencyFact(TimeStamp.new().UTC(), currency, this.buildPolicy(data.feeType, data.minBalance, data.feeReceiver, data.fee, data.ratio, data.minFee, data.maxFee)));
     }
     buildPolicy(feeType, minBalance, receiver, fee, ratio, min, max) {
         Address.from(receiver);
@@ -3202,8 +2962,8 @@ class Currency extends Generator {
      * @returns `transfer` operation.
      */
     transfer(sender, receiver, currency, amount) {
-        return new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, [
-            new TransferItem$1(receiver, [new Amount(currency, amount)])
+        return new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, [
+            new TransferItem(receiver, [new Amount(currency, amount)])
         ]));
     }
     /**
@@ -3218,7 +2978,7 @@ class Currency extends Generator {
     batchTransfer(sender, receivers, currency, amounts) {
         Assert.check(receivers.length !== 0 && amounts.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
         Assert.check(receivers.length === amounts.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the receivers and amounts must be the same."));
-        return new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, receivers.map((receiver, idx) => new TransferItem$1(receiver, [new Amount(currency, amounts[idx])]))));
+        return new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, receivers.map((receiver, idx) => new TransferItem(receiver, [new Amount(currency, amounts[idx])]))));
     }
     /**
      * Generate a `withdraw`operation for withdrawing currency from an contract account.
@@ -3230,7 +2990,7 @@ class Currency extends Generator {
      * @returns `withdraw`operation
      */
     withdraw(sender, target, currency, amount) {
-        return new Operation$1(this.networkID, new WithdrawFact(TimeStamp$1.new().UTC(), sender, [
+        return new Operation$1(this.networkID, new WithdrawFact(TimeStamp.new().UTC(), sender, [
             new WithdrawItem(target, [new Amount(currency, amount)])
         ]));
     }
@@ -3243,8 +3003,8 @@ class Currency extends Generator {
      * @returns `mint` operation.
      */
     mint(receiver, currency, amount) {
-        return new Operation$1(this.networkID, new MintFact$3(TimeStamp$1.new().UTC(), [
-            new MintItem$1(receiver, new Amount(currency, amount))
+        return new Operation$1(this.networkID, new MintFact(TimeStamp.new().UTC(), [
+            new MintItem(receiver, new Amount(currency, amount))
         ]));
     }
     /**
@@ -3302,8 +3062,8 @@ class Account extends KeyG {
                 publickey: kp.publicKey.toString(),
                 address: ks.checksum.toString()
             },
-            operation: new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, [
-                new TransferItem$1(ks.checksum, [new Amount(currency, amount)])
+            operation: new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, [
+                new TransferItem(ks.checksum, [new Amount(currency, amount)])
             ])),
         };
     }
@@ -3317,10 +3077,10 @@ class Account extends KeyG {
      */
     createBatchWallet(sender, n, currency, amount) {
         const keyArray = this.keys(n);
-        const items = keyArray.map((ks) => new TransferItem$1(ks.address, [new Amount(currency, amount)]));
+        const items = keyArray.map((ks) => new TransferItem(ks.address, [new Amount(currency, amount)]));
         return {
             wallet: keyArray,
-            operation: new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, items)),
+            operation: new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, items)),
         };
     }
     /**
@@ -3333,8 +3093,8 @@ class Account extends KeyG {
      */
     createAccount(sender, key, currency, amount) {
         const ks = new Keys([new PubKey(key, 100)], 100);
-        return new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, [
-            new TransferItem$1(ks.checksum, [new Amount(currency, amount)])
+        return new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, [
+            new TransferItem(ks.checksum, [new Amount(currency, amount)])
         ]));
     }
     /**
@@ -3358,7 +3118,7 @@ class Account extends KeyG {
      * const keysArray = [pubkey01, pubkey02];
      */
     createMultiSig(sender, keys, currency, amount, threshold) {
-        return new Operation$1(this.networkID, new CreateAccountFact(TimeStamp$1.new().UTC(), sender, [
+        return new Operation$1(this.networkID, new CreateAccountFact(TimeStamp.new().UTC(), sender, [
             new CreateAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)])
         ]));
     }
@@ -3383,7 +3143,7 @@ class Account extends KeyG {
      * const keysArray = [pubkey01, pubkey02];
      */
     updateKey(sender, newKeys, currency, threshold) {
-        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp$1.new().UTC(), sender, new Keys(newKeys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), currency));
+        return new Operation$1(this.networkID, new UpdateKeyFact(TimeStamp.new().UTC(), sender, new Keys(newKeys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), currency));
     }
     /**
      * Sign and send the `transfer` operation to blockchain network to create single-sig account.
@@ -3534,7 +3294,7 @@ class Contract extends Generator {
                 publickey: kp.publicKey.toString(),
                 address: ks.checksum.toString()
             },
-            operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
+            operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, [
                 new CreateContractAccountItem(ks, [new Amount(currency, amount)])
             ])),
         };
@@ -3548,7 +3308,7 @@ class Contract extends Generator {
      * @returns `create-contract-account` operation.
      */
     createAccount(sender, key, currency, amount) {
-        return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
+        return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, [
             new CreateContractAccountItem(new Keys([new PubKey(key, 100)], 100), [new Amount(currency, amount)])
         ]));
     }
@@ -3573,7 +3333,7 @@ class Contract extends Generator {
      * const keysArray = [pubkey01, pubkey02];
      */
     createMultiSig(sender, keys, currency, amount, threshold) {
-        return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
+        return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, [
             new CreateContractAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)])
         ]));
     }
@@ -3610,7 +3370,18 @@ class Contract extends Generator {
      * @returns `update-handler` operation.
      */
     updateHandler(sender, contract, currency, handlers) {
-        return new Operation$1(this.networkID, new UpdateHandlerFact(TimeStamp$1.new().UTC(), sender, contract, currency, handlers));
+        return new Operation$1(this.networkID, new UpdateHandlerFact(TimeStamp.new().UTC(), sender, contract, currency, handlers));
+    }
+    /**
+  * Generate an `update-recipient` operation to update recipients of contract to given accounts.
+  * @param {string | Address} [sender] - The sender's address.
+  * @param {string | Address} [contract] - The contract account address.
+  * @param {string | CurrencyID} [currency] - The currency ID.
+  * @param {(string | Address)[]} [recipients] - The array of addresses to be updated as recipients.
+  * @returns `update-recipient` operation.
+  */
+    updateRecipient(sender, contract, currency, recipients) {
+        return new Operation$1(this.networkID, new UpdateRecipientFact(TimeStamp.new().UTC(), sender, contract, currency, recipients));
     }
     /**
      * Sign and send the `create-contract-account` operation to blockchain network.
@@ -3643,3257 +3414,6 @@ class Contract extends Generator {
     }
 }
 
-let RegisterModelFact$5 = class RegisterModelFact extends ContractFact {
-    constructor(token, sender, contract, name, royalty, uri, minterWhitelist, currency) {
-        super(HINT.NFT.REGISTER_MODEL.FACT, token, sender, contract, currency);
-        this.name = LongString.from(name);
-        this.royalty = Big.from(royalty);
-        this.uri = LongString.from(uri);
-        this.minterWhitelist = minterWhitelist ? minterWhitelist.map(w => Address.from(w)) : [];
-        Assert.check(Config.NFT.ROYALTY.satisfy(this.royalty.v), MitumError.detail(ECODE.INVALID_FACT, "royalty out of range"));
-        Assert.check(Config.NFT.ADDRESS_IN_MINTER_WHITELIST.satisfy(this.minterWhitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
-        Assert.check(hasOverlappingAddress(this.minterWhitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
-        this.minterWhitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.name.toBuffer(),
-            this.royalty.toBuffer("fill"),
-            this.uri.toBuffer(),
-            this.currency.toBuffer(),
-            Buffer.concat(this.minterWhitelist.sort(SortFunc).map(w => w.toBuffer())),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            name: this.name.toString(),
-            royalty: this.royalty.v,
-            uri: this.uri.toString(),
-            minter_whitelist: this.minterWhitelist.sort(SortFunc).map(w => w.toString()),
-        };
-    }
-    get operationHint() {
-        return HINT.NFT.REGISTER_MODEL.OPERATION;
-    }
-};
-
-let UpdateModelConfigFact$1 = class UpdateModelConfigFact extends ContractFact {
-    constructor(token, sender, contract, name, royalty, uri, minterWhitelist, currency) {
-        super(HINT.NFT.UPDATE_MODEL_CONFIG.FACT, token, sender, contract, currency);
-        this.name = LongString.from(name);
-        this.royalty = Big.from(royalty);
-        this.uri = LongString.from(uri);
-        this.minterWhitelist = minterWhitelist ? minterWhitelist.map(w => Address.from(w)) : [];
-        Assert.check(Config.NFT.ROYALTY.satisfy(this.royalty.v), MitumError.detail(ECODE.INVALID_FACT, "royalty out of range"));
-        Assert.check(Config.NFT.ADDRESS_IN_MINTER_WHITELIST.satisfy(this.minterWhitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
-        Assert.check(hasOverlappingAddress(this.minterWhitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
-        this.minterWhitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.name.toBuffer(),
-            this.royalty.toBuffer("fill"),
-            this.uri.toBuffer(),
-            this.currency.toBuffer(),
-            Buffer.concat(this.minterWhitelist.sort(SortFunc).map(w => w.toBuffer())),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            name: this.name.toString(),
-            royalty: this.royalty.v,
-            uri: this.uri.toString(),
-            minter_whitelist: this.minterWhitelist.sort(SortFunc).map(w => w.toString()),
-        };
-    }
-    get operationHint() {
-        return HINT.NFT.UPDATE_MODEL_CONFIG.OPERATION;
-    }
-};
-
-class NFTItem extends Item {
-    constructor(hint, contract, currency) {
-        super(hint);
-        this.contract = Address.from(contract);
-        this.currency = CurrencyID.from(currency);
-    }
-    toBuffer() {
-        return this.contract.toBuffer();
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            contract: this.contract.toString(),
-            currency: this.currency.toString(),
-        };
-    }
-    toString() {
-        return this.contract.toString();
-    }
-}
-
-class MintItem extends NFTItem {
-    constructor(contract, receiver, hash, uri, creators, currency) {
-        super(HINT.NFT.MINT.ITEM, contract, currency);
-        Assert.check(Config.NFT.HASH.satisfy(hash.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, "hash length is out of range"));
-        Assert.check(Config.NFT.URI.satisfy(uri.toString().length), MitumError.detail(ECODE.INVALID_LENGTH, "uri length is out of range"));
-        this.receiver = Address.from(receiver);
-        this.hash = LongString.from(hash);
-        this.uri = LongString.from(uri);
-        this.creators = creators;
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.hash.toBuffer(),
-            this.uri.toBuffer(),
-            this.creators.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            hash: this.hash.toString(),
-            uri: this.uri.toString(),
-            creators: this.creators.toHintedObject(),
-        };
-    }
-}
-let MintFact$2 = class MintFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.NFT.MINT.FACT, token, sender, items);
-        this.items.forEach(it => {
-            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-            Assert.check(it.receiver.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "receiver is same with contract address"));
-            it.creators.signers.forEach(signer => {
-                Assert.check(signer.account.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "creator is same with contract address"));
-            });
-        });
-    }
-    get operationHint() {
-        return HINT.NFT.MINT.OPERATION;
-    }
-};
-
-class ApproveItem extends NFTItem {
-    constructor(contract, approved, nftIdx, currency) {
-        super(HINT.NFT.APPROVE.ITEM, contract, currency);
-        this.approved = Address.from(approved);
-        this.nftIdx = Big.from(nftIdx);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.approved.toBuffer(),
-            this.nftIdx.toBuffer("fill"),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            approved: this.approved.toString(),
-            nft_idx: this.nftIdx.v,
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.approved.toString()}`;
-    }
-}
-let ApproveFact$2 = class ApproveFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.NFT.APPROVE.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate approve found in items"));
-        this.items.forEach(it => {
-            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-            Assert.check(it.approved.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "approved is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.NFT.APPROVE.OPERATION;
-    }
-};
-
-class ApproveAllItem extends NFTItem {
-    constructor(contract, approved, mode, currency) {
-        super(HINT.NFT.APPROVE_ALL.ITEM, contract, currency);
-        this.approved = Address.from(approved);
-        this.mode = mode;
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.approved.toBuffer(),
-            Buffer.from(this.mode),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            approved: this.approved.toString(),
-            mode: this.mode,
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.approved.toString()}`;
-    }
-}
-class ApproveAlleFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.NFT.APPROVE_ALL.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate approved found in items"));
-        this.items.forEach(it => {
-            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-            Assert.check(it.approved.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "approved is same with contract address"));
-            Assert.check(this.sender.toString() != it.approved.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with approved address"));
-        });
-    }
-    get operationHint() {
-        return HINT.NFT.APPROVE_ALL.OPERATION;
-    }
-}
-
-class TransferItem extends NFTItem {
-    constructor(contract, receiver, nft, currency) {
-        super(HINT.NFT.TRANSFER.ITEM, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.nft = Big.from(nft);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.nft.toBuffer("fill"),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            nft_idx: this.nft.v,
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.nft.toString()}`;
-    }
-}
-let TransferFact$2 = class TransferFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.NFT.TRANSFER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate nft found in items"));
-        this.items.forEach(it => {
-            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-            Assert.check(it.receiver.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "receiver is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.NFT.TRANSFER.OPERATION;
-    }
-};
-
-class AddSignatureItem extends NFTItem {
-    constructor(contract, nftIdx, currency) {
-        super(HINT.NFT.ADD_SIGNATURE.ITEM, contract, currency);
-        this.nftIdx = Big.from(nftIdx);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.nftIdx.toBuffer("fill"),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            nft_idx: this.nftIdx.v,
-        };
-    }
-}
-class AddSignatureFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.NFT.ADD_SIGNATURE.FACT, token, sender, items);
-        this.items.forEach(it => Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address")));
-    }
-    get operationHint() {
-        return HINT.NFT.ADD_SIGNATURE.OPERATION;
-    }
-}
-
-let Signer$1 = class Signer {
-    constructor(account, share, signed) {
-        this.hint = new Hint(HINT.NFT.SIGNER);
-        this.account = Address.from(account);
-        this.share = Big.from(share);
-        this.signed = Bool.from(signed);
-        Assert.check(Config.NFT.SHARE.satisfy(this.share.v), MitumError.detail(ECODE.NFT.INVALID_NFT_SIGNER, "share out of range"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            this.account.toBuffer(),
-            this.share.toBuffer("fill"),
-            this.signed.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            account: this.account.toString(),
-            share: this.share.v,
-            signed: this.signed.v,
-        };
-    }
-};
-class Signers {
-    constructor(signers) {
-        this.hint = new Hint(HINT.NFT.SIGNERS);
-        this.signers = signers;
-        const total = this.signers.reduce((prev, next) => prev + Big.from(next.share).v, 0);
-        Assert.check(total <= 100, MitumError.detail(ECODE.NFT.INVALID_NFT_SIGNERS, `total share over max, ${total} > 100`));
-        Assert.check(Config.NFT.SIGNERS_IN_SIGNERS.satisfy(this.signers.length), MitumError.detail(ECODE.NFT.INVALID_NFT_SIGNERS, "signers length out of range"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            Buffer.concat(this.signers.sort(SortFunc).map(s => s.toBuffer())),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            signers: this.signers.sort(SortFunc).map(s => s.toHintedObject()),
-        };
-    }
-}
-
-class NFT extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    checkArrayLength(array, expectedLength, arrayName) {
-        Assert.check(Array.isArray(array), MitumError.detail(ECODE.INVALID_TYPE, `the ${arrayName} must be in array type`));
-        Assert.check(array.length === expectedLength, MitumError.detail(ECODE.INVALID_LENGTH, `length of ${arrayName} must be ${expectedLength}, but got ${array.length}`));
-    }
-    /**
-     * Generate `register-model` operation to register a new NFT model for creating a collection on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {collectionData} [data] - The collection data to be registed. The properties of `collectionData` include:
-     * - {string | LongString} `name` - The name of the NFT collection.
-     * - {string | LongString} `uri` - The uri of the NFT collection.
-     * - {string | number | Big} `royalty` - The royalty of the NFT collection.
-     * - {(string | Address)[]} `minterWhitelist` - Accounts who have permissions to mint. If it's empty, anyone can mint.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `register-model` operation
-     */
-    registerModel(contract, sender, data, currency) {
-        const keysToCheck = ['name', 'uri', 'royalty', 'minterWhitelist'];
-        keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the collectionData structure`));
-        });
-        return new Operation$1(this.networkID, new RegisterModelFact$5(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.minterWhitelist, currency));
-    }
-    /**
-     * Generate `update-model-config` operation to update the policy of the nft collection on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {collectionData} [data] - The policy data for nft collection to be updated. The properties of `collectionData` include:
-     * - {string | LongString} `name` - The name of the NFT collection.
-     * - {string | LongString} `uri` - The uri of the NFT collection.
-     * - {string | number | Big} `royalty` - The royalty of the NFT collection.
-     * - {(string | Address)[]} `minterWhitelist` - Accounts who have permissions to mint.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `update-model-config` operation.
-     */
-    updateModelConfig(contract, sender, data, currency) {
-        const keysToCheck = ['name', 'uri', 'royalty', 'minterWhitelist'];
-        keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the collectionData structure`));
-        });
-        return new Operation$1(this.networkID, new UpdateModelConfigFact$1(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.minterWhitelist, currency));
-    }
-    /**
-     * Generate `mint` operation for minting a new NFT and assigns it to a receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
-     * @param {string | LongString} [uri] - The URI of the NFT to mint.
-     * @param {string | LongString} [hash] - The hash of the NFT to mint.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
-     * @returns `mint` operation.
-     */
-    mint(contract, sender, receiver, uri, hash, currency, creator) {
-        return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, [new MintItem(contract, receiver, hash, uri, new Signers([new Signer$1(creator, 100, false)]), currency)]));
-    }
-    /**
-     * Generate `mint` operation with multiple item for minting N number of NFT and assigns it to a receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receivers] - The array of address of the receiver of the newly minted NFT.
-     * @param {number} [n] - The number of NFT to be minted.
-     * @param {string | LongString} [uri] - The array of URI for the NFTs to mint.
-     * @param {string | LongString} [hash] - The array of hash for the NFT to mint.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
-     * @returns `mint` operation.
-     */
-    multiMint(contract, sender, receivers, n, uri, hash, currency, creator) {
-        Assert.check(Config.ITEMS_IN_FACT.satisfy(n), MitumError.detail(ECODE.INVALID_ITEMS, "n is out of range"));
-        this.checkArrayLength(receivers, n, "receivers");
-        this.checkArrayLength(uri, n, "uri");
-        this.checkArrayLength(hash, n, "hash");
-        const items = Array.from({ length: n }).map((_, idx) => new MintItem(contract, receivers[idx], hash[idx], uri[idx], new Signers([new Signer$1(creator, 100, false)]), currency));
-        return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, items));
-    }
-    /**
-     * Generate `mint` operation in case of multiple creators.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receiver] - The address of the receiver of the newly minted NFT.
-     * @param {string | LongString} [uri] - The URI of the NFT to mint.
-     * @param {string | LongString} [hash] - The hash of the NFT to mint.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {Creator[]} [creators] - An array of Creator object which has address of the creator of the artwork for NFT with their respective shares. The properties of `Creator` include:
-     * - {string | Address} `account` - The creator's address.
-     * - {string | number | Big} `share` - The share for the artworks. The total share can not over 100.
-     * @returns `mint` operation.
-     */
-    mintForMultiCreators(contract, sender, receiver, uri, hash, currency, creators) {
-        const keysToCheck = ['account', 'share'];
-        keysToCheck.forEach((key) => {
-            creators.forEach((creator) => {
-                Assert.check(creator[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the Creator structure`));
-            });
-        });
-        return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, [
-            new MintItem(contract, receiver, hash, uri, new Signers(creators.map(a => new Signer$1(a.account, a.share, false))), currency)
-        ]));
-    }
-    /**
-     * Generate `transfer` operation for transferring an NFT from one address to another.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receiver] - The address of the receiver of the NFT.
-     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `transfer` operation.
-     */
-    transfer(contract, sender, receiver, nftIdx, currency) {
-        const fact = new TransferFact$2(TimeStamp$1.new().UTC(), sender, [
-            new TransferItem(contract, receiver, nftIdx, currency)
-        ]);
-        return new Operation$1(this.networkID, fact);
-    }
-    /**
-     * Generate `approve` operation to approves NFT to another account (approved).
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The address of the sender of the NFT.
-     * @param {string | Address} [approved] - The address being granted approval to manage the NFT.
-     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `approve` operation.
-     */
-    approve(contract, sender, approved, nftIdx, currency) {
-        return new Operation$1(this.networkID, new ApproveFact$2(TimeStamp$1.new().UTC(), sender, [
-            new ApproveItem(contract, approved, nftIdx, currency)
-        ]));
-    }
-    /**
-     * Generate `approve-all` operation to grant or revoke approval for an account to manage all NFTs of the sender.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The address of the sender giving or revoking approval.
-     * @param {string | Address} [approved] - The address being granted or denied approval to manage all NFTs.
-     * @param {"allow" | "cancel"} [mode] - The mode indicating whether to allow or cancel the approval.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `approve-all` operation.
-     */
-    approveAll(contract, sender, approved, mode, currency) {
-        return new Operation$1(this.networkID, new ApproveAlleFact(TimeStamp$1.new().UTC(), sender, [
-            new ApproveAllItem(contract, approved, mode, currency)
-        ]));
-    }
-    /**
-     * Generate `add-signature` operation to signs an NFT as creator of the artwork.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The address of the creator signing the NFT.
-     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `sign` operation.
-     */
-    addSignature(contract, sender, nftIdx, currency) {
-        return new Operation$1(this.networkID, new AddSignatureFact(TimeStamp$1.new().UTC(), sender, [
-            new AddSignatureItem(contract, nftIdx, currency)
-        ]));
-    }
-    /**
-     * Get information about an NFT collection on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is information about the NFT collection:
-     * - `_hint`: Hint for NFT design,
-     * - `contract`: Address of the contract account,
-     * - `creator`: Address of the creator,
-     * - `active`: Bool represents activation,
-     * - `policy`:
-     * - - `_hint`: Hint for the NFT collection policy,
-     * - - `name`: Name of the NFT collection,
-     * - - `royalty`: Royalty of the NFT collection,
-     * - - `uri`: URI of the NFT collection,
-     * - - `minter_whitelist`: Array of the addresses of accounts who have permissions to mint
-     */
-    async getModelInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.nft.getModel(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get the owner of a specific NFT.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | number | Big} [nftIdx] - The index of the NFT (Indicate the order of minted).
-     * @returns `data` of `SuccessResponse` is the address of the NFT owner.
-     */
-    async getOwner(contract, nftIdx) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
-        if (isSuccessResponse(response) && response.data) {
-            response.data = response.data.owner ? response.data.owner : null;
-        }
-        return response;
-    }
-    /**
-     * Get the address approved to manage a specific NFT.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
-     * @returns `data` of `SuccessResponse` is an address of the approved account to manage the NFT.
-     */
-    async getApproved(contract, nftIdx) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
-        if (isSuccessResponse(response) && response.data) {
-            response.data = response.data.approved ? response.data.approved : null;
-        }
-        return response;
-    }
-    /**
-     * Get the total supply of NFTs in a collection on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is the total supply of NFTs in the collection.
-     */
-    async getTotalSupply(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        const response = await getAPIData(() => contractApi.nft.getNFTCount(this.api, contract, this.delegateIP));
-        if (isSuccessResponse(response) && response.data) {
-            response.data = response.data.nft_total_supply ? Number(response.data.nft_total_supply) : 0;
-        }
-        return response;
-    }
-    /**
-     * Get the URI of a specific NFT.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
-     * @returns `data` of `SuccessResponse` is the URI of the NFT.
-     */
-    async getURI(contract, nftIdx) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        const response = await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
-        if (isSuccessResponse(response) && response.data) {
-            response.data = response.data.uri ? response.data.uri : null;
-        }
-        return response;
-    }
-    /**
-     * Get the address is approved to manage all NFTs of a sepecfic owner.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [owner] - The address of the NFT owner.
-     * @returns `data` of `SuccessResponse` is approval information:
-     * - `_hint`: Hint for NFT operators book,
-     * - `operators`: Array of the addresses of accounts that have been delegated authority over all of the owner’s NFTs
-     */
-    async getApprovedAll(contract, owner) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(owner);
-        return await getAPIData(() => contractApi.nft.getAccountOperators(this.api, contract, owner, this.delegateIP));
-    }
-    /**
-     * Get detailed information about a specific NFT.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [nftIdx] - The index of the NFT (Indicate the order of minted).
-     * @returns `data` of `SuccessResponse` is detailed information about the NFT:
-     * - `_hint`: Hint for NFT,
-     * - `nft_idx`: Index of the NFT,
-     * - `active`: Bool represents activation,
-     * - `owner`: Address of the owner,
-     * - `hash`: Hash for the NFT,
-     * - `uri`: URI for the NFT,
-     * - `approved`: Address of the approved account for the NFT,
-     * - `creators`: Creator object,
-     */
-    async getNFT(contract, nftIdx) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.nft.getNFT(this.api, contract, nftIdx, this.delegateIP));
-    }
-    /**
-     * Get information of all NFTs in a collection. If the optional parameter factHash is given, only the nft created by the operation is searched.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {number} [factHash] - (Optional) The hash of fact in the operation that minted NFT.
-     * @param {number} [limit] - (Optional) The maximum number of items to retrieve.
-     * @param {number} [offset] - (Optional) The number of items skip before starting to return data.
-     * @param {boolean} [reverse] - (Optional) Whether to return the items in reverse newest order.
-     * @returns `data` of `SuccessResponse` is an array of the information about all NFTs in the NFT collection:
-     * - `_hint`: Hint for currency,
-     * - `_embedded`:
-     * - - `_hint`: Hint for NFT,
-     * - - `nft_idx`: Index of the NFT,
-     * - - `active`: Bool represents activation,
-     * - - `owner`: Address of the owner,
-     * - - `hash`: Hash for the NFT,
-     * - - `uri`: URI for the NFT,
-     * - - `approved`: Address of the approved account for the NFT,
-     * - - `creators`: Creator object,
-     * - `_links`: Links for additional information
-     */
-    async getNFTs(contract, factHash, limit, offset, reverse) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.nft.getNFTs(this.api, contract, this.delegateIP, factHash, limit, offset, reverse));
-    }
-}
-
-let RegisterModelFact$4 = class RegisterModelFact extends ContractFact {
-    constructor(token, sender, contract, currency) {
-        super(HINT.CREDENTIAL.REGISTER_MODEL.FACT, token, sender, contract, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    get operationHint() {
-        return HINT.CREDENTIAL.REGISTER_MODEL.OPERATION;
-    }
-};
-
-class AddTemplateFact extends ContractFact {
-    constructor(token, sender, contract, templateID, templateName, serviceDate, expirationDate, templateShare, multiAudit, displayName, subjectKey, description, creator, currency) {
-        super(HINT.CREDENTIAL.ADD_TEMPLATE.FACT, token, sender, contract, currency);
-        this.templateID = templateID;
-        this.templateName = templateName;
-        this.serviceDate = ShortDate.from(serviceDate);
-        this.expirationDate = ShortDate.from(expirationDate);
-        this.templateShare = Bool.from(templateShare);
-        this.multiAudit = Bool.from(multiAudit);
-        this.displayName = displayName;
-        this.subjectKey = subjectKey;
-        this.description = description;
-        this.creator = Address.from(creator);
-        Assert.check(contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        Assert.check(contract.toString() !== creator.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "creator is same with contract address"));
-        Assert.check(Config.CREDENTIAL.TEMPLATE_ID.satisfy(templateID.length), MitumError.detail(ECODE.INVALID_FACT, "template id length out of range"));
-        Assert.check(Config.CREDENTIAL.TEMPLATE_NAME.satisfy(templateName.length), MitumError.detail(ECODE.INVALID_FACT, "template name length out of range"));
-        Assert.check(Config.CREDENTIAL.DISPLAY_NAME.satisfy(displayName.length), MitumError.detail(ECODE.INVALID_FACT, "display name length out of range"));
-        Assert.check(Config.CREDENTIAL.SUBJECT_KEY.satisfy(subjectKey.length), MitumError.detail(ECODE.INVALID_FACT, "subject key length out of range"));
-        Assert.check(Config.CREDENTIAL.DESCRIPTION.satisfy(description.length), MitumError.detail(ECODE.INVALID_FACT, "description length out of range"));
-        Assert.check(Date.parse(serviceDate.toString()) <= Date.parse(expirationDate.toString()), MitumError.detail(ECODE.INVALID_FACT, "expire date < service date"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            Buffer.from(this.templateID),
-            Buffer.from(this.templateName),
-            this.serviceDate.toBuffer(),
-            this.expirationDate.toBuffer(),
-            this.templateShare.toBuffer(),
-            this.multiAudit.toBuffer(),
-            Buffer.from(this.displayName),
-            Buffer.from(this.subjectKey),
-            Buffer.from(this.description),
-            this.creator.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            template_id: this.templateID,
-            template_name: this.templateName,
-            service_date: this.serviceDate.toString(),
-            expiration_date: this.expirationDate.toString(),
-            template_share: this.templateShare.v,
-            multi_audit: this.multiAudit.v,
-            display_name: this.displayName,
-            subject_key: this.subjectKey,
-            description: this.description,
-            creator: this.creator.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.CREDENTIAL.ADD_TEMPLATE.OPERATION;
-    }
-}
-
-class CredentialItem extends Item {
-    constructor(hint, contract, holder, templateID, credentialID, currency) {
-        super(hint);
-        this.contract = Address.from(contract);
-        this.holder = Address.from(holder);
-        this.templateID = templateID;
-        this.credentialID = credentialID;
-        this.currency = CurrencyID.from(currency);
-        Assert.check(Config.CREDENTIAL.TEMPLATE_ID.satisfy(templateID.length), MitumError.detail(ECODE.INVALID_ITEM, "template id length out of range"));
-        Assert.check(Config.CREDENTIAL.ID.satisfy(credentialID.length), MitumError.detail(ECODE.INVALID_ITEM, "credential id length out of range"));
-        Assert.check(this.contract.toString() !== this.holder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "holder is same with contract address"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            this.contract.toBuffer(),
-            this.holder.toBuffer(),
-            Buffer.from(this.templateID),
-            Buffer.from(this.credentialID),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            contract: this.contract.toString(),
-            holder: this.holder.toString(),
-            template_id: this.templateID,
-            credential_id: this.credentialID,
-            currency: this.currency.toString(),
-        };
-    }
-    toString() {
-        return this.contract.toString();
-    }
-}
-
-let IssueItem$1 = class IssueItem extends CredentialItem {
-    constructor(contract, holder, templateID, credentialID, value, validFrom, validUntil, did, currency) {
-        super(HINT.CREDENTIAL.ISSUE.ITEM, contract, holder, templateID, credentialID, currency);
-        this.value = value;
-        this.validFrom = Big.from(validFrom);
-        this.validUntil = Big.from(validUntil);
-        this.did = did;
-        Assert.check(Config.CREDENTIAL.VALUE.satisfy(value.length), MitumError.detail(ECODE.INVALID_ITEM, "credential value length out of range"));
-        Assert.check(validFrom < validUntil, MitumError.detail(ECODE.INVALID_ITEM, "valid until <= valid from"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            Buffer.from(this.value),
-            this.validFrom.toBuffer("fill"),
-            this.validUntil.toBuffer("fill"),
-            Buffer.from(this.did),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            value: this.value,
-            valid_from: this.validFrom.v,
-            valid_until: this.validUntil.v,
-            did: this.did,
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.credentialID}`;
-    }
-};
-let IssueFact$2 = class IssueFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.CREDENTIAL.ISSUE.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate credential id found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.CREDENTIAL.ISSUE.OPERATION;
-    }
-};
-
-class RevokeItem extends CredentialItem {
-    constructor(contract, holder, templateID, credentialID, currency) {
-        super(HINT.CREDENTIAL.REVOKE.ITEM, contract, holder, templateID, credentialID, currency);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toString() {
-        return `${super.toString()}-${this.credentialID}`;
-    }
-}
-class RevokeFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.CREDENTIAL.REVOKE.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate credential id found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.CREDENTIAL.REVOKE.OPERATION;
-    }
-}
-
-class Credential extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    /**
-     * Generate a `register-model` operation to register new credential model on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `register-model` operation.
-     */
-    registerModel(contract, sender, currency) {
-        return new Operation$1(this.networkID, new RegisterModelFact$4(TimeStamp$1.new().UTC(), sender, contract, currency));
-    }
-    /**
-     * Generate an `add-template` operation for adding a new credential template to the credential service.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {templateData} [data] - The template data to be added. The properties of `templateData` include:
-     * - {string} `templateID` - The ID of the template.
-     * - {string} `templateName` - The name of the template.
-     * - {string | ShortDate} `serviceDate` - The service date.
-     * - {string | ShortDate} `expirationDate` - The expiration date.
-     * - {boolean | Bool} `templateShare` - Indicates whether the template is shareable.
-     * - {boolean | Bool} `multiAudit` - Indicates whether multi-audit is enabled.
-     * - {string} `displayName` - The display name of the template.
-     * - {string} `subjectKey` - The subject key of the template.
-     * - {string} `description` - The description of the template.
-     * - {string | Address} `creator` - The address of the creator of the template.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns An `add-template` operation.
-     */
-    addTemplate(contract, sender, data, currency) {
-        const keysToCheck = ['templateID', 'templateName', 'serviceDate', 'expirationDate', 'templateShare', 'multiAudit', 'displayName', 'subjectKey', 'description', 'creator'];
-        keysToCheck.forEach((key) => {
-            const s = data[key];
-            Assert.check(s !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the templateData structure`));
-        });
-        new URIString(data['templateID'], 'templateID');
-        return new Operation$1(this.networkID, new AddTemplateFact(TimeStamp$1.new().UTC(), sender, contract, data.templateID, data.templateName, data.serviceDate, data.expirationDate, data.templateShare, data.multiAudit, data.displayName, data.subjectKey, data.description, data.creator, currency));
-    }
-    /**
-     * Generate an `issue` operation for issue credential to holder.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {issueData} [data] - The data required for issuing the credential. The properties of `issueData` include:
-     * - {string | Address} `holder` - The address of the credential holder.
-     * - {string} `templateID` - The ID of the template.
-     * - {string} `credentialID` - The ID of the credential.
-     * - {string} `value` - The value of the credential.
-     * - {string | number | Big} `validFrom` - The timestamp for validFrom.
-     * - {string | number | Big} `validUntil` - The timestamp for validUntil.
-     * - {string} `did` - The Decentralized Identifier (DID) associated with the credential.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `issue` operation.
-     */
-    issue(contract, sender, data, currency) {
-        const keysToCheck = ['holder', 'templateID', 'credentialID', 'value', 'validFrom', 'validUntil', 'did'];
-        keysToCheck.forEach((key) => {
-            const s = data[key];
-            Assert.check(s !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the templateData structure`));
-        });
-        new URIString(data['templateID'], 'templateID');
-        new URIString(data['credentialID'], 'credentialID');
-        return new Operation$1(this.networkID, new IssueFact$2(TimeStamp$1.new().UTC(), sender, [
-            new IssueItem$1(contract, data.holder, data.templateID, data.credentialID, data.value, data.validFrom, data.validUntil, data.did, currency)
-        ]));
-    }
-    /**
-     * Generate an `revoke` operation to revoke already issued credential.
-     * @param {string | Address} contract - The contract's address.
-     * @param {string | Address} sender - The sender's address.
-     * @param {string | Address} holder - The holder's address of the credential to be revoked.
-     * @param {string} templateID - The ID of the template associated with the credential.
-     * @param {string} credentialID - The ID of the credential to be revoked.
-     * @param {string | CurrencyID} currency - The currency ID.
-     * @returns `revoke` operation.
-     */
-    revoke(contract, sender, holder, templateID, credentialID, currency) {
-        new URIString(templateID, 'templateID');
-        new URIString(credentialID, 'credentialID');
-        return new Operation$1(this.networkID, new RevokeFact(TimeStamp$1.new().UTC(), sender, [
-            new RevokeItem(contract, holder, templateID, credentialID, currency)
-        ]));
-    }
-    /**
-     * Get information about a credential model on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is credential service information:
-     * - `_hint`: Hint for credential design,
-     * - `policy`:
-     * - - `_hint`: Hint for credential policy,
-     * - - `templates`: Array of name of templates,
-     * - - `holders`: Array of holder object
-     * - - - `_hint`: Hint for holder,
-     * - - - `address`: Address of holder,
-     * - - - `credential_count`: The number of credential for the holder
-     * - - `credential_count`: The total number of credential
-     */
-    async getModelInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.credential.getModel(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get detailed information about a specific credential on the template.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [templateID] - The ID of the template associated with the credential.
-     * @param {string} [credentialID] - The unique ID of the credential.
-     * @returns `data` of `SuccessResponse` is credential information:
-     * - `credential`:
-     * - - `_hint`: Hint for credential,
-     * - - `holder`: Address of holder,
-     * - - `template_id`: The id for the template,
-     * - - `credential_id`: The id for the credential,
-     * - - `value`: The value of credential,
-     * - - `valid_from`: The timestamp for valid_from,
-     * - - `valid_until`: The timestamp for valid_until,
-     * - - `did`: The name of the credential,
-     * - `is_active`: Indicates whether the credential is active or revoked
-     */
-    async getCredential(contract, templateID, credentialID) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(templateID, 'templateID');
-        new URIString(credentialID, 'credentialID');
-        return await getAPIData(() => contractApi.credential.getCredential(this.api, contract, templateID, credentialID, this.delegateIP));
-    }
-    /**
-     * Get information about a specific template on the credential service.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [templateID] - The ID of the template.
-     * @returns `data` of `SuccessResponse` is template information:
-     * - `_hint`: Hint for credential template,
-     * - `template_id`: The ID of the template.- `template_name`: Name for template,
-     * - `service_date`: The service date.
-     * - `expiration_date`: The expiration date.
-     * - `template_share`: Indicates whether the template is shareable.
-     * - `multi_audit`: Indicates whether multi-audit is enabled.
-     * - `display_name`: The display name of the template.
-     * - `subject_key`: The description of the template.
-     * - `description`: The description of the template.
-     * - `creator`: The address of the creator of the template.
-     */
-    async getTemplate(contract, templateID) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(templateID, 'templateID');
-        return await getAPIData(() => contractApi.credential.getTemplate(this.api, contract, templateID, this.delegateIP));
-    }
-    /**
-     * Get information about all credentials on the template.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [templateID] - The ID of the template.
-     * @returns `data` of `SuccessResponse` is array of the all credential informations of the template:
-     * - `_hint`: Hint for currency,
-     * - `_embedded`:
-     * - - `credential`:
-     * - - - `_hint`: Hint for credential,
-     * - - - `holder`: Address of holder,
-     * - - - `template_id`: The id for the template,
-     * - - - `credential_id`: The id for the credential,
-     * - - - `value`: The value of credential,
-     * - - - `valid_from`: The timestamp for valid_from,
-     * - - - `valid_until`: The timestamp for valid_until,
-     * - - - `did`: The name of the credential,
-     * - - `is_active`: Indicates whether the credential is active or revoked,
-     * - `_links`: links to get additional information of the credential,
-     */
-    async getAllCredentials(contract, templateID) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(templateID, 'templateID');
-        return await getAPIData(() => contractApi.credential.getCredentials(this.api, contract, templateID, this.delegateIP));
-    }
-    /**
-     * Get all credentials owned by the holder in the credential service.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [holder] - The holder's address claiming the credentials.
-     * @returns `data` of `SuccessResponse` is a object with all credential information owned by the holder:
-     * - `did`: The did value of the most recently issued credential,
-     * - `credentials`: Array of all credential information owned by the holder: {
-     * - - `_hint`: Hint for currency,
-     * - - `_embedded`:
-     * - - - `credential`:
-     * - - - - `_hint`: Hint for credential,
-     * - - - - `holder`: Address of holder,
-     * - - - - `template_id`: The id for the template,
-     * - - - - `credential_id`: The id for the credential,
-     * - - - - `value`: The value of credential,
-     * - - - - `valid_from`: The timestamp for valid_from,
-     * - - - - `valid_until`: The timestamp for valid_until,
-     * - - - - `did`: The name of the credential,
-     * - - - `is_active`: Indicates whether the credential is active or revoked,
-     * - - `_links`: links to get additional information of the credential
-     */
-    async getByHolder(contract, holder) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(holder);
-        return await getAPIData(() => contractApi.credential.getCredentialByHolder(this.api, contract, holder, this.delegateIP));
-    }
-}
-
-let RegisterModelFact$3 = class RegisterModelFact extends ContractFact {
-    constructor(votingPowerToken, sender, contract, option, policy, currency) {
-        super(HINT.DAO.REGISTER_MODEL.FACT, votingPowerToken, sender, contract, currency);
-        this.option = option;
-        this.policy = policy;
-        this.policy.proposerWhitelist.accounts.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            Buffer.from(this.option),
-            this.policy.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            option: this.option,
-            ...this.policy.toHintedObject(),
-            _hint: new Hint(HINT.DAO.REGISTER_MODEL.FACT).toString()
-        };
-    }
-    get operationHint() {
-        return HINT.DAO.REGISTER_MODEL.OPERATION;
-    }
-};
-
-class DAOFact extends ContractFact {
-    constructor(hint, token, sender, contract, proposalID, currency) {
-        super(hint, token, sender, contract, currency);
-        new URIString(proposalID, 'proposalID');
-        this.proposalID = proposalID;
-        Assert.check(this.proposalID !== "", MitumError.detail(ECODE.INVALID_FACT, "empty proposal id"));
-        // this._hash = this.hashing()
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            Buffer.from(this.proposalID),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            proposal_id: this.proposalID,
-        };
-    }
-}
-
-class ProposeFact extends DAOFact {
-    constructor(token, sender, contract, proposalID, proposal, currency) {
-        super(HINT.DAO.PROPOSE.FACT, token, sender, contract, proposalID, currency);
-        this.proposal = proposal;
-        Assert.check(proposal.proposer.toString() === sender, MitumError.detail(ECODE.DAO.UNMATCHED_SENDER, `sender is unmatched with proposer of given proposal`));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.proposal.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            proposal: this.proposal.toHintedObject(),
-        };
-    }
-    get operationHint() {
-        return HINT.DAO.PROPOSE.OPERATION;
-    }
-}
-
-class CancelProposalFact extends DAOFact {
-    constructor(token, sender, contract, proposalID, currency) {
-        super(HINT.DAO.CANCEL_PROPOSAL.FACT, token, sender, contract, proposalID, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    get operationHint() {
-        return HINT.DAO.CANCEL_PROPOSAL.OPERATION;
-    }
-}
-
-class RegisterFact extends DAOFact {
-    constructor(token, sender, contract, proposalID, approved, currency) {
-        super(HINT.DAO.REGISTER.FACT, token, sender, contract, proposalID, currency);
-        this.approved = Address.from(approved);
-        Assert.check(this.contract.toString() !== this.approved.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with approved address"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.approved.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            approved: this.approved.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.DAO.REGISTER.OPERATION;
-    }
-}
-
-class PreSnapFact extends DAOFact {
-    constructor(token, sender, contract, proposalID, currency) {
-        super(HINT.DAO.PRE_SNAP.FACT, token, sender, contract, proposalID, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    get operationHint() {
-        return HINT.DAO.PRE_SNAP.OPERATION;
-    }
-}
-
-class PostSnapFact extends DAOFact {
-    constructor(token, sender, contract, proposalID, currency) {
-        super(HINT.DAO.POST_SNAP.FACT, token, sender, contract, proposalID, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    get operationHint() {
-        return HINT.DAO.POST_SNAP.OPERATION;
-    }
-}
-
-class VoteFact extends DAOFact {
-    constructor(token, sender, contract, proposalID, vote, currency) {
-        super(HINT.DAO.VOTE.FACT, token, sender, contract, proposalID, currency);
-        Assert.check(Config.DAO.VOTE.satisfy(Number(vote)), MitumError.detail(ECODE.INVALID_FACT, "vote option out of range"));
-        this.vote = Big.from(vote);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.vote.v === 0 ? Buffer.from([0x00]) : this.vote.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            vote_option: this.vote.v,
-        };
-    }
-    get operationHint() {
-        return HINT.DAO.VOTE.OPERATION;
-    }
-}
-
-class ExecuteFact extends DAOFact {
-    constructor(token, sender, contract, proposalID, currency) {
-        super(HINT.DAO.EXECUTE.FACT, token, sender, contract, proposalID, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    get operationHint() {
-        return HINT.DAO.EXECUTE.OPERATION;
-    }
-}
-
-class DAOPolicy {
-    constructor(votingPowerToken, threshold, proposalFee, proposerWhitelist, proposalReviewPeriod, registrationPeriod, preSnapshotPeriod, votingPeriod, postSnapshotPeriod, executionDelayPeriod, turnout, quorum) {
-        this.hint = new Hint(HINT.DAO.POLICY);
-        this.votingPowerToken = CurrencyID.from(votingPowerToken);
-        this.threshold = Big.from(threshold);
-        this.proposalFee = proposalFee,
-            this.proposerWhitelist = proposerWhitelist;
-        this.proposalReviewPeriod = Big.from(proposalReviewPeriod);
-        this.registrationPeriod = Big.from(registrationPeriod);
-        this.preSnapshotPeriod = Big.from(preSnapshotPeriod);
-        this.votingPeriod = Big.from(votingPeriod);
-        this.postSnapshotPeriod = Big.from(postSnapshotPeriod);
-        this.executionDelayPeriod = Big.from(executionDelayPeriod);
-        this.turnout = Big.from(turnout);
-        this.quorum = Big.from(quorum);
-        Assert.check(0 < this.proposalReviewPeriod.big && 0 < this.registrationPeriod.big && 0 < this.preSnapshotPeriod.big
-            && 0 < this.votingPeriod.big && 0 < this.postSnapshotPeriod.big && 0 < this.executionDelayPeriod.big, MitumError.detail(ECODE.DAO.INVALID_POLICY, "period must not be set to 0 or below"));
-        Assert.check(0 < this.threshold.big, MitumError.detail(ECODE.DAO.INVALID_POLICY, "threhold must be over zero"));
-        Assert.check(Config.DAO.QUORUM.satisfy(this.turnout.v), MitumError.detail(ECODE.DAO.INVALID_POLICY, "turnout out of range"));
-        Assert.check(Config.DAO.QUORUM.satisfy(this.quorum.v), MitumError.detail(ECODE.DAO.INVALID_POLICY, "quorum out of range"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            this.votingPowerToken.toBuffer(),
-            this.threshold.toBuffer(),
-            this.proposalFee.toBuffer(),
-            this.proposerWhitelist.toBuffer(),
-            this.proposalReviewPeriod.toBuffer("fill"),
-            this.registrationPeriod.toBuffer("fill"),
-            this.preSnapshotPeriod.toBuffer("fill"),
-            this.votingPeriod.toBuffer("fill"),
-            this.postSnapshotPeriod.toBuffer("fill"),
-            this.executionDelayPeriod.toBuffer("fill"),
-            this.turnout.toBuffer(),
-            this.quorum.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            voting_power_token: this.votingPowerToken.toString(),
-            threshold: this.threshold.toString(),
-            proposal_fee: this.proposalFee.toHintedObject(),
-            proposer_whitelist: this.proposerWhitelist.toHintedObject(),
-            proposal_review_period: this.proposalReviewPeriod.v,
-            registration_period: this.registrationPeriod.v,
-            pre_snapshot_period: this.preSnapshotPeriod.v,
-            voting_period: this.votingPeriod.v,
-            post_snapshot_period: this.postSnapshotPeriod.v,
-            execution_delay_period: this.executionDelayPeriod.v,
-            turnout: this.turnout.v,
-            quorum: this.quorum.v,
-        };
-    }
-}
-
-class Whitelist {
-    constructor(active, accounts) {
-        this.hint = new Hint(HINT.DAO.WHITELIST);
-        this.active = Bool.from(active);
-        this.accounts = accounts ? accounts.map(a => Address.from(a)) : [];
-        Assert.check(Config.DAO.ADDRESS_IN_WHITELIST.satisfy(accounts.length), MitumError.detail(ECODE.DAO.INVALID_WHITELIST, "whitelist length out of range"));
-        Assert.check(hasOverlappingAddress(accounts), MitumError.detail(ECODE.DAO.INVALID_WHITELIST, "duplicate account found in whitelist"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            this.active.toBuffer(),
-            Buffer.concat(this.accounts.sort(SortFunc).map(a => a.toBuffer())),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            active: this.active.v,
-            accounts: this.accounts.sort(SortFunc).map(a => a.toString()),
-        };
-    }
-}
-
-class Calldata {
-    constructor(hint) {
-        this.hint = new Hint(hint);
-    }
-    toBuffer() {
-        return Buffer.from([]);
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-        };
-    }
-}
-class TransferCalldata extends Calldata {
-    constructor(sender, receiver, amount) {
-        super(HINT.DAO.CALLDATA.TRANSFER);
-        this.sender = Address.from(sender);
-        this.receiver = Address.from(receiver);
-        this.amount = amount;
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.sender.toBuffer(),
-            this.receiver.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            sender: this.sender.toString(),
-            receiver: this.receiver.toString(),
-            amount: this.amount.toHintedObject(),
-        };
-    }
-}
-class GovernanceCalldata extends Calldata {
-    constructor(policy) {
-        super(HINT.DAO.CALLDATA.GOVERNANCE);
-        this.policy = policy;
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.policy.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            policy: this.policy.toHintedObject(),
-        };
-    }
-}
-class Proposal {
-    constructor(hint, proposer, startTime) {
-        this.hint = new Hint(hint);
-        this.proposer = Address.from(proposer);
-        this.startTime = Big.from(startTime);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            this.proposer.toBuffer(),
-            this.startTime.toBuffer("fill"),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            proposer: this.proposer.toString(),
-            start_time: this.startTime.v,
-        };
-    }
-}
-class CryptoProposal extends Proposal {
-    constructor(proposer, startTime, calldata) {
-        super(HINT.DAO.PROPOSAL.CRYPTO, proposer, startTime);
-        this.calldata = calldata;
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.calldata.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            call_data: this.calldata.toHintedObject(),
-        };
-    }
-}
-class BizProposal extends Proposal {
-    constructor(proposer, startTime, url, hash, options) {
-        super(HINT.DAO.PROPOSAL.BIZ, proposer, startTime);
-        this.url = LongString.from(url);
-        this.hash = LongString.from(hash);
-        this.options = Big.from(options);
-        Assert.check(Config.DAO.VOTE.satisfy(Number(this.options)), MitumError.detail(ECODE.INVALID_FACT, "vote option out of range"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.url.toBuffer(),
-            this.hash.toBuffer(),
-            this.options.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            url: this.url.toString(),
-            hash: this.hash.toString(),
-            options: this.options.v,
-        };
-    }
-}
-
-class UpdateModelConfigFact extends ContractFact {
-    constructor(token, sender, contract, option, policy, currency) {
-        super(HINT.DAO.UPDATE_MODEL_CONFIG.FACT, token, sender, contract, currency);
-        this.option = option;
-        this.policy = policy;
-        this.policy.proposerWhitelist.accounts.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            Buffer.from(this.option),
-            this.policy.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            option: this.option,
-            ...this.policy.toHintedObject(),
-            _hint: new Hint(HINT.DAO.UPDATE_MODEL_CONFIG.FACT).toString()
-        };
-    }
-    get operationHint() {
-        return HINT.DAO.UPDATE_MODEL_CONFIG.OPERATION;
-    }
-}
-
-class DAO extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    /**
-     * Generate `register-model` operation to register a new DAO model on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {daoData} [data] - Data for policy of DAO service to create. The properties of `daoData` include:
-     * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
-     * - {string | CurrencyID} `votingPowerToken` - The currency ID to be used when calculating voting power.
-     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold after paying for the proposal fee.
-     * - {string | number | Big} `proposalFee` - The fee paid when registering a proposal.
-     * - {(string | Address)[]} `proposerWhitelist` - An array of addresses for accounts who can propose the new proposals.
-     * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
-     * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
-     * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
-     * - {string | number | Big} `votingPeriod` - The duration of the voting period (in seconds).
-     * - {string | number | Big} `postSnapshotPeriod` - The duration of the post-snapshot period (in seconds).
-     * - {string | number | Big} `executionDelayPeriod` - The duration of the execution delay period (in seconds).
-     * - {string | number | Big} `turnout` - The minimum rate of attendees for a proposal to pass (in percentage)
-     * - {string | number | Big} `quorum` - The minimum rate of upvotes for a proposal to pass (in percentage)
-     * @param {string | CurrencyID} currency - The currency ID.
-     * @returns `register-model` operation.
-     */
-    registerModel(contract, sender, data, currency) {
-        const keysToCheck = ['option', 'votingPowerToken', 'threshold', 'proposalFee', 'proposerWhitelist', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
-        keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the daoData structure`));
-        });
-        return new Operation$1(this.networkID, new RegisterModelFact$3(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
-    }
-    /**
-     * Generate `update-model-config` operation for updating the DAO policy on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {daoData} [data] - Data for policy of DAO service to update. The properties of `daoData` include:
-     * - {'crypto' | 'biz'} `option` - Option indicates the type of proposal to be registered.
-     * - {string | CurrencyID} `votingPowerToken` - The currency ID to be used when calculating voting power.
-     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold after paying for the proposal fee.
-     * - {string | number | Big} `proposalFee` - The fee paid when registering a proposal.
-     * - {(string | Address)[]} `proposerWhitelist` - An array of addresses for accounts who can propose the new proposals.
-     * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
-     * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
-     * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
-     * - {string | number | Big} `votingPeriod` - The duration of the voting period (in seconds).
-     * - {string | number | Big} `postSnapshotPeriod` - The duration of the post-snapshot period (in seconds).
-     * - {string | number | Big} `executionDelayPeriod` - The duration of the execution delay period (in seconds).
-     * - {string | number | Big} `turnout` - The minimum rate of attendees for a proposal to pass (in percentage)
-     * - {string | number | Big} `quorum` - The minimum rate of upvotes for a proposal to pass (in percentage)
-     * @param {string | CurrencyID} currency - The currency ID.
-     * @returns `update-model-config` operation
-     */
-    updateModelConfig(contract, sender, data, currency) {
-        const keysToCheck = ['option', 'votingPowerToken', 'threshold', 'proposalFee', 'proposerWhitelist', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
-        keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the daoData structure`));
-        });
-        return new Operation$1(this.networkID, new UpdateModelConfigFact(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
-    }
-    /**
-     * Create transfer calldata for the crypto proposal to transfer crypto currency.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | number | Big} [amount] - The amount to transfer.
-     * @returns Transfer calldata.
-     */
-    formTransferCalldata(sender, receiver, currency, amount) {
-        return new TransferCalldata(sender, receiver, new Amount(currency, amount));
-    }
-    /**
-     * Create governance calldata for the crypto proposal to update DAO policy.
-     * @param {policyData} [data] - Data for policy of DAO service to update. The properties of `policyData` include:
-     * - {string | CurrencyID} `votingPowerToken` - The currency ID to be used when calculating voting power.
-     * - {string | number | Big} `threshold` - The minimum balance of a proposer must hold after paying for the proposal fee.
-     * - {string | number | Big} `proposalFee` - The fee paid when registering a proposal.
-     * - {(string | Address)[]} `proposerWhitelist` - An array of addresses for accounts who can propose the new proposals.
-     * - {string | number | Big} `proposalReviewPeriod` - The duration of the proposal review period (in seconds).
-     * - {string | number | Big} `registrationPeriod` - The duration of the registration period (in seconds).
-     * - {string | number | Big} `preSnapshotPeriod` - The duration of the pre-snapshot period (in seconds).
-     * - {string | number | Big} `votingPeriod` - The duration of the voting period (in seconds).
-     * - {string | number | Big} `postSnapshotPeriod` - The duration of the post-snapshot period (in seconds).
-     * - {string | number | Big} `executionDelayPeriod` - The duration of the execution delay period (in seconds).
-     * - {string | number | Big} `turnout` - The minimum rate of attendees for a proposal to pass (in percentage)
-     * - {string | number | Big} `quorum` - The minimum rate of upvotes for a proposal to pass (in percentage)
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns governance calldata.
-     */
-    formSetPolicyCalldata(data, currency) {
-        const keysToCheck = ['votingPowerToken', 'threshold', 'proposalFee', 'proposerWhitelist', 'proposalReviewPeriod', 'registrationPeriod', 'preSnapshotPeriod', 'votingPeriod', 'postSnapshotPeriod', 'executionDelayPeriod', 'turnout', 'quorum'];
-        keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the policyData structure`));
-        });
-        return new GovernanceCalldata(new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum));
-    }
-    /**
-     * Write a crypto proposal include `TransferCalldata` or `GovernanceCalldata` .
-     * @param {string} [proposer] - The address of the proposer.
-     * @param {number} [startTime] - The time to start `proposalReviewPeriod` (in UTC timestamp).
-     * @param {TransferCalldata | GovernanceCalldata} [calldata] - Calldata for the crypto proposal.
-     * @returns Crypto proposal to be proposed.
-     */
-    writeCryptoProposal(proposer, startTime, calldata) {
-        return new CryptoProposal(proposer, startTime, calldata);
-    }
-    /**
-     * Write a business proposal providing multiple choice voting.
-     * @param {string | Address} [proposer] - The address of the proposer.
-     * @param {string | number | Big} [startTime] - The time to start `proposalReviewPeriod` (in UTC timestamp).
-     * @param {string | LongString} [url] - The URL associated with the proposal.
-     * @param {string | LongString} [hash] - The hash associated with the proposal.
-     * @param {string | number | Big} [options] - The number of multiple choices.
-     * @returns Business proposal to be proposed.
-     */
-    writeBizProposal(proposer, startTime, url, hash, options) {
-        return new BizProposal(proposer, startTime, url, hash, options);
-    }
-    /**
-     * Generate `propose` operation for propose a new proposal. Only the account in the whitelist can propose.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [proposalID] - The unique identifier for the proposal.
-     * @param {CryptoProposal | BizProposal} [proposal] - The proposal written by `writeBizProposal` or `writeCryptoProposal`.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `propose` operation.
-     */
-    propose(contract, sender, proposalID, proposal, currency) {
-        return new Operation$1(this.networkID, new ProposeFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, proposal, currency));
-    }
-    /**
-     * Generate `register` operation to register to get voting right to the proposal. If approved is given, delegate voting rights to the account.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [approved] - (Optional) The address of the account to which voting rights will be delegated..
-     * @returns `register` operation
-     */
-    register(contract, sender, proposalID, currency, approved) {
-        return new Operation$1(this.networkID, new RegisterFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, approved ? approved : sender, currency));
-    }
-    /**
-     * Generate `cancel-proposal` operation to cancel a DAO proposal.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [proposalID] - The unique identifier for the proposal.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `cancel-proposal` operation
-     */
-    cancelProposal(contract, sender, proposalID, currency) {
-        return new Operation$1(this.networkID, new CancelProposalFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
-    }
-    /**
-     * Generate `pre-snap` operation to take a snapshot before the voting period.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `pre-snap` operation.
-     */
-    preSnap(contract, sender, proposalID, currency) {
-        return new Operation$1(this.networkID, new PreSnapFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
-    }
-    /**
-     * Generate `vote` operation to cast a vote for the proposal.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @param {number} [voteOption] - The option chosen for the vote. (crypto: 0-approve, 1-disapprove, biz: choose from multiple choices)
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `vote` operation.
-     */
-    vote(contract, sender, proposalID, voteOption, currency) {
-        return new Operation$1(this.networkID, new VoteFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, voteOption, currency));
-    }
-    /**
-     * Generate `post-snap` operation to take a snapshot after the voting period.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `post-snap` operation
-     */
-    postSnap(contract, sender, proposalID, currency) {
-        return new Operation$1(this.networkID, new PostSnapFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
-    }
-    /**
-     * Generate `execute` operation to reflect voting results.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `execute` operation
-     */
-    execute(contract, sender, proposalID, currency) {
-        return new Operation$1(this.networkID, new ExecuteFact(TimeStamp$1.new().UTC(), sender, contract, proposalID, currency));
-    }
-    /**
-     * Get DAO model information for a specific contract address.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is information of the DAO service:
-     * - `_hint`: Hint for dao design,
-     * - `option`: 'biz' or 'crypto',
-     * - `policy`: [Policy]
-     */
-    async getModelInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.dao.getModel(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get information about a specific DAO proposal. The `status` does not accurately reflect the current state of the proposal because it is updated only when an operation occurs.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @returns `data` of `SuccessResponse` is information about the DAO proposal:
-     * - `_hint`: Hint for the dao proposal state value,
-     * - `status`: Proposal status - Proposed (0), Canceled (1), PreSnapped (2), PostSnapped (3), Completed (4), Rejected (5), Executed (6), NilStatus (7),
-     * - `proposal`: [BizProposal] or [CryptoProposal],
-     * - `policy`: [Policy]
-     */
-    async getProposal(contract, proposalID) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(proposalID, 'proposalID');
-        return await getAPIData(() => contractApi.dao.getProposal(this.api, contract, proposalID, this.delegateIP));
-    }
-    /**
-     * Get the approved account who has taken over the voting rights from the registrant account.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @param {string | Address} [account] - The address of the account that has approved another account.
-     * @returns `data` of `SuccessResponse` is approval information:
-     * - `_hint`: Hint for DAO approval voting info,
-     * - `account`: Address of the registrant that has approved another account,
-     * - `approved`: Address of the approved account,
-     */
-    async getApproved(contract, proposalID, account) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(proposalID, 'proposalID');
-        return await getAPIData(() => contractApi.dao.getApproved(this.api, contract, proposalID, account, this.delegateIP));
-    }
-    /**
-     * Get information about voters in a specific DAO proposal.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @returns `data` of `SuccessResponse` is an array of information of the voters:
-     * - `_hint`: Hint for dao voter,
-     * - `voter`: Address of account that can vote,
-     * - `votring_power_holders`: List of accounts that have delegated their voting power to voter.
-     */
-    async getVoters(contract, proposalID) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(proposalID, 'proposalID');
-        return await getAPIData(() => contractApi.dao.getVoters(this.api, contract, proposalID, this.delegateIP));
-    }
-    /**
-     * Get the status of the voting for the proposal.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [proposalID] - The proposal ID.
-     * @returns `data` of `SuccessResponse` is information of voting power and the voting result:
-     * - `_hint`: Hint for voting power box.
-     * - `total`: Total voting power.
-     * - `voting_powers`: Object mapping registered account addresses to their corresponding voting information represents `_hint`, `account`,`voted`, `vote_for`, `voting_power`.
-     * - `result`: Object consisting of the selected option and the number of votes.
-     */
-    async getVotingStatus(contract, proposalID) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(proposalID, 'proposalID');
-        return await getAPIData(() => contractApi.dao.getVotingStatus(this.api, contract, proposalID, this.delegateIP));
-    }
-}
-
-class STOItem extends Item {
-    constructor(hint, contract, currency) {
-        super(hint);
-        this.contract = Address.from(contract);
-        this.currency = CurrencyID.from(currency);
-    }
-    toBuffer() {
-        return this.contract.toBuffer();
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            contract: this.contract.toString(),
-            currency: this.currency.toString(),
-        };
-    }
-    toString() {
-        return this.contract.toString();
-    }
-}
-
-class Partition {
-    constructor(s) {
-        Assert.check(Config.STO.PARTITION.satisfy(s.length), MitumError.detail(ECODE.STO.INVALID_PARTITION, "partition length out of range"));
-        Assert.check(/^[A-Z0-9][A-Z0-9_\.\!\$\*\@]*[A-Z0-9]$/.test(s), MitumError.detail(ECODE.STO.INVALID_PARTITION, "invalid partition format"));
-        this.s = s;
-    }
-    static from(s) {
-        return s instanceof Partition ? s : new Partition(s);
-    }
-    toBuffer() {
-        return Buffer.from(this.s);
-    }
-    toString() {
-        return this.s;
-    }
-}
-
-class CreateSecurityTokenItem extends STOItem {
-    constructor(contract, granularity, defaultPartition, currency) {
-        super(HINT.STO.CREATE_SECURITY_TOKEN.ITEM, contract, currency);
-        this.granularity = Big.from(granularity);
-        this.defaultPartition = Partition.from(defaultPartition);
-        Assert.check(this.granularity.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "granularity must be over zero"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            this.contract.toBuffer(),
-            this.granularity.toBuffer("fill"),
-            this.defaultPartition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            granularity: this.granularity.v,
-            default_partition: this.defaultPartition.toString(),
-        };
-    }
-}
-class CreateSecurityTokenFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.CREATE_SECURITY_TOKEN.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate contract found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.CREATE_SECURITY_TOKEN.OPERATION;
-    }
-}
-
-class IssueItem extends STOItem {
-    constructor(contract, receiver, amount, partition, currency) {
-        super(HINT.STO.ISSUE.ITEM, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.amount = Big.from(amount);
-        this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "receiver is same with contract address"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.amount.toBuffer(),
-            this.partition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            amount: this.amount.toString(),
-            partition: this.partition.toString(),
-        };
-    }
-}
-let IssueFact$1 = class IssueFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.ISSUE.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate contract found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.ISSUE.OPERATION;
-    }
-};
-
-class AuthorizeOperatorItem extends STOItem {
-    constructor(contract, operator, partition, currency) {
-        super(HINT.STO.AUTHORIZE_OPERATOR.ITEM, contract, currency);
-        this.operator = Address.from(operator);
-        this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.operator.toString(), MitumError.detail(ECODE.INVALID_ITEM, "operator is same with contract address"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.operator.toBuffer(),
-            this.partition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            operator: this.operator.toString(),
-            partition: this.partition.toString(),
-        };
-    }
-    toString() {
-        return this.operator.toString();
-    }
-}
-class AuthorizeOperatorFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.AUTHORIZE_OPERATOR.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate operator found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-            Assert.check(item.operator.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "operator is same with sender address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.AUTHORIZE_OPERATOR.OPERATION;
-    }
-}
-
-class RevokeOperatorItem extends STOItem {
-    constructor(contract, operator, partition, currency) {
-        super(HINT.STO.REVOKE_OPERATOR.ITEM, contract, currency);
-        this.operator = Address.from(operator);
-        this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.operator.toString(), MitumError.detail(ECODE.INVALID_ITEM, "operator is same with contract address"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.operator.toBuffer(),
-            this.partition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            operator: this.operator.toString(),
-            partition: this.partition.toString(),
-        };
-    }
-    toString() {
-        return this.operator.toString();
-    }
-}
-class RevokeOperatorFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.REVOKE_OPERATOR.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate operator found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.REVOKE_OPERATOR.OPERATION;
-    }
-}
-
-class RedeemItem extends STOItem {
-    constructor(contract, tokenHolder, amount, partition, currency) {
-        super(HINT.STO.REDEEM.ITEM, contract, currency);
-        this.tokenHolder = Address.from(tokenHolder);
-        this.amount = Big.from(amount);
-        this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.tokenHolder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with contract address"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.tokenHolder.toBuffer(),
-            this.amount.toBuffer(),
-            this.partition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            tokenHolder: this.tokenHolder.toString(),
-            amount: this.amount.toString(),
-            partition: this.partition.toString(),
-        };
-    }
-    toString() {
-        return this.tokenHolder.toString();
-    }
-}
-class RedeemFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.REDEEM.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate token holder found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.REDEEM.OPERATION;
-    }
-}
-
-class SetDocumentFact extends ContractFact {
-    constructor(token, sender, contract, title, uri, documentHash, currency) {
-        super(HINT.STO.SET_DOCUMENT.FACT, token, sender, contract, currency);
-        this.title = title;
-        this.uri = uri;
-        this.documentHash = documentHash;
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            Buffer.from(this.title),
-            Buffer.from(this.uri),
-            Buffer.from(this.documentHash),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            title: this.title,
-            uri: this.uri,
-            documenthash: this.documentHash,
-        };
-    }
-    get operationHint() {
-        return HINT.STO.SET_DOCUMENT.OPERATION;
-    }
-}
-
-class TransferByPartitionItem extends STOItem {
-    constructor(contract, tokenHolder, receiver, partition, amount, currency) {
-        super(HINT.STO.TRANSFER_BY_PARTITION.ITEM, contract, currency);
-        this.tokenHolder = Address.from(tokenHolder);
-        this.receiver = Address.from(receiver);
-        this.partition = Partition.from(partition);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.tokenHolder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with contract address"));
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "receiver is same with contract address"));
-        Assert.check(this.tokenHolder.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with receiver address"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.tokenHolder.toBuffer(),
-            this.receiver.toBuffer(),
-            this.partition.toBuffer(),
-            this.amount.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            tokenholder: this.tokenHolder.toString(),
-            receiver: this.receiver.toString(),
-            partition: this.partition.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    toString() {
-        return `${this.tokenHolder.toString()}-${this.receiver.toString()}-${this.partition.toString()}`;
-    }
-}
-class TransferByPartitionFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.TRANSFER_BY_PARTITION.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate token holder-receiver-partition found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.TRANSFER_BY_PARTITION.OPERATION;
-    }
-}
-
-class STO extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    /**
-     * Generate `authorize-operator` operation to authorize an operator for the security token in specific partition.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [operator] - The operator's address to be authorized.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `authorize-operator` operation.
-     */
-    authorizeOperator(contract, sender, operator, partition, currency) {
-        return new Operation$1(this.networkID, new AuthorizeOperatorFact(TimeStamp$1.new().UTC(), sender, [
-            new AuthorizeOperatorItem(contract, operator, partition, currency)
-        ]));
-    }
-    /**
-     * Generate `create-security-token` operation to create new security token.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {createServiceData} [data] - Data required to create the security token. The properties of `createServiceData` include:
-     * - {string | number | Big} `granularity` - The basic unit of the token.
-     * - {string | Partition} `defaultPartition` - Capital letters with length between 3 and 10 (can include numbers)
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `create-security-token` operation
-     */
-    createService(contract, sender, data, currency) {
-        const keysToCheck = ['granularity', 'defaultPartition'];
-        keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the createServiceData structure`));
-        });
-        return new Operation$1(this.networkID, new CreateSecurityTokenFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateSecurityTokenItem(contract, data.granularity, data.defaultPartition, currency)
-        ]));
-    }
-    /**
-     * Generate `issue` operation to issue new security token in specific partition to a specified receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | number | Big} [amount] - The amount of tokens to issue.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `issue` operation.
-     */
-    issue(contract, sender, receiver, partition, amount, currency) {
-        return new Operation$1(this.networkID, new IssueFact$1(TimeStamp$1.new().UTC(), sender, [
-            new IssueItem(contract, receiver, amount, partition, currency)
-        ]));
-    }
-    /**
-     * Generate `redeem` operation to redeem(burn) a specified amount of security token in a specific partition.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [tokenHolder] - The token holder's address.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | number | Big} [amount] - The amount of tokens to redeem.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `redeem` operation.
-     */
-    redeem(contract, sender, tokenHolder, partition, amount, currency) {
-        return new Operation$1(this.networkID, new RedeemFact(TimeStamp$1.new().UTC(), sender, [
-            new RedeemItem(contract, tokenHolder, amount, partition, currency)
-        ]));
-    }
-    /**
-     * Generate `revoke` operation to revoke operator's authorization for the security token in specific partition.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [operator] - The operator's address.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `revoke` operation.
-     */
-    revokeOperator(contract, sender, operator, partition, currency) {
-        return new Operation$1(this.networkID, new RevokeOperatorFact(TimeStamp$1.new().UTC(), sender, [
-            new RevokeOperatorItem(contract, operator, partition, currency)
-        ]));
-    }
-    /**
-     * Generate `setDocumnet` operation to set document for the security token on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [title] - The title of the document.
-     * @param {string} [uri] - The URI of the document.
-     * @param {string} [documentHash] - The hash value of the document.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `setDocumnet` operation.
-     */
-    setDocument(contract, sender, title, uri, documentHash, currency) {
-        return new Operation$1(this.networkID, new SetDocumentFact(TimeStamp$1.new().UTC(), sender, contract, title, uri, documentHash, currency));
-    }
-    /**
-     * Generate `transfer-by-partition` operation to transfer security token in specific partitions.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [holder] - The token holder's address.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | number | Big} [amount] - The amount of tokens to transfer.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `transfer-by-partition` operation
-     */
-    transferByPartition(contract, sender, holder, receiver, partition, amount, currency) {
-        return new Operation$1(this.networkID, new TransferByPartitionFact(TimeStamp$1.new().UTC(), sender, [
-            new TransferByPartitionItem(contract, holder, receiver, partition, amount, currency)
-        ]));
-    }
-    /**
-     * Get information about the security token on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is information of the security token:
-     * - `_hint`: Hint for STO design,
-     * - `granularity`: Basic unit for the token,
-     * - `policy`: {
-     *     _hint: Hint for the STO policy,
-     *     partitions: Array of name of partition,
-     *     aggregate: Total supply amount,
-     *     documents: Array of information about documents with `_hint`, `title`, `hash`, `uri`
-     * }
-     */
-    async getServiceInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.sto.getService(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get partitions of given holder.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [holder] - The token holder's address.
-     * @returns `data` of `SuccessResponse` is an array of token partition names owned by the holder.
-     */
-    async getPartitionsInfo(contract, holder) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(holder);
-        return await getAPIData(() => contractApi.sto.getPartitions(this.api, contract, holder, this.delegateIP));
-    }
-    /**
-     * Get balance of holder for the partition.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [holder] - The token holder's address.
-     * @param {string} [partition] - The partition ID.
-     * @returns `data` of `SuccessResponse` is the balance of holder for the partition
-     */
-    async getBalanceByHolder(contract, holder, partition) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(holder);
-        return await getAPIData(() => contractApi.sto.getBalanceByHolder(this.api, contract, holder, partition, this.delegateIP));
-    }
-    /**
-     * Get operators of the partition who granted by the holder.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [holder] - The token holder's address.
-     * @param {string} [partition] - The partition ID.
-     * @returns `data` of `SuccessResponse` is information of the operators:
-     * - `operators`: Array of the address of operators.
-     */
-    async getOperatorsByHolder(contract, holder, partition) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(holder);
-        return await getAPIData(() => contractApi.sto.getOperatorsByHolder(this.api, contract, holder, partition, this.delegateIP));
-    }
-    /**
-     * Get balance for a specific partition.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [partition] - The partition ID.
-     * @returns `data` of `SuccessResponse` is the partition balance amount.
-     */
-    async getPartitionBalanceInfo(contract, partition) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.sto.getPartitionBalance(this.api, contract, partition, this.delegateIP));
-    }
-    /**
-     * Get information about the holder who granted to the operator.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [operator] - The operator's address.
-     * @returns `data` of `SuccessResponse` is information of holder:
-     * - `holders`: Array of the address of holders.
-     */
-    async getAuthorizedInfo(contract, operator) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(operator);
-        return await getAPIData(() => contractApi.sto.getAuthorized(this.api, contract, operator, this.delegateIP));
-    }
-}
-
-class CreateServiceFact extends ContractFact {
-    constructor(token, sender, contract, currency) {
-        super(HINT.KYC.CREATE_SERVICE.FACT, token, sender, contract, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    get operationHint() {
-        return HINT.KYC.CREATE_SERVICE.OPERATION;
-    }
-}
-
-class KYCItem extends Item {
-    constructor(hint, contract, currency) {
-        super(hint);
-        this.contract = Address.from(contract);
-        this.currency = CurrencyID.from(currency);
-    }
-    toBuffer() {
-        return this.contract.toBuffer();
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            contract: this.contract.toString(),
-            currency: this.currency.toString(),
-        };
-    }
-    toString() {
-        return this.contract.toString();
-    }
-}
-
-class AddControllerItem extends KYCItem {
-    constructor(contract, controller, currency) {
-        super(HINT.KYC.ADD_CONTROLLER.ITEM, contract, currency);
-        this.controller = Address.from(controller);
-        Assert.check(this.contract.toString() !== this.controller.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with controller address"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.controller.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            controller: this.controller.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.controller.toString()}`;
-    }
-}
-class AddControllerFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.KYC.ADD_CONTROLLER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate controller found in items"));
-    }
-    get operationHint() {
-        return HINT.KYC.ADD_CONTROLLER.OPERATION;
-    }
-}
-
-class RemoveControllerItem extends KYCItem {
-    constructor(contract, controller, currency) {
-        super(HINT.KYC.REMOVE_CONTROLLER.ITEM, contract, currency);
-        this.controller = Address.from(controller);
-        Assert.check(this.contract.toString() !== this.controller.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with controller address"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.controller.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            controller: this.controller.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.controller.toString()}`;
-    }
-}
-class RemoveControllerFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.KYC.REMOVE_CONTROLLER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate controller found in items"));
-    }
-    get operationHint() {
-        return HINT.KYC.REMOVE_CONTROLLER.OPERATION;
-    }
-}
-
-class AddCustomerItem extends KYCItem {
-    constructor(contract, customer, status, currency) {
-        super(HINT.KYC.ADD_CUSTOMER.ITEM, contract, currency);
-        this.customer = Address.from(customer);
-        this.status = Bool.from(status);
-        Assert.check(this.contract.toString() !== this.customer.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with customer address"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.customer.toBuffer(),
-            this.status.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            customer: this.customer.toString(),
-            status: this.status.v,
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.customer.toString()}`;
-    }
-}
-class AddCustomerFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.KYC.ADD_CUSTOMER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate customer found in items"));
-    }
-    get operationHint() {
-        return HINT.KYC.ADD_CUSTOMER.OPERATION;
-    }
-}
-
-class UpdateCustomerItem extends KYCItem {
-    constructor(contract, customer, status, currency) {
-        super(HINT.KYC.UPDATE_CUSTOMER.ITEM, contract, currency);
-        this.customer = Address.from(customer);
-        this.status = Bool.from(status);
-        Assert.check(this.contract.toString() !== this.customer.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with customer address"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.customer.toBuffer(),
-            this.status.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            customer: this.customer.toString(),
-            status: this.status.v,
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.customer.toString()}`;
-    }
-}
-class UpdateCustomerFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.KYC.UPDATE_CUSTOMER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate customer found in items"));
-    }
-    get operationHint() {
-        return HINT.KYC.UPDATE_CUSTOMER.OPERATION;
-    }
-}
-
-class KYC extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    createService(contract, sender, currency) {
-        return new Operation$1(this.networkID, new CreateServiceFact(TimeStamp$1.new().UTC(), sender, contract, currency));
-    }
-    addController(contract, sender, controller, currency) {
-        return new Operation$1(this.networkID, new AddControllerFact(TimeStamp$1.new().UTC(), sender, [
-            new AddControllerItem(contract, controller, currency)
-        ]));
-    }
-    addCustomer(contract, sender, customer, status, currency) {
-        return new Operation$1(this.networkID, new AddCustomerFact(TimeStamp$1.new().UTC(), sender, [
-            new AddCustomerItem(contract, customer, status, currency)
-        ]));
-    }
-    removeController(contract, sender, controller, currency) {
-        return new Operation$1(this.networkID, new RemoveControllerFact(TimeStamp$1.new().UTC(), sender, [
-            new RemoveControllerItem(contract, controller, currency)
-        ]));
-    }
-    updateCustomer(contract, sender, customer, status, currency) {
-        return new Operation$1(this.networkID, new UpdateCustomerFact(TimeStamp$1.new().UTC(), sender, [new UpdateCustomerItem(contract, customer, status, currency)]));
-    }
-}
-
-class TimeStampFact extends ContractFact {
-    constructor(hint, token, sender, contract, currency) {
-        super(hint, token, sender, contract, currency);
-        // this._hash = this.hashing()
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-        };
-    }
-}
-
-let RegisterModelFact$2 = class RegisterModelFact extends TimeStampFact {
-    constructor(token, sender, contract, currency) {
-        super(HINT.TIMESTAMP.REGISTER_MODEL.FACT, token, sender, contract, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-        ]);
-    }
-    get operationHint() {
-        return HINT.TIMESTAMP.REGISTER_MODEL.OPERATION;
-    }
-};
-
-class IssueFact extends ContractFact {
-    constructor(token, sender, contract, projectID, requestTimeStamp, data, currency) {
-        super(HINT.TIMESTAMP.ISSUE.FACT, token, sender, contract, currency);
-        this.projectID = projectID;
-        this.requestTimeStamp = Big.from(requestTimeStamp);
-        this.data = data;
-        Assert.check(Config.TIMESTAMP.PROJECT_ID.satisfy(this.projectID.length), MitumError.detail(ECODE.INVALID_FACT, "project id length out of range"));
-        Assert.check(Config.TIMESTAMP.DATA.satisfy(this.data.length), MitumError.detail(ECODE.INVALID_FACT, "data length out of range"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            Buffer.from(this.projectID),
-            this.requestTimeStamp.toBuffer("fill"),
-            Buffer.from(this.data),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            project_id: this.projectID,
-            request_timestamp: this.requestTimeStamp.v,
-            data: this.data,
-        };
-    }
-    get operationHint() {
-        return HINT.TIMESTAMP.ISSUE.OPERATION;
-    }
-}
-
-class TimeStamp extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    /**
-     * Generate a `register-model` operation to register new timestamp model on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `register-model` operation.
-     */
-    registerModel(contract, sender, currency) {
-        return new Operation$1(this.networkID, new RegisterModelFact$2(TimeStamp$1.new().UTC(), sender, contract, currency));
-    }
-    /**
-     * Generate `issue` operation to issue new timestamp to the project on the timestamp model.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [projectID] - The ID of the project to issue.
-     * @param {string | number | Big} [requestTimeStamp] - Value of the timestamp to record.
-     * @param {string} [data] - The data to be appended.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `issue` operation
-     */
-    issue(contract, sender, projectID, requestTimeStamp, data, currency) {
-        new URIString(projectID, 'projectID');
-        const fact = new IssueFact(TimeStamp$1.new().UTC(), sender, contract, projectID, requestTimeStamp, data, currency);
-        return new Operation$1(this.networkID, fact);
-    }
-    /**
-     * Get information about a timestamp service on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is information about the timestamp service:
-     * - `_hint`: Hint for timestamp design,
-     * - `projects`: Array of all project's id
-     */
-    async getModelInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.timestamp.getModel(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get detailed information about a timestamp on the project.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [projectID] - The ID of the project.
-     * @param {string | number | Big} [timestampIdx] - The index of timestamp (Indicate the order of appended to the project)
-     * @returns `data` of `SuccessResponse` is information about the timestamp with certain tid on the certain project:
-     * - `_hint`: Hint for timestamp item,
-     * - `project_id`: ID of the timestamp project,
-     * - `request_timestamp`: Request timestamp entered when appending timestamp,
-     * - `response_timestamp`: Time when the timestamp was registered,
-     * - `timestamp_idx`: A index for the timestamp ,
-     * - `data`: Data string
-     */
-    async getTimestamp(contract, projectID, timestampIdx) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        new URIString(projectID, 'projectID');
-        return await getAPIData(() => contractApi.timestamp.getTimeStamp(this.api, contract, projectID, timestampIdx, this.delegateIP));
-    }
-}
-
-class TokenFact extends ContractFact {
-    constructor(hint, token, sender, contract, currency) {
-        super(hint, token, sender, contract, currency);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-        };
-    }
-}
-
-let RegisterModelFact$1 = class RegisterModelFact extends TokenFact {
-    constructor(token, sender, contract, currency, symbol, name, decimal, initialSupply) {
-        super(HINT.TOKEN.REGISTER_MODEL.FACT, token, sender, contract, currency);
-        this.symbol = CurrencyID.from(symbol);
-        this.name = LongString.from(name);
-        this.decimal = Big.from(decimal);
-        this.initialSupply = Big.from(initialSupply);
-        Assert.check(this.initialSupply.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "initialSupply under zero"));
-        Assert.check(this.decimal.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "decimal number under zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.symbol.toBuffer(),
-            this.name.toBuffer(),
-            this.decimal.toBuffer(),
-            this.initialSupply.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            symbol: this.symbol.toString(),
-            name: this.name.toString(),
-            decimal: this.decimal.toString(),
-            initial_supply: this.initialSupply.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.TOKEN.REGISTER_MODEL.OPERATION;
-    }
-};
-
-let MintFact$1 = class MintFact extends TokenFact {
-    constructor(token, sender, contract, currency, receiver, amount) {
-        super(HINT.TOKEN.MINT.FACT, token, sender, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.TOKEN.MINT.OPERATION;
-    }
-};
-
-let BurnFact$1 = class BurnFact extends TokenFact {
-    constructor(token, sender, contract, currency, amount) {
-        super(HINT.TOKEN.BURN.FACT, token, sender, contract, currency);
-        this.target = Address.from(sender);
-        this.amount = Big.from(amount);
-        // Assert.check(
-        //     Address.from(contract).toString() !== this.target.toString(),
-        //     MitumError.detail(ECODE.INVALID_FACT, "target is same with contract address")
-        // )
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.target.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            target: this.target.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.TOKEN.BURN.OPERATION;
-    }
-};
-
-let TransferFact$1 = class TransferFact extends TokenFact {
-    constructor(token, sender, contract, currency, receiver, amount) {
-        super(HINT.TOKEN.TRANSFER.FACT, token, sender, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
-        Assert.check(this.receiver.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with sender address"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.TOKEN.TRANSFER.OPERATION;
-    }
-};
-
-let ApproveFact$1 = class ApproveFact extends TokenFact {
-    constructor(token, sender, contract, currency, approved, amount) {
-        super(HINT.TOKEN.APPROVE.FACT, token, sender, contract, currency);
-        this.approved = Address.from(approved);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.approved.toString(), MitumError.detail(ECODE.INVALID_FACT, "approved is same with contract address"));
-        Assert.check(this.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "amount must not be under zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.approved.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            approved: this.approved.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.TOKEN.APPROVE.OPERATION;
-    }
-};
-
-let TransferFromFact$1 = class TransferFromFact extends TokenFact {
-    constructor(token, sender, contract, currency, receiver, target, amount) {
-        super(HINT.TOKEN.TRANSFER_FROM.FACT, token, sender, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.target = Address.from(target);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
-        Assert.check(this.contract.toString() !== this.target.toString(), MitumError.detail(ECODE.INVALID_FACT, "target is same with contract address"));
-        Assert.check(this.target.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with target address"));
-        Assert.check(this.target.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "target is same with sender address, use 'transfer' instead"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.target.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            target: this.target.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.TOKEN.TRANSFER_FROM.OPERATION;
-    }
-};
-
-const calculateAllowance = (response, owner, approved) => {
-    let amount = '0';
-    if (response.data.policy && response.data.policy.approve_list) {
-        const approveList = response.data.policy.approve_list;
-        const approval = approveList.find(item => item.account === owner);
-        if (approval) {
-            const allowance = approval.approved.find(item => item.account === approved);
-            if (allowance) {
-                amount = allowance.amount;
-            }
-        }
-        return { 'amount': amount };
-    }
-    else {
-        throw new Error(`Unknown error orccur: token policy or policy.approve_list does not exist`);
-    }
-};
-
-class Token extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    /**
-     * Generate a `register-model` operation to register new token model on a contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | LongString} [name] - The name of the token to register.
-     * @param {string | CurrencyID} [symbol] - The symbol of the token to register.
-     * @param {string | number | Big} [decimal] - (Optional) The decimal number to the token to register. If not provided, the default value is 0.
-     * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the token to register. If not provided, the default value is 0.
-     * @returns `register-model` operation.
-     */
-    registerModel(contract, sender, currency, name, symbol, decimal, initialSupply) {
-        return new Operation$1(this.networkID, new RegisterModelFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
-    }
-    /**
-     * Generate a `mint` operation for minting tokens and allocating them to a receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | number | Big} [amount] - The amount to mint.
-     * @returns `mint` operation.
-     */
-    mint(contract, sender, currency, receiver, amount) {
-        return new Operation$1(this.networkID, new MintFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
-    }
-    /**
-     * Generate a `burn` operation for burning tokens from sender account.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | number | Big} [amount] - The amount to burn.
-     * @returns `burn` operation
-     */
-    burn(contract, sender, currency, amount) {
-        return new Operation$1(this.networkID, new BurnFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, amount));
-    }
-    /**
-     * Generate an `transfer` operation for transferring tokens from the sender to a receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency - The currency ID.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | number | Big} [amount] - The amount to transfer.
-     * @returns `transfer` operation.
-     */
-    transfer(contract, sender, currency, receiver, amount) {
-        return new Operation$1(this.networkID, new TransferFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
-    }
-    /**
-     * Generate a `transfer-from` operation for transferring tokens from target account to receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | Address} [target] - The target account's address.
-     * @param {string | number | Big} [amount] - The amount to transfer.
-     * @returns `transfer-from` operation.
-     */
-    transferFrom(contract, sender, currency, receiver, target, amount) {
-        return new Operation$1(this.networkID, new TransferFromFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, target, amount));
-    }
-    /**
-     * Generate an `approve` operation for approving certain amount tokens to approved account.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [approved] - The address to approve.
-     * @param {string | number | Big} [amount] - The amount to approve.
-     * @returns `approve` operation
-     */
-    approve(contract, sender, currency, approved, amount) {
-        return new Operation$1(this.networkID, new ApproveFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, approved, amount));
-    }
-    /**
-     * Get information about the specific token model on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is token information:
-     * - `_hint`: Hint for token design,
-     * - `symbol`: Symbol of the token,
-     * - `name`: Name of the token,
-     * - `policy`: Token policy object including `_hint`, `total_supply`, `approve_list`
-     */
-    async getModelInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.token.getModel(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get the allowance information granted by the owner for a specific token.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The token owner's address.
-     * @param {string | Address} [approved] - Address of approved account.
-     * @returns `data` of `SuccessResponse` is token allowance information:
-     * - `amount`: String of allowance amount
-     */
-    async getAllowance(contract, owner, approved) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(owner);
-        Address.from(approved);
-        const response = await getAPIData(() => contractApi.token.getModel(this.api, contract, this.delegateIP));
-        if (isSuccessResponse(response) && response.data) {
-            response.data = calculateAllowance(response, owner, approved);
-        }
-        return response;
-    }
-    /**
-     * Get token balance for given account.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [account] - The token owner's address.
-     * @returns`data` of `SuccessResponse` is token balance information:
-     * - `amount`: String of amount
-     */
-    async getBalance(contract, account) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(account);
-        return await getAPIData(() => contractApi.token.getTokenBalance(this.api, contract, account, this.delegateIP));
-    }
-}
-
-class PointFact extends ContractFact {
-    constructor(hint, token, sender, contract, currency) {
-        super(hint, token, sender, contract, currency);
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-        };
-    }
-}
-
-class RegisterModelFact extends PointFact {
-    constructor(token, sender, contract, currency, symbol, name, decimal, initialSupply) {
-        super(HINT.POINT.REGISTER_MODEL.FACT, token, sender, contract, currency);
-        this.symbol = CurrencyID.from(symbol);
-        this.name = LongString.from(name);
-        this.decimal = Big.from(decimal);
-        this.initialSupply = Big.from(initialSupply);
-        Assert.check(this.decimal.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "decimal number under zero"));
-        Assert.check(this.initialSupply.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "initialSupply under zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.symbol.toBuffer(),
-            this.name.toBuffer(),
-            this.decimal.toBuffer(),
-            this.initialSupply.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            symbol: this.symbol.toString(),
-            name: this.name.toString(),
-            decimal: this.decimal.toString(),
-            initial_supply: this.initialSupply.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.POINT.REGISTER_MODEL.OPERATION;
-    }
-}
-
-class MintFact extends PointFact {
-    constructor(token, sender, contract, currency, receiver, amount) {
-        super(HINT.POINT.MINT.FACT, token, sender, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.POINT.MINT.OPERATION;
-    }
-}
-
-class BurnFact extends PointFact {
-    constructor(token, sender, contract, currency, amount) {
-        super(HINT.POINT.BURN.FACT, token, sender, contract, currency);
-        this.target = Address.from(sender);
-        this.amount = Big.from(amount);
-        // Assert.check(
-        //     Address.from(contract).toString() !== this.target.toString(),
-        //     MitumError.detail(ECODE.INVALID_FACT, "target is same with contract address")
-        // )
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.target.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            target: this.target.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.POINT.BURN.OPERATION;
-    }
-}
-
-class TransferFact extends PointFact {
-    constructor(token, sender, contract, currency, receiver, amount) {
-        super(HINT.POINT.TRANSFER.FACT, token, sender, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
-        Assert.check(this.receiver.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with sender address"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.POINT.TRANSFER.OPERATION;
-    }
-}
-
-class ApproveFact extends PointFact {
-    constructor(token, sender, contract, currency, approved, amount) {
-        super(HINT.POINT.APPROVE.FACT, token, sender, contract, currency);
-        this.approved = Address.from(approved);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.approved.toString(), MitumError.detail(ECODE.INVALID_FACT, "approved is same with contract address"));
-        Assert.check(this.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "amount must not be under zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.approved.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            approved: this.approved.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.POINT.APPROVE.OPERATION;
-    }
-}
-
-class TransferFromFact extends PointFact {
-    constructor(token, sender, contract, currency, receiver, target, amount) {
-        super(HINT.POINT.TRANSFER_FROM.FACT, token, sender, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.target = Address.from(target);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with contract address"));
-        Assert.check(this.contract.toString() !== this.target.toString(), MitumError.detail(ECODE.INVALID_FACT, "target is same with contract address"));
-        Assert.check(this.target.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with target address"));
-        Assert.check(this.target.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "target is same with sender address, use 'transfer' instead"));
-        Assert.check(this.amount.compare(0) > 0, MitumError.detail(ECODE.INVALID_FACT, "amount must be over zero"));
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.target.toBuffer(),
-            this.amount.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            target: this.target.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    get operationHint() {
-        return HINT.POINT.TRANSFER_FROM.OPERATION;
-    }
-}
-
-class Point extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    /**
-     * Generate a `register-model` operation to register new point model on a contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | LongString} [name] - The name of the point to register.
-     * @param {string | CurrencyID} [symbol] - The symbol of the point to register.
-     * @param {string | number | Big} [decimal] - (Optional) The decimal number to the point to register. If not provided, the default value is 0.
-     * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the point to register. If not provided, the default value is 0.
-     * @returns `register-model` operation.
-     */
-    registerModel(contract, sender, currency, name, symbol, decimal, initialSupply) {
-        return new Operation$1(this.networkID, new RegisterModelFact(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
-    }
-    /**
-     * Generate a `mint` operation for minting points and allocating them to a receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | number | Big} [amount] - The amount to mint.
-     * @returns `mint` operation.
-     */
-    mint(contract, sender, currency, receiver, amount) {
-        return new Operation$1(this.networkID, new MintFact(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
-    }
-    /**
-     * Generate a `burn` operation for burning points from sender account.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | number | Big} [amount] - The amount to burn.
-     * @returns `burn` operation
-     */
-    burn(contract, sender, currency, amount) {
-        return new Operation$1(this.networkID, new BurnFact(TimeStamp$1.new().UTC(), sender, contract, currency, amount));
-    }
-    /**
-     * Generate an `transfer` operation for transferring points from the sender to a receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency - The currency ID.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | number | Big} [amount] - The amount to transfer.
-     * @returns `transfer` operation.
-     */
-    transfer(contract, sender, currency, receiver, amount) {
-        return new Operation$1(this.networkID, new TransferFact(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
-    }
-    /**
-     * Generate a `transfer-from` operation for transferring points from target account to receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | Address} [target] - The target account's address.
-     * @param {string | number | Big} [amount] - The amount to transfer.
-     * @returns `transfer-from` operation.
-     */
-    transferFrom(contract, sender, currency, receiver, target, amount) {
-        return new Operation$1(this.networkID, new TransferFromFact(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, target, amount));
-    }
-    /**
-     * Generate an `approve` operation for approving certain amount points to approved account.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | Address} [approved] - The address to approve.
-     * @param {string | number | Big} [amount] - The amount to approve.
-     * @returns `approve` operation
-     */
-    approve(contract, sender, currency, approved, amount) {
-        return new Operation$1(this.networkID, new ApproveFact(TimeStamp$1.new().UTC(), sender, contract, currency, approved, amount));
-    }
-    /**
-     * Get information about the specific point model on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is point information:
-     * - `_hint`: Hint for point design,
-     * - `symbol`: Symbol of the point,
-     * - `name`: Name of the point,
-     * - `policy`: Point policy object including `_hint`, `total_supply`, `approve_list`
-     */
-    async getModelInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.point.getModel(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get the allowance information granted by the owner for a specific point.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [owner] - The point owner's address.
-     * @param {string | Address} [approved] - Address of approved account.
-     * @returns `data` of `SuccessResponse` is point allowance information:
-     * - `amount`: String of allowance amount
-     */
-    async getAllowance(contract, owner, approved) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(owner);
-        Address.from(approved);
-        const response = await getAPIData(() => contractApi.point.getModel(this.api, contract, this.delegateIP));
-        if (isSuccessResponse(response) && response.data) {
-            response.data = calculateAllowance(response, owner, approved);
-        }
-        return response;
-    }
-    /**
-     * Get point balance for given account.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [account] - The point owner's address.
-     * @returns `data` of `SuccessResponse` is point balance information:
-     * - `amount`: String of amount
-     */
-    async getBalance(contract, account) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(account);
-        return await getAPIData(() => contractApi.point.getPointBalance(this.api, contract, account, this.delegateIP));
-    }
-}
-
 class Signer extends Generator {
     constructor(networkID, api) {
         super(networkID, api);
@@ -6913,7 +3433,7 @@ class Signer extends Generator {
         return option ? this.nodeSign(keypair, operation, option.node ?? "") : this.accSign(keypair, operation);
     }
     accSign(keypair, operation) {
-        const now = TimeStamp$1.new();
+        const now = TimeStamp.new();
         const fs = new GeneralFactSign(keypair.publicKey.toString(), keypair.sign(Buffer.concat([
             Buffer.from(this.networkID),
             base58.decode(operation.fact.hash),
@@ -6942,7 +3462,7 @@ class Signer extends Generator {
     }
     nodeSign(keypair, operation, node) {
         const nd = new NodeAddress(node);
-        const now = TimeStamp$1.new();
+        const now = TimeStamp.new();
         const fs = new NodeFactSign(node, keypair.publicKey.toString(), keypair.sign(Buffer.concat([
             Buffer.from(this.networkID),
             nd.toBuffer(),
@@ -6968,6 +3488,561 @@ class Signer extends Generator {
         ]);
         operation.hash = base58.encode(sha3(msg));
         return operation;
+    }
+}
+
+class AccountAbstraction extends Generator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    /**
+     * Creates a `UserOperation` for account abstraction.
+     * @param {Fact} fact - The operation fact.
+     * @param {string | Address} contract - The did contract address.
+     * @param {string} authentication_id - The authentication ID for the did contract.
+     * @returns {UserOperation<Fact>} - The created `UserOperation` instance.
+     */
+    createUserOperation(fact, contract, authentication_id) {
+        return new UserOperation(this.networkID, fact, new Authentication$1(contract, authentication_id, undefined), new Settlement(undefined, undefined));
+    }
+    /**
+     * Add alternative signature for userOperation, fill `proof_data` item of `authentication` object.
+     * @param {string | Key | KeyPair} [privateKey] - The private key or key pair for signing.
+     * @param {UserOperation<Fact> | HintedObject} [userOperation] - The operation to be signed.
+     * @returns The user operation fill with authentication.
+     */
+    // addAlterSign(privateKey: string | Key, type?: "ed25519" | "ecdsa") {
+    addAlterSign(privateKey, userOperation) {
+        Assert.check(isUserOp(userOperation) || isHintedObjectFromUserOp(userOperation), MitumError.detail(ECODE.INVALID_USER_OPERATION, `Input must in UserOperation format`));
+        const hintedUserOp = isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
+        privateKey = Key.from(privateKey);
+        const keypair = KeyPair.fromPrivateKey(privateKey);
+        const now = TimeStamp.new();
+        const alterSign = keypair.sign(Buffer.concat([Buffer.from(this._networkID), Buffer.from(hintedUserOp.fact.hash), now.toBuffer()]));
+        hintedUserOp.authentication.proof_data = base58.encode(alterSign);
+        return hintedUserOp;
+    }
+    /**
+     * Updates the settlement details of a userOperation and returns a new hinted object of user operation.
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update settlment,
+     * @param {string | Address} opSender - The opseration sender's address (Bundler's address).
+     * @param {string | Address} proxyPayer - The proxy payer's address. (address of CA)
+     * @returns {HintedObject} A new hinted object representing the updated user operation.
+     **/
+    setSettlement(userOperation, opSender, proxyPayer) {
+        Assert.check(isUserOp(userOperation) || isHintedObjectFromUserOp(userOperation), MitumError.detail(ECODE.INVALID_USER_OPERATION, `Input must in UserOperation format`));
+        const hintedUserOp = isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
+        const { contract, authentication_id, proof_data } = hintedUserOp.authentication;
+        const filledUO = new UserOperation(this.networkID, hintedUserOp.fact, new Authentication$1(contract, authentication_id, proof_data), new Settlement(opSender, proxyPayer));
+        return {
+            ...filledUO.toHintedObjectWithOutFact(hintedUserOp._hint, hintedUserOp.fact)
+        };
+    }
+    /**
+     * Sign the given userOperation in JSON format using given private key.
+     * @param {string | Key} [privatekey] - The private key used for signing.
+     * @param {UserOperation<Fact> | HintedObject} [userOperation] - The operation to be signed.
+     * @returns The signed user operation in JSON object (HintedObject).
+     */
+    sign(privatekey, userOperation) {
+        Assert.check(isUserOp(userOperation) || isHintedObjectFromUserOp(userOperation), MitumError.detail(ECODE.INVALID_USER_OPERATION, `Input must in UserOperation format`));
+        const hintedUserOp = isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
+        const signer = new Signer(this.networkID);
+        const signedOp = signer.sign(privatekey, hintedUserOp);
+        hintedUserOp.signs = signedOp.signs;
+        return this.FillUserOpHash(hintedUserOp);
+    }
+    FillUserOpHash(userOperation) {
+        const { contract, authentication_id, proof_data, op_sender, proxy_payer } = { ...userOperation.authentication, ...userOperation.settlement };
+        const auth = new Authentication$1(contract, authentication_id, proof_data);
+        const settlement = new Settlement(op_sender, proxy_payer);
+        const msg = Buffer.concat([
+            base58.decode(userOperation.fact.hash),
+            Buffer.concat(userOperation.signs.map((s) => Buffer.concat([
+                Buffer.from(s.signer),
+                base58.decode(s.signature),
+                new FullTimeStamp(s.signed_at).toBuffer("super"),
+            ]))),
+            auth.toBuffer(),
+            settlement.toBuffer()
+        ]);
+        userOperation.hash = base58.encode(sha3(msg));
+        return userOperation;
+    }
+}
+
+// import { Config } from "../../node"
+// import { Assert, ECODE, MitumError } from "../../error"
+class RegisterModelFact extends ContractFact {
+    constructor(token, sender, contract, didMethod, currency) {
+        super(HINT.DID.REGISTER_MODEL.FACT, token, sender, contract, currency);
+        // Assert.check(
+        //     Config.DMILE.PROJECT.satisfy(project.toString().length),
+        //     MitumError.detail(ECODE.INVALID_FACT, `project length out of range, should be between ${Config.DMILE.PROJECT.min} to ${Config.DMILE.PROJECT.max}`),
+        // )
+        this.didMethod = LongString.from(didMethod);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.didMethod.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            didMethod: this.didMethod.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.REGISTER_MODEL.OPERATION;
+    }
+}
+
+// import { Config } from "../../node"
+class CreateFact extends ContractFact {
+    constructor(token, sender, contract, authType, publicKey, serviceType, serviceEndpoints, currency) {
+        super(HINT.DID.CREATE_DID.FACT, token, sender, contract, currency);
+        this.authType = LongString.from(authType);
+        this.publicKey = LongString.from(publicKey);
+        this.serviceType = LongString.from(serviceType);
+        this.serviceEndpoints = LongString.from(serviceEndpoints);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.authType.toBuffer(),
+            this.publicKey.toBuffer(),
+            this.serviceType.toBuffer(),
+            this.serviceEndpoints.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            authType: this.authType.toString(),
+            publicKey: this.publicKey.toString(),
+            serviceType: this.serviceType.toString(),
+            serviceEndpoints: this.serviceEndpoints.toString()
+        };
+    }
+    get operationHint() {
+        return HINT.DID.CREATE_DID.OPERATION;
+    }
+}
+
+class MigrateDidItem extends Item {
+    constructor(contract, currency, publicKey, txId) {
+        super(HINT.DID.MIGRATE_DID.ITEM);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.publicKey = LongString.from(publicKey);
+        this.txId = LongString.from(txId);
+        new URIString(publicKey.toString(), 'merkleRoot');
+        new URIString(txId.toString(), 'txId');
+        Assert.check(/^[0-9a-fA-F]+$/.test(publicKey.toString().slice(-128)), MitumError.detail(ECODE.INVALID_FACT, `${this.publicKey.toString()} is not a hexadecimal number`));
+        Assert.check(Config.DID.PUBLIC_KEY.satisfy(publicKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `publickey length out of range, should be over ${Config.DID.PUBLIC_KEY.min}`));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            this.publicKey.toBuffer(),
+            this.txId.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+            publicKey: this.publicKey.toString(),
+            tx_hash: this.txId.toString(),
+            currency: this.currency.toString()
+        };
+    }
+    toString() {
+        return this.publicKey.toString();
+    }
+}
+class MigrateDidFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.DID.MIGRATE_DID.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated item founded"));
+    }
+    get operationHint() {
+        return HINT.DID.MIGRATE_DID.OPERATION;
+    }
+}
+
+class DidFact extends ContractFact {
+    constructor(hint, token, sender, contract, did, currency) {
+        super(hint, token, sender, contract, currency);
+        this.did = LongString.from(did);
+        StringAssert.with(did.toString(), MitumError.detail(ECODE.DID.INVALID_DID, `The did must be starting with 'did:'`))
+            .startsWith('did:')
+            .excute();
+        const splited = did.toString().split(":");
+        Assert.check(splited.length === 3, MitumError.detail(ECODE.DID.INVALID_DID, "The did format must follow the standard."));
+        Assert.check(/^[0-9a-f]+$/.test(splited[2]), MitumError.detail(ECODE.INVALID_ADDRESS, `${splited[2]} is not a hexadecimal number`));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.did.toBuffer()
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            did: this.did.toString(),
+        };
+    }
+}
+
+class ReactivateDidFact extends DidFact {
+    constructor(token, sender, contract, did, currency) {
+        super(HINT.DID.REACTIVATE_DID.FACT, token, sender, contract, did, currency);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.REACTIVATE_DID.OPERATION;
+    }
+}
+
+class DeactivateDidFact extends DidFact {
+    constructor(token, sender, contract, did, currency) {
+        super(HINT.DID.DEACTIVATE_DID.FACT, token, sender, contract, did, currency);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.DEACTIVATE_DID.OPERATION;
+    }
+}
+
+// import { Config } from "../../node"
+// import { Assert, ECODE, MitumError } from "../../error"
+class UpdateDocumentFact extends ContractFact {
+    constructor(token, sender, contract, did, document, currency) {
+        super(HINT.DID.UPDATE_DID_DOCUMENT.FACT, token, sender, contract, currency);
+        this.did = LongString.from(did);
+        this.document = document;
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.did.toBuffer(),
+            this.document.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            did: this.did.toString(),
+            document: this.document.toHintedObject(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.UPDATE_DID_DOCUMENT.OPERATION;
+    }
+}
+
+// import { Config } from "../../node"
+class Authentication {
+    constructor(hint) {
+        this.hint = new Hint(hint);
+    }
+    toBuffer() {
+        return Buffer.from([]);
+    }
+    toHintedObject() {
+        return {
+            _hint: this.hint.toString(),
+        };
+    }
+}
+class AsymKeyAuth extends Authentication {
+    constructor(id, authType, controller, publicKey) {
+        super(HINT.DID.AUTHENTICATION.ASYMMETRIC_KEY);
+        this.id = LongString.from(id);
+        this.authType = authType;
+        this.controller = LongString.from(controller);
+        this.publicKey = LongString.from(publicKey);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.id.toBuffer(),
+            Buffer.from(this.authType),
+            this.controller.toBuffer(),
+            this.publicKey.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            id: this.id.toString(),
+            authType: this.authType.toString(),
+            controller: this.controller.toString(),
+            publicKey: this.publicKey.toString(),
+        };
+    }
+}
+class SocialLoginAuth extends Authentication {
+    constructor(id, 
+    //authType: "VerifiableCredential", 
+    controller, serviceEndpoint, proofMethod) {
+        super(HINT.DID.AUTHENTICATION.SOCIAL_LOGIN);
+        this.id = LongString.from(id);
+        this.authType = "VerifiableCredential";
+        this.controller = LongString.from(controller);
+        this.serviceEndpoint = LongString.from(serviceEndpoint);
+        this.proofMethod = LongString.from(proofMethod);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.id.toBuffer(),
+            Buffer.from(this.authType),
+            this.controller.toBuffer(),
+            this.serviceEndpoint.toBuffer(),
+            this.proofMethod.toBuffer()
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            id: this.id.toString(),
+            authType: this.authType.toString(),
+            controller: this.controller.toString(),
+            serviceEndpoint: this.serviceEndpoint.toString(),
+            proof: {
+                verificationMethod: this.proofMethod.toString()
+            }
+        };
+    }
+}
+class Document {
+    constructor(context, status, created, id, authentication, verificationMethod, service_id, service_type, service_end_point) {
+        this.hint = new Hint(HINT.DID.DOCUMENT);
+        this.context = LongString.from(context);
+        this.status = LongString.from(status);
+        this.created = LongString.from(created);
+        this.id = LongString.from(id);
+        this.authentication = authentication;
+        this.verificationMethod = verificationMethod;
+        this.service_id = LongString.from(service_id);
+        this.service_type = LongString.from(service_type);
+        this.service_end_point = LongString.from(service_end_point);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.context.toBuffer(),
+            this.id.toBuffer(),
+            this.created.toBuffer(),
+            this.status.toBuffer(),
+            Buffer.concat(this.authentication.map(el => el.toBuffer())),
+            this.service_id.toBuffer(),
+            this.service_type.toBuffer(),
+            this.service_end_point.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            _hint: this.hint.toString(),
+            "@context": this.context.toString(),
+            id: this.id.toString(),
+            created: this.created.toString(),
+            status: this.status.toString(),
+            authentication: this.authentication.map(el => el.toHintedObject()),
+            verificationMethod: [],
+            service: {
+                id: this.service_id.toString(),
+                type: this.service_type.toString(),
+                service_end_point: this.service_end_point.toString(),
+            }
+        };
+    }
+}
+
+class DID extends ContractGenerator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    writeAsymkeyAuth(id, authType, controller, publicKey) {
+        return new AsymKeyAuth(id, authType, controller, publicKey);
+    }
+    ;
+    writeSocialLoginAuth(id, controller, serviceEndpoint, verificationMethod) {
+        return new SocialLoginAuth(id, controller, serviceEndpoint, verificationMethod);
+    }
+    ;
+    writeDocument(didContext, status, created, didID, authentications, serivceID, serviceType, serviceEndPoint) {
+        return new Document(didContext, status, created, didID, authentications, [], serivceID, serviceType, serviceEndPoint);
+    }
+    ;
+    /**
+     * Generate a `register-model` operation to register new did model on the contract.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | LongString} [didMethod] - The did method
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `register-model` operation.
+     */
+    registerModel(contract, sender, didMethod, currency) {
+        return new Operation$1(this.networkID, new RegisterModelFact(TimeStamp.new().UTC(), sender, contract, didMethod, currency));
+    }
+    /**
+     * Generate `create-did` operation to create new did.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {document} [document] - DID document to be created when create new did.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-did` operation
+     */
+    create(contract, sender, authType, publicKey, serviceType, serviceEndpoints, currency) {
+        const fact = new CreateFact(TimeStamp.new().UTC(), sender, contract, authType, publicKey, serviceType, serviceEndpoints, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `migrate-did` operation to migrate did with publicKey and tx id to the did model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | LongString[]} [publicKeys] - array with multiple publicKey to record.
+     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `migrate-did` operation
+     */
+    migrateDID(contract, sender, publicKeys, txIds, currency) {
+        Assert.check(publicKeys.length !== 0 && txIds.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
+        Assert.check(new Set(publicKeys.map(it => it.toString())).size === publicKeys.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated merkleRoot founded"));
+        Assert.check(new Set(txIds.map(it => it.toString())).size === txIds.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated txId founded"));
+        Assert.check(publicKeys.length === txIds.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the publicKeys and txIds must be the same."));
+        return new Operation$1(this.networkID, new MigrateDidFact(TimeStamp.new().UTC(), sender, publicKeys.map((publicKey, idx) => new MigrateDidItem(contract, currency, publicKey.toString(), txIds[idx].toString()))));
+    }
+    /**
+     * Generate `deactivate-did` operation to deactivate the did.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [did] - The did to deactivate.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `deactivate-did` operation
+     */
+    deactivate(contract, sender, did, currency) {
+        const fact = new DeactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `reactivate-did` operation to reactivate the did.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [did] - The did to reactivate.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `reactivate-did` operation
+     */
+    reactivate(contract, sender, did, currency) {
+        const fact = new ReactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    updateDIDDocument(contract, sender, document, currency) {
+        const fact = new UpdateDocumentFact(TimeStamp.new().UTC(), sender, contract, document.id.toString(), new Document(document["@context"], document.status, document.created, document.id, document.authentication.map((el) => {
+            if ("proof" in el) {
+                return new SocialLoginAuth(el.id, el.controller, el.serviceEndpoint, el.proof.verificationMethod);
+            }
+            else {
+                return new AsymKeyAuth(el.id, el.authType, el.controller, el.publicKey);
+            }
+        }), document.verificationMethod, document.service.id, document.service.type, document.service.service_end_point), currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Get information for did model.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information of did model:
+     * - `_hint`: hint for did model design,
+     * - `didMethod`: The did method,
+     * - `docContext`: The context of did,
+     * - `docAuthType`: The type of authentication,
+     * - `docSvcType`: The type of did service,
+     * - `docSvcEndPoint`: The end point of did service
+     */
+    async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        return await getAPIData(() => contractApi.did.getModel(this.api, contract, this.delegateIP));
+    }
+    /**
+     * Get did by publickey.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [publicKey] - The publicKey, // Must be longer than 128 digits. If the length over 128, only the 128 characters from the end will be used.
+     * @returns `data` of `SuccessResponse` is did:
+     * - `did`: The did value,
+     */
+    async getDIDByPublicKey(contract, publicKey) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        new URIString(publicKey, 'publicKey');
+        const response = await getAPIData(() => contractApi.did.getByPubKey(this.api, contract, publicKey, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.did ? { did: response.data.did } : null;
+        }
+        return response;
+    }
+    /**
+     * Get did document by did.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [did] - The did value.
+     * @returns `data` of `SuccessResponse` is did document:
+     * - `did_document`: object
+     * - - `'@context'`: The context of did,
+     * - - `id`: The did value,
+     * - - `created`: The fact hash of create-did operation,
+     * - - `status`: 0 means deactive, 1 means active,
+     * - - `authentication`: object,
+     * - - - `id`: The did value,
+     * - - - `type`: The type of authentication
+     * - - - `controller`: The did value
+     * - - - `publicKey`: The publickey used when did create,
+     * - - `service`: object
+     * - - - `id`: The did value
+     * - - - `type`: The type of did service,
+     * - - - `service_end_point`: The end point of did service,
+     */
+    async getDDocByDID(contract, did) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        const response = await getAPIData(() => contractApi.did.getByDID(this.api, contract, did, this.delegateIP));
+        return response;
     }
 }
 
@@ -7060,10 +4135,10 @@ class Operation extends Generator {
     async send(operation, headers) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Assert.check(isOpFact(operation) || isHintedObject(operation), MitumError.detail(ECODE.INVALID_OPERATION, `input is neither in OP<Fact> nor HintedObject format`));
-        operation = isOpFact(operation) ? operation.toHintedObject() : operation;
-        Assert.check(operation.signs.length !== 0, MitumError.detail(ECODE.EMPTY_SIGN, `signature is required before sending the operation`));
-        Assert.check(Config.OP_SIZE.satisfy(Buffer.byteLength(JSON.stringify(operation), 'utf8')), MitumError.detail(ECODE.OP_SIZE_EXCEEDED, `Operation size exceeds the allowed limit of ${Config.OP_SIZE.max} bytes.`));
-        const sendResponse = await getAPIData(() => api$1.send(this.api, operation, this.delegateIP, headers));
+        const hintedOperation = isOpFact(operation) ? operation.toHintedObject() : operation;
+        Assert.check(hintedOperation.signs.length !== 0, MitumError.detail(ECODE.EMPTY_SIGN, `signature is required before sending the operation`));
+        Assert.check(Config.OP_SIZE.satisfy(Buffer.byteLength(JSON.stringify(hintedOperation), 'utf8')), MitumError.detail(ECODE.OP_SIZE_EXCEEDED, `Operation size exceeds the allowed limit of ${Config.OP_SIZE.max} bytes.`));
+        const sendResponse = await getAPIData(() => api$1.send(this.api, hintedOperation, this.delegateIP, headers));
         return new OperationResponse(sendResponse, this.networkID, this.api, this.delegateIP);
     }
 }
@@ -7155,14 +4230,8 @@ class Mitum extends Generator {
         this._operation = new Operation(this.networkID, this.api, this.delegateIP);
         this._signer = new Signer(this.networkID, this.api);
         this._contract = new Contract(this.networkID, this.api, this.delegateIP);
-        this._nft = new NFT(this.networkID, this.api, this.delegateIP);
-        this._credential = new Credential(this.networkID, this.api, this.delegateIP);
-        this._timestamp = new TimeStamp(this.networkID, this.api, this.delegateIP);
-        this._sto = new STO(this.networkID, this.api, this.delegateIP);
-        this._kyc = new KYC(this.networkID, this.api, this.delegateIP);
-        this._dao = new DAO(this.networkID, this.api, this.delegateIP);
-        this._token = new Token(this.networkID, this.api, this.delegateIP);
-        this._point = new Point(this.networkID, this.api, this.delegateIP);
+        this._did = new DID(this.networkID, this.api, this.delegateIP);
+        this._accountAbstraction = new AccountAbstraction(this.networkID, this.api, this.delegateIP);
         this.ECODE = ECODE;
         this.PCODE = PCODE;
         this.DCODE = DCODE;
@@ -7175,14 +4244,8 @@ class Mitum extends Generator {
         this._block = new Block(this.api, this.delegateIP);
         this._operation = new Operation(this.networkID, this.api, this.delegateIP);
         this._contract = new Contract(this.networkID, this.api, this.delegateIP);
-        this._nft = new NFT(this.networkID, this.api, this.delegateIP);
-        this._credential = new Credential(this.networkID, this.api, this.delegateIP);
-        this._timestamp = new TimeStamp(this.networkID, this.api, this.delegateIP);
-        this._sto = new STO(this.networkID, this.api, this.delegateIP);
-        this._kyc = new KYC(this.networkID, this.api, this.delegateIP);
-        this._dao = new DAO(this.networkID, this.api, this.delegateIP);
-        this._token = new Token(this.networkID, this.api, this.delegateIP);
-        this._point = new Point(this.networkID, this.api, this.delegateIP);
+        this._did = new DID(this.networkID, this.api, this.delegateIP);
+        this._accountAbstraction = new AccountAbstraction(this.networkID, this.api, this.delegateIP);
         this._utils = new Utils();
     }
     get node() {
@@ -7206,29 +4269,11 @@ class Mitum extends Generator {
     get contract() {
         return this._contract;
     }
-    get nft() {
-        return this._nft;
+    get did() {
+        return this._did;
     }
-    get credential() {
-        return this._credential;
-    }
-    get timestamp() {
-        return this._timestamp;
-    }
-    get sto() {
-        return this._sto;
-    }
-    get kyc() {
-        return this._kyc;
-    }
-    get dao() {
-        return this._dao;
-    }
-    get token() {
-        return this._token;
-    }
-    get point() {
-        return this._point;
+    get accountAbstraction() {
+        return this._accountAbstraction;
     }
     get utils() {
         return this._utils;

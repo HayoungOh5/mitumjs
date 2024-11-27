@@ -1,4 +1,4 @@
-export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.HDWALLET[keyof typeof ECODE.HDWALLET] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.NFT[keyof typeof ECODE.NFT] | typeof ECODE.STO[keyof typeof ECODE.STO] | typeof ECODE.DAO[keyof typeof ECODE.DAO]);
+export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.HDWALLET[keyof typeof ECODE.HDWALLET] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.DID[keyof typeof ECODE.DID]);
 export declare const ECODE: {
     readonly NO_API: "EC_NO_API";
     readonly UNKNOWN: "EC_UNKNOWN";
@@ -38,6 +38,7 @@ export declare const ECODE: {
     readonly INVALID_FACT: "EC_INVALID_FACT";
     readonly INVALID_OPERATION: "EC_INVALID_OPERATION";
     readonly INVALID_OPERATIONS: "EC_INVALID_OPERATIONS";
+    readonly INVALID_USER_OPERATION: "EC_INVALID_USER_OPERATION";
     readonly INVALID_SEAL: "EC_INVALID_SEAL";
     readonly INVALID_AMOUNT: "EC_INVALID_AMOUNT";
     readonly INVALID_AMOUNTS: "EC_INVALID_AMOUNTS";
@@ -58,17 +59,8 @@ export declare const ECODE: {
         readonly INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY";
         readonly INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN";
     };
-    readonly NFT: {
-        readonly INVALID_NFT_SIGNER: "EC_INVALID_NFT_SIGNER";
-        readonly INVALID_NFT_SIGNERS: "EC_INVALID_NFT_SIGNERS";
-    };
-    readonly STO: {
-        readonly INVALID_PARTITION: "EC_INVALID_PARTITION";
-    };
-    readonly DAO: {
-        readonly INVALID_POLICY: "EC_INVALID_POLICY";
-        readonly INVALID_WHITELIST: "EC_INVALID_WHITELIST";
-        readonly UNMATCHED_SENDER: "EC_UNMATCHED_SENDER";
+    readonly DID: {
+        readonly INVALID_DID: "EC_INVALID_DID";
     };
     readonly TIME_OUT: "EC_TIME_OUT";
     readonly TRANSACTION_REVERTED: "EC_TRANSACTION_REVERTED";

@@ -50,5 +50,9 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
+    UPDATE_RECIPIENT: {
+        FACT: string;
+        OPERATION: string;
+    };
 };
 export default _default;
