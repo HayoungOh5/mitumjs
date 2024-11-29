@@ -19,7 +19,7 @@ type asymkeyAuth = {
 type socialLoginAuth = {
     _hint: string;
     id: string | LongString;
-    authType: string | LongString;
+    authType: "VerifiableCredential";
     controller: string | LongString;
     serviceEndpoint: string | LongString;
     proof: {

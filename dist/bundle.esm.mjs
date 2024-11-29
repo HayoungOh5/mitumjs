@@ -3595,7 +3595,6 @@ class CreateFact extends ContractFact {
         else {
             throw MitumError.detail(ECODE.INVALID_FACT, "invalid authType");
         }
-        this.authType = LongString.from(authType);
         this.publicKey = Key.from(publicKey);
         this.serviceType = LongString.from(serviceType);
         this.serviceEndpoints = LongString.from(serviceEndpoints);
@@ -3843,7 +3842,7 @@ const isOfType = (obj, keys) => typeof obj === "object" && obj !== null && keys.
 const validateAuthentication = (auth, index) => {
     const baseKeys = ["_hint", "id", "authType", "controller"];
     if (!isOfType(auth, baseKeys)) {
-        throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, "invalid authentication type");
+        throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, "Invalid authentication type");
     }
     if (auth.authType === "Ed25519VerificationKey2018" || auth.authType === "EcdsaSecp256k1VerificationKey2019") {
         const asymkeyAuthKeys = [...baseKeys, "publicKey"];
@@ -3851,15 +3850,21 @@ const validateAuthentication = (auth, index) => {
             throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Asymkey authentication at index ${index} is missing required fields.`);
         }
     }
-    else {
+    else if (auth.authType === "VerifiableCredential") {
         const socialLoginAuthKeys = [...baseKeys, "serviceEndpoint", "proof"];
         if (!isOfType(auth, socialLoginAuthKeys)) {
             throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Social login authentication at index ${index} is missing required fields.`);
         }
+        if (!auth.proof || typeof auth.proof !== "object") {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Proof in social login authentication at index ${index} is invalid or missing.`);
+        }
         const proofKeys = ["verificationMethod"];
         if (!isOfType(auth.proof, proofKeys)) {
-            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Proof in social login authentication at index ${index} is invalid.`);
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Proof in social login authentication at index ${index} is missing required fields.`);
         }
+    }
+    else {
+        throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Unknown authentication type at index ${index}.`);
     }
 };
 class DID extends ContractGenerator {
