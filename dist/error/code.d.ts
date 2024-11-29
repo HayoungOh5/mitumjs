@@ -61,6 +61,8 @@ export declare const ECODE: {
     };
     readonly DID: {
         readonly INVALID_DID: "EC_INVALID_DID";
+        readonly INVALID_DOCUMENT: "EC_INVALID_DOCUMENT";
+        readonly INVALID_AUTHENTICATION: "EC_INVALID_AUTHENTICATION";
     };
     readonly TIME_OUT: "EC_TIME_OUT";
     readonly TRANSACTION_REVERTED: "EC_TRANSACTION_REVERTED";

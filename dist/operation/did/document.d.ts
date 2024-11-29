@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { HintedObject, IBuffer, IHintedObject, LongString } from "../../types";
+import { Key } from "../../key";
 declare abstract class Authentication implements IBuffer, IHintedObject {
     private hint;
     constructor(hint: string);
@@ -10,8 +11,8 @@ export declare class AsymKeyAuth extends Authentication {
     readonly id: LongString;
     readonly authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019";
     readonly controller: LongString;
-    readonly publicKey: LongString;
-    constructor(id: string | LongString, authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019", controller: string | LongString, publicKey: string | LongString);
+    readonly publicKey: Key;
+    constructor(id: string | LongString, authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019", controller: string | LongString, publicKey: string | Key);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
 }

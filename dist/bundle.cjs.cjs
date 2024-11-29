@@ -112,6 +112,8 @@ const ECODE = {
     // DID Errors
     DID: {
         INVALID_DID: "EC_INVALID_DID",
+        INVALID_DOCUMENT: "EC_INVALID_DOCUMENT",
+        INVALID_AUTHENTICATION: "EC_INVALID_AUTHENTICATION"
     },
     // Transaction Errors
     TIME_OUT: "EC_TIME_OUT",
@@ -451,6 +453,7 @@ class StringAssert {
 class LongString {
     constructor(s) {
         Assert.check(s !== "", MitumError.detail(ECODE.EMPTY_STRING, "empty string"));
+        Assert.check(typeof (s) === "string", MitumError.detail(ECODE.INVALID_TYPE, `${s} is not in string type`));
         this.s = s;
     }
     static from(s) {
@@ -470,11 +473,6 @@ class IP extends LongString {
     }
     static from(s) {
         return s instanceof IP ? s : new IP(s);
-    }
-}
-class URIString {
-    constructor(s, name) {
-        Assert.check((/^[^\s:/?#\[\]@]*$/.test(s)), MitumError.detail(ECODE.INVALID_CHARACTER, `${name} must not contain: space / : ? # [ ] @`));
     }
 }
 
@@ -1402,8 +1400,7 @@ class OperationFact extends Fact {
         super(hint, token);
         this.sender = Address.from(sender);
         Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length), MitumError.detail(ECODE.INVALID_ITEMS, "length of items is out of range"));
-        hint !== "mitum-nft-mint-operation-fact" ? Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"))
-            : null;
+        Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"));
         this.items = items;
         this._hash = this.hashing();
     }
@@ -2124,8 +2121,8 @@ async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getByPubKey(api, contract, publicKey, delegateIP) {
-    const apiPath = `${url(api, contract)}/did/${publicKey}`;
+async function getByAccount(api, contract, account, delegateIP) {
+    const apiPath = `${url(api, contract)}/did/${account}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getByDID(api, contract, did, delegateIP) {
@@ -2134,7 +2131,7 @@ async function getByDID(api, contract, did, delegateIP) {
 }
 var did = {
     getModel,
-    getByPubKey,
+    getByAccount,
     getByDID
 };
 
@@ -3601,12 +3598,20 @@ class RegisterModelFact extends ContractFact {
     }
 }
 
-// import { Config } from "../../node"
 class CreateFact extends ContractFact {
     constructor(token, sender, contract, authType, publicKey, serviceType, serviceEndpoints, currency) {
         super(HINT.DID.CREATE_DID.FACT, token, sender, contract, currency);
+        if (authType === "ECDSA") {
+            this.authType = LongString.from("EcdsaSecp256k1VerificationKey2019");
+        }
+        else if (authType === "EdDSA") {
+            this.authType = LongString.from("Ed25519VerificationKey2018");
+        }
+        else {
+            throw MitumError.detail(ECODE.INVALID_FACT, "invalid authType");
+        }
         this.authType = LongString.from(authType);
-        this.publicKey = LongString.from(publicKey);
+        this.publicKey = Key.from(publicKey);
         this.serviceType = LongString.from(serviceType);
         this.serviceEndpoints = LongString.from(serviceEndpoints);
         this._hash = this.hashing();
@@ -3632,49 +3637,6 @@ class CreateFact extends ContractFact {
     }
     get operationHint() {
         return HINT.DID.CREATE_DID.OPERATION;
-    }
-}
-
-class MigrateDidItem extends Item {
-    constructor(contract, currency, publicKey, txId) {
-        super(HINT.DID.MIGRATE_DID.ITEM);
-        this.contract = Address.from(contract);
-        this.currency = CurrencyID.from(currency);
-        this.publicKey = LongString.from(publicKey);
-        this.txId = LongString.from(txId);
-        new URIString(publicKey.toString(), 'merkleRoot');
-        new URIString(txId.toString(), 'txId');
-        Assert.check(/^[0-9a-fA-F]+$/.test(publicKey.toString().slice(-128)), MitumError.detail(ECODE.INVALID_FACT, `${this.publicKey.toString()} is not a hexadecimal number`));
-        Assert.check(Config.DID.PUBLIC_KEY.satisfy(publicKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `publickey length out of range, should be over ${Config.DID.PUBLIC_KEY.min}`));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            this.contract.toBuffer(),
-            this.publicKey.toBuffer(),
-            this.txId.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            contract: this.contract.toString(),
-            publicKey: this.publicKey.toString(),
-            tx_hash: this.txId.toString(),
-            currency: this.currency.toString()
-        };
-    }
-    toString() {
-        return this.publicKey.toString();
-    }
-}
-class MigrateDidFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.DID.MIGRATE_DID.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated item founded"));
-    }
-    get operationHint() {
-        return HINT.DID.MIGRATE_DID.OPERATION;
     }
 }
 
@@ -3794,7 +3756,7 @@ class AsymKeyAuth extends Authentication {
         this.id = LongString.from(id);
         this.authType = authType;
         this.controller = LongString.from(controller);
-        this.publicKey = LongString.from(publicKey);
+        this.publicKey = Key.from(publicKey);
     }
     toBuffer() {
         return Buffer.concat([
@@ -3892,9 +3854,73 @@ class Document {
     }
 }
 
+const isOfType = (obj, keys) => typeof obj === "object" && obj !== null && keys.every((key) => key in obj);
+const validateAuthentication = (auth, index) => {
+    const baseKeys = ["_hint", "id", "authType", "controller"];
+    if (!isOfType(auth, baseKeys)) {
+        throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, "invalid authentication type");
+    }
+    if (auth.authType === "Ed25519VerificationKey2018" || auth.authType === "EcdsaSecp256k1VerificationKey2019") {
+        const asymkeyAuthKeys = [...baseKeys, "publicKey"];
+        if (!isOfType(auth, asymkeyAuthKeys)) {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Asymkey authentication at index ${index} is missing required fields.`);
+        }
+    }
+    else {
+        const socialLoginAuthKeys = [...baseKeys, "serviceEndpoint", "proof"];
+        if (!isOfType(auth, socialLoginAuthKeys)) {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Social login authentication at index ${index} is missing required fields.`);
+        }
+        const proofKeys = ["verificationMethod"];
+        if (!isOfType(auth.proof, proofKeys)) {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Proof in social login authentication at index ${index} is invalid.`);
+        }
+    }
+};
 class DID extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
+    }
+    validateDocument(doc) {
+        if (typeof doc !== "object" || doc === null) {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "invalid document type");
+        }
+        const requiredKeys = ["_hint", "@context", "status", "created", "id", "authentication", "verificationMethod", "service"];
+        if (!isOfType(doc, requiredKeys)) {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "The document structure is invalid or missing required fields.");
+        }
+        if (!Array.isArray(doc.authentication)) {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, "The 'authentication' field must be an array.");
+        }
+        doc.authentication.forEach((auth, index) => validateAuthentication(auth, index));
+        const serviceKeys = ["id", "type", "service_end_point"];
+        if (!isOfType(doc.service, serviceKeys)) {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "The 'service' structure is invalid or missing required fields.");
+        }
+    }
+    validateDID(did, option) {
+        const parts = did.split(":");
+        if (parts.length !== 3) {
+            throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid did structure");
+        }
+        if (parts[0] !== "did") {
+            throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid did structure");
+        }
+        if (option) {
+            const subparts = parts[2].split("#");
+            if (subparts.length !== 2) {
+                throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid authentication id");
+            }
+            else {
+                Address.from(subparts[0]);
+            }
+        }
+        else {
+            Address.from(parts[2]);
+        }
+        if (option && (did.match(/#/g) || []).length !== 1) {
+            throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid authentication id");
+        }
     }
     writeAsymkeyAuth(id, authType, controller, publicKey) {
         return new AsymKeyAuth(id, authType, controller, publicKey);
@@ -3920,32 +3946,20 @@ class DID extends ContractGenerator {
         return new Operation$1(this.networkID, new RegisterModelFact(TimeStamp.new().UTC(), sender, contract, didMethod, currency));
     }
     /**
-     * Generate `create-did` operation to create new did.
+     * Generate `create-did` operation to create new did and did document.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {document} [document] - DID document to be created when create new did.
+     * @param {"ECDSA"} [authType] - The encryption method to use for authentication.
+     * @param {publicKey} [publicKey] - The public key to use for authentication.
+     * @param {serviceType} [serviceType] - The serivce type.
+     * @param {serviceEndpoints} [serviceEndpoints] - The service end point.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-did` operation
      */
-    create(contract, sender, authType, publicKey, serviceType, serviceEndpoints, currency) {
+    create(contract, sender, authType, //"ECDSA" | "EdDSA"
+    publicKey, serviceType, serviceEndpoints, currency) {
         const fact = new CreateFact(TimeStamp.new().UTC(), sender, contract, authType, publicKey, serviceType, serviceEndpoints, currency);
         return new Operation$1(this.networkID, fact);
-    }
-    /**
-     * Generate `migrate-did` operation to migrate did with publicKey and tx id to the did model.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string[] | LongString[]} [publicKeys] - array with multiple publicKey to record.
-     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `migrate-did` operation
-     */
-    migrateDID(contract, sender, publicKeys, txIds, currency) {
-        Assert.check(publicKeys.length !== 0 && txIds.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
-        Assert.check(new Set(publicKeys.map(it => it.toString())).size === publicKeys.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated merkleRoot founded"));
-        Assert.check(new Set(txIds.map(it => it.toString())).size === txIds.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated txId founded"));
-        Assert.check(publicKeys.length === txIds.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the publicKeys and txIds must be the same."));
-        return new Operation$1(this.networkID, new MigrateDidFact(TimeStamp.new().UTC(), sender, publicKeys.map((publicKey, idx) => new MigrateDidItem(contract, currency, publicKey.toString(), txIds[idx].toString()))));
     }
     /**
      * Generate `deactivate-did` operation to deactivate the did.
@@ -3956,6 +3970,7 @@ class DID extends ContractGenerator {
      * @returns `deactivate-did` operation
      */
     deactivate(contract, sender, did, currency) {
+        this.validateDID(did);
         const fact = new DeactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
         return new Operation$1(this.networkID, fact);
     }
@@ -3968,11 +3983,16 @@ class DID extends ContractGenerator {
      * @returns `reactivate-did` operation
      */
     reactivate(contract, sender, did, currency) {
+        this.validateDID(did);
         const fact = new ReactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
         return new Operation$1(this.networkID, fact);
     }
     updateDIDDocument(contract, sender, document, currency) {
+        this.validateDocument(document);
+        this.validateDID(document.id.toString());
+        this.validateDID(document.service.id.toString());
         const fact = new UpdateDocumentFact(TimeStamp.new().UTC(), sender, contract, document.id.toString(), new Document(document["@context"], document.status, document.created, document.id, document.authentication.map((el) => {
+            this.validateDID(el.id.toString(), true);
             if ("proof" in el) {
                 return new SocialLoginAuth(el.id, el.controller, el.serviceEndpoint, el.proof.verificationMethod);
             }
@@ -4000,18 +4020,18 @@ class DID extends ContractGenerator {
         return await getAPIData(() => contractApi.did.getModel(this.api, contract, this.delegateIP));
     }
     /**
-     * Get did by publickey.
+     * Get did by account address.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | LongString} [publicKey] - The publicKey, // Must be longer than 128 digits. If the length over 128, only the 128 characters from the end will be used.
+     * @param {string | LongString} [account] - The account address.
      * @returns `data` of `SuccessResponse` is did:
      * - `did`: The did value,
      */
-    async getDIDByPublicKey(contract, publicKey) {
+    async getDIDByAddress(contract, account) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
-        new URIString(publicKey, 'publicKey');
-        const response = await getAPIData(() => contractApi.did.getByPubKey(this.api, contract, publicKey, this.delegateIP));
+        Address.from(account);
+        const response = await getAPIData(() => contractApi.did.getByAccount(this.api, contract, account, this.delegateIP));
         if (isSuccessResponse(response) && response.data) {
             response.data = response.data.did ? { did: response.data.did } : null;
         }
@@ -4041,6 +4061,7 @@ class DID extends ContractGenerator {
     async getDDocByDID(contract, did) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
+        this.validateDID(did);
         const response = await getAPIData(() => contractApi.did.getByDID(this.api, contract, did, this.delegateIP));
         return response;
     }

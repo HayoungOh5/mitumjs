@@ -1,6 +1,5 @@
 import { RegisterModelFact } from "./register-model";
 import { CreateFact } from "./create-did";
-import { MigrateDidFact } from "./migrate-did";
 import { ReactivateDidFact } from "./reactive-did";
 import { DeactivateDidFact } from "./deactive-did";
 import { UpdateDocumentFact } from "./update_did_document";
@@ -9,12 +8,13 @@ import { ContractGenerator, Operation } from "../base";
 import { Address } from "../../key";
 import { CurrencyID } from "../../common";
 import { IP, LongString } from "../../types";
+import { Key } from "../../key";
 type asymkeyAuth = {
     _hint: string;
     id: string | LongString;
     authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019";
     controller: string | LongString;
-    publicKey: string | LongString;
+    publicKey: string | Key;
 };
 type socialLoginAuth = {
     _hint: string;
@@ -42,6 +42,8 @@ type document = {
 };
 export declare class DID extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
+    private validateDocument;
+    private validateDID;
     writeAsymkeyAuth(id: string, authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019", controller: string, publicKey: string): AsymKeyAuth;
     writeSocialLoginAuth(id: string, controller: string, serviceEndpoint: string, verificationMethod: string): SocialLoginAuth;
     writeDocument(didContext: string, status: string, created: string, didID: string, authentications: (SocialLoginAuth | AsymKeyAuth)[], serivceID: string, serviceType: string, serviceEndPoint: string): Document;
@@ -55,24 +57,18 @@ export declare class DID extends ContractGenerator {
      */
     registerModel(contract: string | Address, sender: string | Address, didMethod: string, currency: string | CurrencyID): Operation<RegisterModelFact>;
     /**
-     * Generate `create-did` operation to create new did.
+     * Generate `create-did` operation to create new did and did document.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {document} [document] - DID document to be created when create new did.
+     * @param {"ECDSA"} [authType] - The encryption method to use for authentication.
+     * @param {publicKey} [publicKey] - The public key to use for authentication.
+     * @param {serviceType} [serviceType] - The serivce type.
+     * @param {serviceEndpoints} [serviceEndpoints] - The service end point.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-did` operation
      */
-    create(contract: string | Address, sender: string | Address, authType: "EcdsaSecp256k1VerificationKey2019" | "Ed25519VerificationKey2018", publicKey: string, serviceType: string, serviceEndpoints: string, currency: string | CurrencyID): Operation<CreateFact>;
-    /**
-     * Generate `migrate-did` operation to migrate did with publicKey and tx id to the did model.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string[] | LongString[]} [publicKeys] - array with multiple publicKey to record.
-     * @param {string[] | LongString[]} [txIds] - array with multiple tx Id.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `migrate-did` operation
-     */
-    migrateDID(contract: string | Address, sender: string | Address, publicKeys: string[] | LongString[], txIds: string[] | LongString[], currency: string | CurrencyID): Operation<MigrateDidFact>;
+    create(contract: string | Address, sender: string | Address, authType: "ECDSA", //"ECDSA" | "EdDSA"
+    publicKey: string, serviceType: string, serviceEndpoints: string, currency: string | CurrencyID): Operation<CreateFact>;
     /**
      * Generate `deactivate-did` operation to deactivate the did.
      * @param {string | Address} [contract] - The contract's address.
@@ -106,14 +102,14 @@ export declare class DID extends ContractGenerator {
      */
     getModelInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
-     * Get did by publickey.
+     * Get did by account address.
      * @async
      * @param {string | Address} [contract] - The contract's address.
-     * @param {string | LongString} [publicKey] - The publicKey, // Must be longer than 128 digits. If the length over 128, only the 128 characters from the end will be used.
+     * @param {string | LongString} [account] - The account address.
      * @returns `data` of `SuccessResponse` is did:
      * - `did`: The did value,
      */
-    getDIDByPublicKey(contract: string | Address, publicKey: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getDIDByAddress(contract: string | Address, account: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get did document by did.
      * @async

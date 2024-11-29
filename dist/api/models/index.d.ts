@@ -11,7 +11,7 @@ declare const _default: {
         };
         did: {
             getModel: (api: string | undefined, contract: string | import("../../key").Address, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
-            getByPubKey: (api: string | undefined, contract: string | import("../../key").Address, publicKey: string, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
+            getByAccount: (api: string | undefined, contract: string | import("../../key").Address, account: string, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
             getByDID: (api: string | undefined, contract: string | import("../../key").Address, did: string, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
         };
     };
