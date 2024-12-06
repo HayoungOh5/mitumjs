@@ -6,8 +6,8 @@ import { CurrencyID } from "../../common";
 import { Big, HintedObject } from "../../types";
 export declare class TransferItem extends NFTItem {
     readonly receiver: Address;
-    readonly nft: Big;
-    constructor(contract: string | Address, receiver: string | Address, nft: string | number | Big, currency: string | CurrencyID);
+    readonly nftIdx: Big;
+    constructor(contract: string | Address, receiver: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
     toString(): string;

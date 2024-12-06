@@ -67,6 +67,7 @@ const ECODE = {
     INVALID_FACTSIGNS: "EC_INVALID_FACTSIGNS",
     INVALID_SIG_TYPE: "EC_INVALID_SIG_TYPE",
     INVALID_FACT: "EC_INVALID_FACT",
+    INVALID_FACT_HASH: "EC_INVALID_FACT_HASH",
     INVALID_OPERATION: "EC_INVALID_OPERATION",
     INVALID_OPERATIONS: "EC_INVALID_OPERATIONS",
     INVALID_SEAL: "EC_INVALID_SEAL",
@@ -445,6 +446,7 @@ class StringAssert {
 
 class LongString {
     constructor(s) {
+        Assert.check(typeof (s) === "string", MitumError.detail(ECODE.INVALID_TYPE, `${s} is not in string type`));
         Assert.check(s !== "", MitumError.detail(ECODE.EMPTY_STRING, "empty string"));
         this.s = s;
     }
@@ -785,6 +787,7 @@ const Config = {
     AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
     ITEMS_IN_FACT: getRangeConfig(1, 100),
     OP_SIZE: getRangeConfig(1, 262144),
+    FACT_HASHES: getRangeConfig(1, 44),
     KEY: {
         MITUM: {
             PRIVATE: getRangeConfig(67),
@@ -1555,8 +1558,9 @@ class OperationFact extends Fact {
         super(hint, token);
         this.sender = Address.from(sender);
         Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length), MitumError.detail(ECODE.INVALID_ITEMS, "length of items is out of range"));
-        hint !== "mitum-nft-mint-operation-fact" ? Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"))
-            : null;
+        if (hint !== HINT.NFT.MINT.FACT) {
+            Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"));
+        }
         this.items = items;
         this._hash = this.hashing();
     }
@@ -1614,6 +1618,13 @@ const isHintedObject = (object) => {
 };
 const isSuccessResponse = (response) => {
     return 'data' in response;
+};
+const isBase58Encoded = (value) => {
+    if (!value || typeof value !== 'string') {
+        return false;
+    }
+    const base58Chars = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
+    return base58Chars.test(value);
 };
 
 class BaseAddress {
@@ -2188,6 +2199,10 @@ async function getOperation(api, hash, delegateIP) {
     const apiPath = `${api}/block/operation/${hash}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
+async function getMultiOperations(api, hashes, delegateIP) {
+    const apiPath = `${api}/block/operations/facts?hashes=${hashes.join(",")}`;
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
 async function getBlockOperationsByHeight(api, height, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2210,7 +2225,7 @@ var api$1 = {
     getOperations,
     getOperation,
     getBlockOperationsByHeight,
-    // getBlockOperationsByHash,
+    getMultiOperations,
     getAccountOperations,
     send
 };
@@ -3791,7 +3806,7 @@ class ApproveItem extends NFTItem {
         };
     }
     toString() {
-        return `${super.toString()}-${this.approved.toString()}`;
+        return `${super.toString()}-${this.nftIdx.v}-${this.approved.toString()}`;
     }
 }
 let ApproveFact$2 = class ApproveFact extends OperationFact {
@@ -3849,16 +3864,16 @@ class ApproveAlleFact extends OperationFact {
 }
 
 class TransferItem extends NFTItem {
-    constructor(contract, receiver, nft, currency) {
+    constructor(contract, receiver, nftIdx, currency) {
         super(HINT.NFT.TRANSFER.ITEM, contract, currency);
         this.receiver = Address.from(receiver);
-        this.nft = Big.from(nft);
+        this.nftIdx = Big.from(nftIdx);
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             this.receiver.toBuffer(),
-            this.nft.toBuffer("fill"),
+            this.nftIdx.toBuffer("fill"),
             this.currency.toBuffer(),
         ]);
     }
@@ -3866,11 +3881,11 @@ class TransferItem extends NFTItem {
         return {
             ...super.toHintedObject(),
             receiver: this.receiver.toString(),
-            nft_idx: this.nft.v,
+            nft_idx: this.nftIdx.v,
         };
     }
     toString() {
-        return `${super.toString()}-${this.nft.toString()}`;
+        return `${super.toString()}-${this.nftIdx.toString()}`;
     }
 }
 let TransferFact$2 = class TransferFact extends OperationFact {
@@ -4408,13 +4423,13 @@ let IssueItem$1 = class IssueItem extends CredentialItem {
         };
     }
     toString() {
-        return `${super.toString()}-${this.credentialID}`;
+        return `${super.toString()}-${this.templateID}-${this.credentialID}`;
     }
 };
 let IssueFact$2 = class IssueFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.CREDENTIAL.ISSUE.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate credential id found in items"));
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, `each item's combination of contract-templateID-credentialID must be unique`));
         items.forEach(item => {
             Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
         });
@@ -4435,13 +4450,13 @@ class RevokeItem extends CredentialItem {
         ]);
     }
     toString() {
-        return `${super.toString()}-${this.credentialID}`;
+        return `${super.toString()}-${this.templateID}-${this.credentialID}`;
     }
 }
 class RevokeFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.CREDENTIAL.REVOKE.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate credential id found in items"));
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, `each item's combination of contract-templateID-credentialID must be unique`));
         items.forEach(item => {
             Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
         });
@@ -5418,6 +5433,9 @@ class CreateSecurityTokenItem extends STOItem {
             default_partition: this.defaultPartition.toString(),
         };
     }
+    toString() {
+        return `${super.toString()}-${this.defaultPartition.toString()}`;
+    }
 }
 class CreateSecurityTokenFact extends OperationFact {
     constructor(token, sender, items) {
@@ -5458,6 +5476,9 @@ class IssueItem extends STOItem {
             partition: this.partition.toString(),
         };
     }
+    toString() {
+        return `${super.toString()}-${this.receiver.toString()}-${this.partition.toString()}`;
+    }
 }
 let IssueFact$1 = class IssueFact extends OperationFact {
     constructor(token, sender, items) {
@@ -5495,7 +5516,7 @@ class AuthorizeOperatorItem extends STOItem {
         };
     }
     toString() {
-        return this.operator.toString();
+        return `${super.toString()}-${this.operator.toString()}-${this.partition.toString()}`;
     }
 }
 class AuthorizeOperatorFact extends OperationFact {
@@ -5535,7 +5556,7 @@ class RevokeOperatorItem extends STOItem {
         };
     }
     toString() {
-        return this.operator.toString();
+        return `${super.toString()}-${this.operator.toString()}-${this.partition.toString()}`;
     }
 }
 class RevokeOperatorFact extends OperationFact {
@@ -5578,7 +5599,7 @@ class RedeemItem extends STOItem {
         };
     }
     toString() {
-        return this.tokenHolder.toString();
+        return `${super.toString()}-${this.tokenHolder.toString()}-${this.partition.toString()}`;
     }
 }
 class RedeemFact extends OperationFact {
@@ -5656,7 +5677,7 @@ class TransferByPartitionItem extends STOItem {
         };
     }
     toString() {
-        return `${this.tokenHolder.toString()}-${this.receiver.toString()}-${this.partition.toString()}`;
+        return `${super.toString()}-${this.tokenHolder.toString()}-${this.receiver.toString()}-${this.partition.toString()}`;
     }
 }
 class TransferByPartitionFact extends OperationFact {
@@ -7008,6 +7029,37 @@ class Operation extends Generator {
         const response = await getAPIData(() => api$1.getOperation(this.api, hash, this.delegateIP));
         if (isSuccessResponse(response)) {
             response.data = response.data ? response.data : null;
+        }
+        return response;
+    }
+    /**
+     * Get multiple operations by array of fact hashes.
+     * Returns excluding operations that have not yet been recorded.
+     * @async
+     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 44 length.
+     * @returns The `data` of `SuccessResponse` is array of infomation of the operations:
+     * - `_hint`: Hint for the operation,
+     * - `hash`: Hash for the fact,
+     * - `operation`:
+     * - - `hash`: Hash fot the operation,
+     * - - `fact`: Object for fact,
+     * - - `signs`: Array for sign,
+     * - - `_hint`: Hint for operation type,
+     * - `height`: Block height containing the operation,
+     * - `confirmed_at`: Timestamp when the block was confirmed,
+     * - `reason`: Reason for operation failure,
+     * - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - `index`: Index of the operation in the block
+     */
+    async getMultiOperations(hashes) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Assert.check(Config.FACT_HASHES.satisfy(hashes.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of hash array is out of range"));
+        hashes.forEach((hash) => {
+            Assert.check(isBase58Encoded(hash) && hash.length === 44, MitumError.detail(ECODE.INVALID_FACT_HASH, "fact hash must be base58 encoded string with 44 length."));
+        });
+        const response = await getAPIData(() => api$1.getMultiOperations(this.api, hashes, this.delegateIP));
+        if (isSuccessResponse(response) && Array.isArray(response.data)) {
+            response.data = response.data.map((el) => { return el._embedded; });
         }
         return response;
     }

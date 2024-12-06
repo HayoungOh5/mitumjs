@@ -56,6 +56,26 @@ export declare class Operation extends Generator {
      */
     getOperation(hash: string): Promise<SuccessResponse | ErrorResponse>;
     /**
+     * Get multiple operations by array of fact hashes.
+     * Returns excluding operations that have not yet been recorded.
+     * @async
+     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 44 length.
+     * @returns The `data` of `SuccessResponse` is array of infomation of the operations:
+     * - `_hint`: Hint for the operation,
+     * - `hash`: Hash for the fact,
+     * - `operation`:
+     * - - `hash`: Hash fot the operation,
+     * - - `fact`: Object for fact,
+     * - - `signs`: Array for sign,
+     * - - `_hint`: Hint for operation type,
+     * - `height`: Block height containing the operation,
+     * - `confirmed_at`: Timestamp when the block was confirmed,
+     * - `reason`: Reason for operation failure,
+     * - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - `index`: Index of the operation in the block
+     */
+    getMultiOperations(hashes: string[]): Promise<SuccessResponse | ErrorResponse>;
+    /**
      * Sign the given operation using the provided private key or key pair.
      * @param {string | Key | KeyPair} [privatekey] - The private key or key pair for signing.
      * @param {OP<Fact>} [operation] - The operation to sign.

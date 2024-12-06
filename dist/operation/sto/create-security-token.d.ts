@@ -11,6 +11,7 @@ export declare class CreateSecurityTokenItem extends STOItem {
     constructor(contract: string | Address, granularity: string | number | Big, defaultPartition: string | Partition, currency: string | CurrencyID);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
+    toString(): string;
 }
 export declare class CreateSecurityTokenFact extends OperationFact<CreateSecurityTokenItem> {
     constructor(token: string, sender: string | Address, items: CreateSecurityTokenItem[]);
