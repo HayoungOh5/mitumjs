@@ -67,6 +67,7 @@ const ECODE = {
     INVALID_FACTSIGNS: "EC_INVALID_FACTSIGNS",
     INVALID_SIG_TYPE: "EC_INVALID_SIG_TYPE",
     INVALID_FACT: "EC_INVALID_FACT",
+    INVALID_FACT_HASH: "EC_INVALID_FACT_HASH",
     INVALID_OPERATION: "EC_INVALID_OPERATION",
     INVALID_OPERATIONS: "EC_INVALID_OPERATIONS",
     INVALID_USER_OPERATION: "EC_INVALID_USER_OPERATION",
@@ -746,10 +747,13 @@ const Config = {
         ZERO: getRangeConfig(8, 15),
         NODE: getRangeConfig(4, Number.MAX_SAFE_INTEGER),
     },
+    CONTRACT_HANDLERS: getRangeConfig(1, 20),
+    CONTRACT_RECIPIENTS: getRangeConfig(0, 20),
     KEYS_IN_ACCOUNT: getRangeConfig(1, 100),
     AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
     ITEMS_IN_FACT: getRangeConfig(1, 100),
     OP_SIZE: getRangeConfig(1, 262144),
+    FACT_HASHES: getRangeConfig(1, 44),
     KEY: {
         MITUM: {
             PRIVATE: getRangeConfig(67),
@@ -1253,6 +1257,9 @@ class UserOperation extends Operation$1 {
         super(networkID, fact);
         this.id = networkID;
         this.fact = fact;
+        if ("sender" in fact) {
+            this.isSenderDidOwner(fact.sender, auth.authenticationId, true);
+        }
         this.auth = auth;
         this.settlement = settlement;
         this.hint = new Hint(fact.operationHint);
@@ -1302,6 +1309,9 @@ class UserOperation extends Operation$1 {
             signs: factSigns.map(fs => fs.toHintedObject())
         };
     }
+    isSenderDidOwner(sender, did, id) {
+        Assert.check(sender.toString() === validateDID(did.toString(), id).toString(), MitumError.detail(ECODE.DID.INVALID_DID, `The owner of did must match the sender(${sender.toString()}). check the did (${did.toString()})`));
+    }
     /**
      * Add alternative signature for userOperation, fill `proof_data` item of `authentication` object.
      * @param {string | Key | KeyPair} [privateKey] - The private key or key pair for signing.
@@ -1333,7 +1343,15 @@ class UserOperation extends Operation$1 {
      * @returns void.
      */
     sign(privatekey) {
-        Key.from(privatekey);
+        const userOperationFields = {
+            contract: this.auth.contract.toString(),
+            authentication_id: this.auth.authenticationId,
+            proof_data: this.auth.proofData,
+            op_sender: this.settlement.opSender.toString(),
+        };
+        Object.entries(userOperationFields).forEach(([key, value]) => {
+            StringAssert.with(value, MitumError.detail(ECODE.INVALID_USER_OPERATION, `Cannot sign the user operation: ${key} must not be empty.`)).empty().not().excute();
+        });
         const keypair = KeyPair.fromPrivateKey(privatekey);
         const now = TimeStamp.new();
         const factSign = new GeneralFactSign(keypair.publicKey, keypair.sign(Buffer.concat([Buffer.from(this.id), this.fact.hash, now.toBuffer()])), now.toString());
@@ -1468,6 +1486,30 @@ const isBase58Encoded = (value) => {
     }
     const base58Chars = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
     return base58Chars.test(value);
+};
+const validateDID = (did, id) => {
+    const parts = did.split(":");
+    if (parts.length !== 3) {
+        throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid did structure");
+    }
+    if (parts[0] !== "did") {
+        throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid did structure");
+    }
+    if (id && (did.match(/#/g) || []).length !== 1) {
+        throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid authentication id");
+    }
+    if (id) {
+        const subparts = parts[2].split("#");
+        if (subparts.length !== 2) {
+            throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid authentication id");
+        }
+        else {
+            return Address.from(subparts[0]);
+        }
+    }
+    else {
+        return Address.from(parts[2]);
+    }
 };
 
 class BaseAddress {
@@ -2042,6 +2084,10 @@ async function getOperation(api, hash, delegateIP) {
     const apiPath = `${api}/block/operation/${hash}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
+async function getMultiOperations(api, hashes, delegateIP) {
+    const apiPath = `${api}/block/operations/facts?hashes=${hashes.join(",")}`;
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
 async function getBlockOperationsByHeight(api, height, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -2064,7 +2110,7 @@ var api$1 = {
     getOperations,
     getOperation,
     getBlockOperationsByHeight,
-    // getBlockOperationsByHash,
+    getMultiOperations,
     getAccountOperations,
     send
 };
@@ -2585,6 +2631,7 @@ class UpdateHandlerFact extends Fact {
         this.handlers = handlers.map(a => Address.from(a));
         this._hash = this.hashing();
         Assert.check((this.handlers.length !== 0), MitumError.detail(ECODE.INVALID_FACT, "empty handlers"));
+        Assert.check(Config.CONTRACT_HANDLERS.satisfy(handlers.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of handlers array is out of range"));
         Assert.check(hasOverlappingAddress(this.handlers), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in handlers"));
     }
     toBuffer() {
@@ -2618,10 +2665,7 @@ class UpdateRecipientFact extends Fact {
         this.currency = CurrencyID.from(currency);
         this.recipients = recipients.map(a => Address.from(a));
         this._hash = this.hashing();
-        // Assert.check(
-        //     (this.recipients.length !== 0),
-        //     MitumError.detail(ECODE.INVALID_FACT, "empty recipients"),
-        // )
+        Assert.check(Config.CONTRACT_RECIPIENTS.satisfy(recipients.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of recipients array is out of range"));
         Assert.check(hasOverlappingAddress(this.recipients), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in recipients"));
     }
     toBuffer() {
@@ -3396,83 +3440,6 @@ class Contract extends Generator {
     }
 }
 
-class Signer extends Generator {
-    constructor(networkID, api) {
-        super(networkID, api);
-    }
-    /**
-     * Sign the given operation in JSON format using given private key.
-     * @param {string | Key} [privatekey] - The private key used for signing.
-     * @param {Operation<Fact> | HintedObject} [operation] - The operation to be signed.
-     * @param {SignOption} [option] - (Optional) Option for node sign.
-     * @returns The signed operation in JSON object (HintedObject).
-     */
-    sign(privatekey, operation, option) {
-        Assert.check(isOpFact(operation) || isHintedObject(operation), MitumError.detail(ECODE.INVALID_OPERATION, `input is neither in OP<Fact> nor HintedObject format`));
-        operation = isOpFact(operation) ? operation.toHintedObject() : operation;
-        Key.from(privatekey);
-        const keypair = KeyPair.fromPrivateKey(privatekey);
-        return option ? this.nodeSign(keypair, operation, option.node ?? "") : this.accSign(keypair, operation);
-    }
-    accSign(keypair, operation) {
-        const now = TimeStamp.new();
-        const fs = new GeneralFactSign(keypair.publicKey.toString(), keypair.sign(Buffer.concat([
-            Buffer.from(this.networkID),
-            base58.decode(operation.fact.hash),
-            now.toBuffer(),
-        ])), now.toString()).toHintedObject();
-        if (operation.signs !== undefined) {
-            operation.signs = [...operation.signs, fs];
-        }
-        else {
-            operation.signs = [fs];
-        }
-        Assert.check(new Set(operation.signs.map(fs => fs.signer.toString())).size === operation.signs.length, MitumError.detail(ECODE.INVALID_FACTSIGNS, "duplicate signers found in factsigns"));
-        const factSigns = operation.signs
-            .map((s) => Buffer.concat([
-            Buffer.from(s.signer),
-            base58.decode(s.signature),
-            new FullTimeStamp(s.signed_at).toBuffer("super"),
-        ]));
-        //.sort((a, b) => Buffer.compare(a, b))
-        const msg = Buffer.concat([
-            base58.decode(operation.fact.hash),
-            Buffer.concat(factSigns),
-        ]);
-        operation.hash = base58.encode(sha3(msg));
-        return operation;
-    }
-    nodeSign(keypair, operation, node) {
-        const nd = new NodeAddress(node);
-        const now = TimeStamp.new();
-        const fs = new NodeFactSign(node, keypair.publicKey.toString(), keypair.sign(Buffer.concat([
-            Buffer.from(this.networkID),
-            nd.toBuffer(),
-            base58.decode(operation.fact.hash),
-            now.toBuffer(),
-        ])), now.toString()).toHintedObject();
-        if (operation.signs) {
-            operation.signs = [...operation.signs, fs];
-        }
-        else {
-            operation.signs = [fs];
-        }
-        const factSigns = operation.signs
-            .map((s) => Buffer.concat([
-            Buffer.from(s.signer),
-            base58.decode(s.signature),
-            new FullTimeStamp(s.signed_at).toBuffer("super"),
-        ]))
-            .sort((a, b) => Buffer.compare(a, b));
-        const msg = Buffer.concat([
-            base58.decode(operation.fact.hash),
-            Buffer.concat(factSigns),
-        ]);
-        operation.hash = base58.encode(sha3(msg));
-        return operation;
-    }
-}
-
 class AccountAbstraction extends Generator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
@@ -3499,8 +3466,7 @@ class AccountAbstraction extends Generator {
         const hintedUserOp = isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
         privateKey = Key.from(privateKey);
         const keypair = KeyPair.fromPrivateKey(privateKey);
-        const now = TimeStamp.new();
-        const alterSign = keypair.sign(Buffer.concat([Buffer.from(this._networkID), Buffer.from(hintedUserOp.fact.hash), now.toBuffer()]));
+        const alterSign = keypair.sign(Buffer.from(base58.decode(hintedUserOp.fact.hash)));
         hintedUserOp.authentication.proof_data = base58.encode(alterSign);
         return hintedUserOp;
     }
@@ -3519,37 +3485,6 @@ class AccountAbstraction extends Generator {
         return {
             ...filledUO.toHintedObjectWithOutFact(hintedUserOp._hint, hintedUserOp.fact)
         };
-    }
-    /**
-     * Sign the given userOperation in JSON format using given private key.
-     * @param {string | Key} [privatekey] - The private key used for signing.
-     * @param {UserOperation<Fact> | HintedObject} [userOperation] - The operation to be signed.
-     * @returns The signed user operation in JSON object (HintedObject).
-     */
-    sign(privatekey, userOperation) {
-        Assert.check(isUserOp(userOperation) || isHintedObjectFromUserOp(userOperation), MitumError.detail(ECODE.INVALID_USER_OPERATION, `Input must in UserOperation format`));
-        const hintedUserOp = isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
-        const signer = new Signer(this.networkID);
-        const signedOp = signer.sign(privatekey, hintedUserOp);
-        hintedUserOp.signs = signedOp.signs;
-        return this.FillUserOpHash(hintedUserOp);
-    }
-    FillUserOpHash(userOperation) {
-        const { contract, authentication_id, proof_data, op_sender, proxy_payer } = { ...userOperation.authentication, ...userOperation.settlement };
-        const auth = new Authentication$1(contract, authentication_id, proof_data);
-        const settlement = new Settlement(op_sender, proxy_payer);
-        const msg = Buffer.concat([
-            base58.decode(userOperation.fact.hash),
-            Buffer.concat(userOperation.signs.map((s) => Buffer.concat([
-                Buffer.from(s.signer),
-                base58.decode(s.signature),
-                new FullTimeStamp(s.signed_at).toBuffer("super"),
-            ]))),
-            auth.toBuffer(),
-            settlement.toBuffer()
-        ]);
-        userOperation.hash = base58.encode(sha3(msg));
-        return userOperation;
     }
 }
 
@@ -3720,7 +3655,6 @@ class UpdateDocumentFact extends ContractFact {
     }
 }
 
-// import { Config } from "../../node"
 class Authentication {
     constructor(hint) {
         this.hint = new Hint(hint);
@@ -3740,7 +3674,7 @@ class AsymKeyAuth extends Authentication {
         this.id = LongString.from(id);
         this.authType = authType;
         this.controller = LongString.from(controller);
-        this.publicKey = Key.from(publicKey);
+        this.publicKey = new PubKey(publicKey, 100);
     }
     toBuffer() {
         return Buffer.concat([
@@ -3748,7 +3682,7 @@ class AsymKeyAuth extends Authentication {
             this.id.toBuffer(),
             Buffer.from(this.authType),
             this.controller.toBuffer(),
-            this.publicKey.toBuffer(),
+            Buffer.from(this.publicKey.toString())
         ]);
     }
     toHintedObject() {
@@ -3759,6 +3693,9 @@ class AsymKeyAuth extends Authentication {
             controller: this.controller.toString(),
             publicKey: this.publicKey.toString(),
         };
+    }
+    toString() {
+        return this.id.toString();
     }
 }
 class SocialLoginAuth extends Authentication {
@@ -3794,6 +3731,9 @@ class SocialLoginAuth extends Authentication {
             }
         };
     }
+    toString() {
+        return this.id.toString();
+    }
 }
 class Document {
     constructor(context, status, created, id, authentication, verificationMethod, service_id, service_type, service_end_point) {
@@ -3802,6 +3742,7 @@ class Document {
         this.status = LongString.from(status);
         this.created = LongString.from(created);
         this.id = LongString.from(id);
+        Assert.check(new Set(authentication.map(i => i.toString())).size === authentication.length, MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "duplicate authentication id found in document"));
         this.authentication = authentication;
         this.verificationMethod = verificationMethod;
         this.service_id = LongString.from(service_id);
@@ -3888,29 +3829,8 @@ class DID extends ContractGenerator {
             throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "The 'service' structure is invalid or missing required fields.");
         }
     }
-    validateDID(did, option) {
-        const parts = did.split(":");
-        if (parts.length !== 3) {
-            throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid did structure");
-        }
-        if (parts[0] !== "did") {
-            throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid did structure");
-        }
-        if (option) {
-            const subparts = parts[2].split("#");
-            if (subparts.length !== 2) {
-                throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid authentication id");
-            }
-            else {
-                Address.from(subparts[0]);
-            }
-        }
-        else {
-            Address.from(parts[2]);
-        }
-        if (option && (did.match(/#/g) || []).length !== 1) {
-            throw MitumError.detail(ECODE.DID.INVALID_DID, "Invalid authentication id");
-        }
+    isSenderDidOwner(sender, did, id) {
+        Assert.check(sender.toString() === validateDID(did.toString(), id).toString(), MitumError.detail(ECODE.DID.INVALID_DID, `The owner of did must match the sender(${sender.toString()}). check the did (${did.toString()})`));
     }
     writeAsymkeyAuth(id, authType, controller, publicKey) {
         return new AsymKeyAuth(id, authType, controller, publicKey);
@@ -3925,7 +3845,7 @@ class DID extends ContractGenerator {
     }
     ;
     /**
-     * Generate a `register-model` operation to register new did model on the contract.
+     * Generate a `register-model` operation to register new did registry model on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | LongString} [didMethod] - The did method
@@ -3960,7 +3880,7 @@ class DID extends ContractGenerator {
      * @returns `deactivate-did` operation
      */
     deactivate(contract, sender, did, currency) {
-        this.validateDID(did);
+        this.isSenderDidOwner(sender, did);
         const fact = new DeactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
         return new Operation$1(this.networkID, fact);
     }
@@ -3973,17 +3893,19 @@ class DID extends ContractGenerator {
      * @returns `reactivate-did` operation
      */
     reactivate(contract, sender, did, currency) {
-        this.validateDID(did);
+        this.isSenderDidOwner(sender, did);
         const fact = new ReactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
         return new Operation$1(this.networkID, fact);
     }
     updateDIDDocument(contract, sender, document, currency) {
         this.validateDocument(document);
-        this.validateDID(document.id.toString());
-        this.validateDID(document.service.id.toString());
+        this.isSenderDidOwner(sender, document.id);
+        this.isSenderDidOwner(sender, document.service.id);
         const fact = new UpdateDocumentFact(TimeStamp.new().UTC(), sender, contract, document.id.toString(), new Document(document["@context"], document.status, document.created, document.id, document.authentication.map((el) => {
-            this.validateDID(el.id.toString(), true);
+            this.isSenderDidOwner(sender, el.id, true);
+            this.isSenderDidOwner(sender, el.controller);
             if ("proof" in el) {
+                validateDID(el.proof.verificationMethod.toString(), true);
                 return new SocialLoginAuth(el.id, el.controller, el.serviceEndpoint, el.proof.verificationMethod);
             }
             else {
@@ -3993,16 +3915,12 @@ class DID extends ContractGenerator {
         return new Operation$1(this.networkID, fact);
     }
     /**
-     * Get information for did model.
+     * Get information for did-registry model.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information of did model:
      * - `_hint`: hint for did model design,
-     * - `didMethod`: The did method,
-     * - `docContext`: The context of did,
-     * - `docAuthType`: The type of authentication,
-     * - `docSvcType`: The type of did service,
-     * - `docSvcEndPoint`: The end point of did service
+     * - `didMethod`: The did method
      */
     async getModelInfo(contract) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
@@ -4051,9 +3969,116 @@ class DID extends ContractGenerator {
     async getDDocByDID(contract, did) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
-        this.validateDID(did);
+        validateDID(did);
         const response = await getAPIData(() => contractApi.did.getByDID(this.api, contract, did, this.delegateIP));
         return response;
+    }
+}
+
+class Signer extends Generator {
+    constructor(networkID, api) {
+        super(networkID, api);
+    }
+    /**
+     * Sign the given operation in JSON format using given private key.
+     * @param {string | Key} [privatekey] - The private key used for signing.
+     * @param {Operation<Fact> | HintedObject} [operation] - The operation to be signed.
+     * @param {SignOption} [option] - (Optional) Option for node sign.
+     * @returns The signed operation in JSON object (HintedObject).
+     */
+    sign(privatekey, operation, option) {
+        Assert.check(isOpFact(operation) || isHintedObject(operation), MitumError.detail(ECODE.INVALID_OPERATION, `input is neither in OP<Fact> nor HintedObject format`));
+        operation = isOpFact(operation) ? operation.toHintedObject() : operation;
+        Key.from(privatekey);
+        const keypair = KeyPair.fromPrivateKey(privatekey);
+        return option ? this.nodeSign(keypair, operation, option.node ?? "") : this.accSign(keypair, operation);
+    }
+    accSign(keypair, operation) {
+        const now = TimeStamp.new();
+        const fs = new GeneralFactSign(keypair.publicKey.toString(), keypair.sign(Buffer.concat([
+            Buffer.from(this.networkID),
+            base58.decode(operation.fact.hash),
+            now.toBuffer(),
+        ])), now.toString()).toHintedObject();
+        if (operation.signs !== undefined) {
+            operation.signs = [...operation.signs, fs];
+        }
+        else {
+            operation.signs = [fs];
+        }
+        Assert.check(new Set(operation.signs.map(fs => fs.signer.toString())).size === operation.signs.length, MitumError.detail(ECODE.INVALID_FACTSIGNS, "duplicate signers found in factsigns"));
+        const factSigns = operation.signs
+            .map((s) => Buffer.concat([
+            Buffer.from(s.signer),
+            base58.decode(s.signature),
+            new FullTimeStamp(s.signed_at).toBuffer("super"),
+        ]));
+        //.sort((a, b) => Buffer.compare(a, b))
+        const msg = Buffer.concat([
+            base58.decode(operation.fact.hash),
+            Buffer.concat(factSigns),
+        ]);
+        if (isHintedObjectFromUserOp(operation)) {
+            return this.FillUserOpHash(operation);
+        }
+        operation.hash = base58.encode(sha3(msg));
+        return operation;
+    }
+    nodeSign(keypair, operation, node) {
+        const nd = new NodeAddress(node);
+        const now = TimeStamp.new();
+        const fs = new NodeFactSign(node, keypair.publicKey.toString(), keypair.sign(Buffer.concat([
+            Buffer.from(this.networkID),
+            nd.toBuffer(),
+            base58.decode(operation.fact.hash),
+            now.toBuffer(),
+        ])), now.toString()).toHintedObject();
+        if (operation.signs) {
+            operation.signs = [...operation.signs, fs];
+        }
+        else {
+            operation.signs = [fs];
+        }
+        const factSigns = operation.signs
+            .map((s) => Buffer.concat([
+            Buffer.from(s.signer),
+            base58.decode(s.signature),
+            new FullTimeStamp(s.signed_at).toBuffer("super"),
+        ]))
+            .sort((a, b) => Buffer.compare(a, b));
+        const msg = Buffer.concat([
+            base58.decode(operation.fact.hash),
+            Buffer.concat(factSigns),
+        ]);
+        operation.hash = base58.encode(sha3(msg));
+        return operation;
+    }
+    FillUserOpHash(userOperation) {
+        const { contract, authentication_id, proof_data, op_sender, proxy_payer } = { ...userOperation.authentication, ...userOperation.settlement };
+        const userOperationFields = {
+            contract,
+            authentication_id,
+            proof_data,
+            op_sender,
+            proxy_payer,
+        };
+        Object.entries(userOperationFields).forEach(([key, value]) => {
+            StringAssert.with(value, MitumError.detail(ECODE.INVALID_USER_OPERATION, `Cannot sign the user operation: ${key} must not be empty.`)).empty().not().excute();
+        });
+        const auth = new Authentication$1(contract, authentication_id, proof_data);
+        const settlement = new Settlement(op_sender, proxy_payer);
+        const msg = Buffer.concat([
+            base58.decode(userOperation.fact.hash),
+            Buffer.concat(userOperation.signs.map((s) => Buffer.concat([
+                Buffer.from(s.signer),
+                base58.decode(s.signature),
+                new FullTimeStamp(s.signed_at).toBuffer("super"),
+            ]))),
+            auth.toBuffer(),
+            settlement.toBuffer()
+        ]);
+        userOperation.hash = base58.encode(sha3(msg));
+        return userOperation;
     }
 }
 
@@ -4109,6 +4134,37 @@ class Operation extends Generator {
         const response = await getAPIData(() => api$1.getOperation(this.api, hash, this.delegateIP));
         if (isSuccessResponse(response)) {
             response.data = response.data ? response.data : null;
+        }
+        return response;
+    }
+    /**
+     * Get multiple operations by array of fact hashes.
+     * Returns excluding operations that have not yet been recorded.
+     * @async
+     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 44 length.
+     * @returns The `data` of `SuccessResponse` is array of infomation of the operations:
+     * - `_hint`: Hint for the operation,
+     * - `hash`: Hash for the fact,
+     * - `operation`:
+     * - - `hash`: Hash fot the operation,
+     * - - `fact`: Object for fact,
+     * - - `signs`: Array for sign,
+     * - - `_hint`: Hint for operation type,
+     * - `height`: Block height containing the operation,
+     * - `confirmed_at`: Timestamp when the block was confirmed,
+     * - `reason`: Reason for operation failure,
+     * - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - `index`: Index of the operation in the block
+     */
+    async getMultiOperations(hashes) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Assert.check(Config.FACT_HASHES.satisfy(hashes.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of hash array is out of range"));
+        hashes.forEach((hash) => {
+            Assert.check(isBase58Encoded(hash) && hash.length === 44, MitumError.detail(ECODE.INVALID_FACT_HASH, "fact hash must be base58 encoded string with 44 length."));
+        });
+        const response = await getAPIData(() => api$1.getMultiOperations(this.api, hashes, this.delegateIP));
+        if (isSuccessResponse(response) && Array.isArray(response.data)) {
+            response.data = response.data.map((el) => { return el._embedded; });
         }
         return response;
     }

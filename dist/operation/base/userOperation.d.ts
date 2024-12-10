@@ -35,6 +35,7 @@ export declare class UserOperation<T extends Fact> extends Operation<T> {
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
     toHintedObjectWithOutFact(_hint: string | undefined, fact: FactJson): HintedObject;
+    private isSenderDidOwner;
     /**
      * Add alternative signature for userOperation, fill `proof_data` item of `authentication` object.
      * @param {string | Key | KeyPair} [privateKey] - The private key or key pair for signing.

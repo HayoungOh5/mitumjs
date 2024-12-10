@@ -5,10 +5,9 @@ import { DeactivateDidFact } from "./deactive-did";
 import { UpdateDocumentFact } from "./update_did_document";
 import { AsymKeyAuth, SocialLoginAuth, Document } from "./document";
 import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
+import { Address, Key } from "../../key";
 import { CurrencyID } from "../../common";
 import { IP, LongString } from "../../types";
-import { Key } from "../../key";
 type asymkeyAuth = {
     _hint: string;
     id: string | LongString;
@@ -43,12 +42,12 @@ type document = {
 export declare class DID extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     private validateDocument;
-    private validateDID;
+    private isSenderDidOwner;
     writeAsymkeyAuth(id: string, authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019", controller: string, publicKey: string): AsymKeyAuth;
     writeSocialLoginAuth(id: string, controller: string, serviceEndpoint: string, verificationMethod: string): SocialLoginAuth;
     writeDocument(didContext: string, status: string, created: string, didID: string, authentications: (SocialLoginAuth | AsymKeyAuth)[], serivceID: string, serviceType: string, serviceEndPoint: string): Document;
     /**
-     * Generate a `register-model` operation to register new did model on the contract.
+     * Generate a `register-model` operation to register new did registry model on the contract.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | LongString} [didMethod] - The did method
@@ -89,16 +88,12 @@ export declare class DID extends ContractGenerator {
     reactivate(contract: string | Address, sender: string | Address, did: string, currency: string | CurrencyID): Operation<ReactivateDidFact>;
     updateDIDDocument(contract: string | Address, sender: string | Address, document: document, currency: string | CurrencyID): Operation<UpdateDocumentFact>;
     /**
-     * Get information for did model.
+     * Get information for did-registry model.
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @returns `data` of `SuccessResponse` is information of did model:
      * - `_hint`: hint for did model design,
-     * - `didMethod`: The did method,
-     * - `docContext`: The context of did,
-     * - `docAuthType`: The type of authentication,
-     * - `docSvcType`: The type of did service,
-     * - `docSvcEndPoint`: The end point of did service
+     * - `didMethod`: The did method
      */
     getModelInfo(contract: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**

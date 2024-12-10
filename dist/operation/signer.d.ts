@@ -13,4 +13,5 @@ export declare class Signer extends Generator {
     sign(privatekey: string | Key, operation: OP<Fact> | HintedObject, option?: SignOption): OperationJson;
     private accSign;
     private nodeSign;
+    private FillUserOpHash;
 }

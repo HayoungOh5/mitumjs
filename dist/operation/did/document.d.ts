@@ -15,6 +15,7 @@ export declare class AsymKeyAuth extends Authentication {
     constructor(id: string | LongString, authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019", controller: string | LongString, publicKey: string | Key);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
+    toString(): string;
 }
 export declare class SocialLoginAuth extends Authentication {
     readonly id: LongString;
@@ -25,6 +26,7 @@ export declare class SocialLoginAuth extends Authentication {
     constructor(id: string | LongString, controller: string | LongString, serviceEndpoint: string | LongString, proofMethod: string | LongString);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
+    toString(): string;
 }
 export declare class Service implements IBuffer, IHintedObject {
     readonly id: LongString;

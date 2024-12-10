@@ -1,4 +1,4 @@
-import { UserOperationJson, Fact, UserOperation } from "../base";
+import { Fact, UserOperation } from "../base";
 import { Generator, HintedObject, IP } from "../../types";
 import { Key, Address } from "../../key";
 export declare class AccountAbstraction extends Generator {
@@ -25,13 +25,5 @@ export declare class AccountAbstraction extends Generator {
      * @param {string | Address} proxyPayer - The proxy payer's address. (address of CA)
      * @returns {HintedObject} A new hinted object representing the updated user operation.
      **/
-    setSettlement(userOperation: UserOperation<Fact> | HintedObject, opSender: string | Address, proxyPayer: string | Address): HintedObject;
-    /**
-     * Sign the given userOperation in JSON format using given private key.
-     * @param {string | Key} [privatekey] - The private key used for signing.
-     * @param {UserOperation<Fact> | HintedObject} [userOperation] - The operation to be signed.
-     * @returns The signed user operation in JSON object (HintedObject).
-     */
-    sign(privatekey: string | Key, userOperation: UserOperation<Fact> | HintedObject): UserOperationJson;
-    private FillUserOpHash;
+    setSettlement(userOperation: UserOperation<Fact> | HintedObject, opSender: string | Address, proxyPayer: string | Address | undefined): HintedObject;
 }
