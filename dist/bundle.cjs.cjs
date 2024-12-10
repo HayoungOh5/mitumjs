@@ -82,6 +82,7 @@ const ECODE = {
     INVALID_FACTSIGNS: "EC_INVALID_FACTSIGNS",
     INVALID_SIG_TYPE: "EC_INVALID_SIG_TYPE",
     INVALID_FACT: "EC_INVALID_FACT",
+    INVALID_FACT_HASH: "EC_INVALID_FACT_HASH",
     INVALID_OPERATION: "EC_INVALID_OPERATION",
     INVALID_OPERATIONS: "EC_INVALID_OPERATIONS",
     INVALID_SEAL: "EC_INVALID_SEAL",
@@ -460,6 +461,7 @@ class StringAssert {
 
 class LongString {
     constructor(s) {
+        Assert.check(typeof (s) === "string", MitumError.detail(ECODE.INVALID_TYPE, `${s} is not in string type`));
         Assert.check(s !== "", MitumError.detail(ECODE.EMPTY_STRING, "empty string"));
         this.s = s;
     }
@@ -773,10 +775,12 @@ const Config = {
         ZERO: getRangeConfig(8, 15),
         NODE: getRangeConfig(4, Number.MAX_SAFE_INTEGER),
     },
+    CONTRACT_HANDLERS: getRangeConfig(1, 20),
     KEYS_IN_ACCOUNT: getRangeConfig(1, 100),
     AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
     ITEMS_IN_FACT: getRangeConfig(1, 100),
     OP_SIZE: getRangeConfig(1, 262144),
+    FACT_HASHES: getRangeConfig(1, 44),
     KEY: {
         MITUM: {
             PRIVATE: getRangeConfig(67),
@@ -1285,8 +1289,7 @@ class OperationFact extends Fact {
         super(hint, token);
         this.sender = Address.from(sender);
         Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length), MitumError.detail(ECODE.INVALID_ITEMS, "length of items is out of range"));
-        hint !== "mitum-nft-mint-operation-fact" ? Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"))
-            : null;
+        Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"));
         this.items = items;
         this._hash = this.hashing();
     }
@@ -1344,6 +1347,13 @@ const isHintedObject = (object) => {
 };
 const isSuccessResponse = (response) => {
     return 'data' in response;
+};
+const isBase58Encoded = (value) => {
+    if (!value || typeof value !== 'string') {
+        return false;
+    }
+    const base58Chars = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
+    return base58Chars.test(value);
 };
 
 class BaseAddress {
@@ -1918,6 +1928,10 @@ async function getOperation(api, hash, delegateIP) {
     const apiPath = `${api}/block/operation/${hash}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
+async function getMultiOperations(api, hashes, delegateIP) {
+    const apiPath = `${api}/block/operations/facts?hashes=${hashes.join(",")}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
 async function getBlockOperationsByHeight(api, height, delegateIP, limit, offset, reverse) {
     const apiPath = apiPathWithParams(`${api}/block/${Big.from(height).toString()}/operations`, limit, offset, reverse);
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
@@ -1940,7 +1954,7 @@ var api$1 = {
     getOperations,
     getOperation,
     getBlockOperationsByHeight,
-    // getBlockOperationsByHash,
+    getMultiOperations,
     getAccountOperations,
     send
 };
@@ -2620,6 +2634,7 @@ class UpdateHandlerFact extends Fact {
         this.handlers = handlers.map(a => Address.from(a));
         this._hash = this.hashing();
         Assert.check((this.handlers.length !== 0), MitumError.detail(ECODE.INVALID_FACT, "empty handlers"));
+        Assert.check(Config.CONTRACT_HANDLERS.satisfy(handlers.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of handlers array is out of range"));
         Assert.check(hasOverlappingAddress(this.handlers), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in handlers"));
     }
     toBuffer() {
@@ -3562,7 +3577,8 @@ class CreateDatasItem extends Item {
         };
     }
     toString() {
-        return this.dataKey.toString();
+        // return this.dataKey.toString() + this.contract.toString() + this.dataValue.toString()
+        return this.dataKey.toString() + this.contract.toString();
     }
 }
 class CreateDatasFact extends OperationFact {
@@ -3572,7 +3588,11 @@ class CreateDatasFact extends OperationFact {
             new URIString(it.dataKey.toString(), 'dataKey');
             Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
         });
-        Assert.check(new Set(items.map(item => item.dataKey.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate dataKey found in items"));
+        // duplicated item check has already confirmed that contract-dataKey is unique.
+        // Assert.check(
+        //     new Set(items.map(item => item.dataKey.toString() + item.contract.toString())).size === items.length,
+        //     MitumError.detail(ECODE.INVALID_ITEMS, "duplicate dataKey found in items")
+        // )
     }
     get operationHint() {
         return HINT.STORAGE.CREATE_DATAS.OPERATION;
@@ -3633,7 +3653,7 @@ class UpdateDatasItem extends Item {
         };
     }
     toString() {
-        return this.dataKey.toString();
+        return this.dataKey.toString() + this.contract.toString();
     }
 }
 class UpdateDatasFact extends OperationFact {
@@ -3643,7 +3663,11 @@ class UpdateDatasFact extends OperationFact {
             new URIString(it.dataKey.toString(), 'dataKey');
             Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
         });
-        Assert.check(new Set(items.map(item => item.dataKey.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate dataKey found in items"));
+        // duplicated item check has already confirmed that contract-dataKey is unique.
+        // Assert.check(
+        //     new Set(items.map(item => item.dataKey.toString())).size === items.length,
+        //     MitumError.detail(ECODE.INVALID_ITEMS, "duplicate dataKey found in items")
+        // )
     }
     get operationHint() {
         return HINT.STORAGE.UPDATE_DATAS.OPERATION;
@@ -3889,6 +3913,37 @@ class Operation extends Generator {
         const response = await getAPIData(() => api$1.getOperation(this.api, hash, this.delegateIP));
         if (isSuccessResponse(response)) {
             response.data = response.data ? response.data : null;
+        }
+        return response;
+    }
+    /**
+     * Get multiple operations by array of fact hashes.
+     * Returns excluding operations that have not yet been recorded.
+     * @async
+     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 44 length.
+     * @returns The `data` of `SuccessResponse` is array of infomation of the operations:
+     * - `_hint`: Hint for the operation,
+     * - `hash`: Hash for the fact,
+     * - `operation`:
+     * - - `hash`: Hash fot the operation,
+     * - - `fact`: Object for fact,
+     * - - `signs`: Array for sign,
+     * - - `_hint`: Hint for operation type,
+     * - `height`: Block height containing the operation,
+     * - `confirmed_at`: Timestamp when the block was confirmed,
+     * - `reason`: Reason for operation failure,
+     * - `in_state`: Boolean indicating whether the operation was successful or not,
+     * - `index`: Index of the operation in the block
+     */
+    async getMultiOperations(hashes) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Assert.check(Config.FACT_HASHES.satisfy(hashes.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of hash array is out of range"));
+        hashes.forEach((hash) => {
+            Assert.check(isBase58Encoded(hash) && hash.length === 44, MitumError.detail(ECODE.INVALID_FACT_HASH, "fact hash must be base58 encoded string with 44 length."));
+        });
+        const response = await getAPIData(() => api$1.getMultiOperations(this.api, hashes, this.delegateIP));
+        if (isSuccessResponse(response) && Array.isArray(response.data)) {
+            response.data = response.data.map((el) => { return el._embedded; });
         }
         return response;
     }

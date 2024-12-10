@@ -25,10 +25,12 @@ export declare const Config: {
         ZERO: RangeConfig;
         NODE: RangeConfig;
     };
+    CONTRACT_HANDLERS: RangeConfig;
     KEYS_IN_ACCOUNT: RangeConfig;
     AMOUNTS_IN_ITEM: RangeConfig;
     ITEMS_IN_FACT: RangeConfig;
     OP_SIZE: RangeConfig;
+    FACT_HASHES: RangeConfig;
     KEY: {
         MITUM: {
             PRIVATE: RangeConfig;
