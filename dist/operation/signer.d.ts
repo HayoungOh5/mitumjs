@@ -14,4 +14,5 @@ export declare class Signer extends Generator {
     private accSign;
     private nodeSign;
     private FillUserOpHash;
+    private validateUserOpFields;
 }

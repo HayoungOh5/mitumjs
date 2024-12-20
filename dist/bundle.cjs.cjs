@@ -762,7 +762,7 @@ const Config = {
         ZERO: getRangeConfig(8, 15),
         NODE: getRangeConfig(4, Number.MAX_SAFE_INTEGER),
     },
-    CONTRACT_HANDLERS: getRangeConfig(1, 20),
+    CONTRACT_HANDLERS: getRangeConfig(0, 20),
     CONTRACT_RECIPIENTS: getRangeConfig(0, 20),
     KEYS_IN_ACCOUNT: getRangeConfig(1, 100),
     AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
@@ -838,6 +838,11 @@ var CURRENCY = {
     UPDATE_RECIPIENT: {
         FACT: "mitum-extension-update-recipient-operation-fact",
         OPERATION: "mitum-extension-update-recipient-operation",
+    },
+    EXTENSION: {
+        AUTHENTICATION: "mitum-extension-base-authentication",
+        PROXY_PAYER: "mitum-extension-base-proxy-payer",
+        SETTLEMENT: "mitum-extension-base-settlement"
     }
 };
 
@@ -855,20 +860,10 @@ var DID$1 = {
         FACT: "mitum-did-migrate-did-operation-fact",
         OPERATION: "mitum-did-migrate-did-operation",
     },
-    DEACTIVATE_DID: {
-        FACT: "mitum-did-deactivate-did-operation-fact",
-        OPERATION: "mitum-did-deactivate-did-operation",
-    },
-    REACTIVATE_DID: {
-        FACT: "mitum-did-reactivate-did-operation-fact",
-        OPERATION: "mitum-did-reactivate-did-operation",
-    },
     UPDATE_DID_DOCUMENT: {
         FACT: "mitum-did-update-did-document-operation-fact",
         OPERATION: "mitum-did-update-did-document-operation",
     },
-    DATA: "mitum-did-data",
-    RESOURCE: "mitum-did-resource",
     DOCUMENT: "mitum-did-document",
     AUTHENTICATION: {
         ASYMMETRIC_KEY: "mitum-did-asymmetric-key-authentication",
@@ -1224,9 +1219,9 @@ let Operation$1 = class Operation {
     }
 };
 
-// type SigType = "FactSign" | "NodeFactSign" | null
 let Authentication$1 = class Authentication {
     constructor(contract, authenticationId, proofData) {
+        this.hint = new Hint(HINT.CURRENCY.EXTENSION.AUTHENTICATION);
         this.contract = Address.from(contract);
         this.authenticationId = authenticationId;
         if (proofData) {
@@ -1234,41 +1229,41 @@ let Authentication$1 = class Authentication {
         }
         this.proofData = proofData ? proofData : "";
     }
-    toBuffer() {
-        return Buffer.concat([
-            this.contract.toBuffer(),
-            Buffer.from(this.authenticationId),
-            Buffer.from(this.proofData),
-        ]);
-    }
     toHintedObject() {
         return {
+            _hint: this.hint.toString(),
             contract: this.contract.toString(),
             authentication_id: this.authenticationId,
             proof_data: this.proofData,
         };
     }
 };
-class Settlement {
-    constructor(opSender, proxyPayer) {
-        this.opSender = opSender ? Address.from(opSender) : "";
-        this.proxyPayer = proxyPayer ? Address.from(proxyPayer) : "";
-    }
-    toBuffer() {
-        return Buffer.concat([
-            Buffer.from(this.opSender.toString()),
-            Buffer.from(this.proxyPayer.toString()),
-        ]);
+class ProxyPayer {
+    constructor(proxyPayer) {
+        this.hint = new Hint(HINT.CURRENCY.EXTENSION.PROXY_PAYER);
+        this.proxyPayer = Address.from(proxyPayer);
     }
     toHintedObject() {
         return {
-            op_sender: this.opSender.toString(),
+            _hint: this.hint.toString(),
             proxy_payer: this.proxyPayer.toString(),
         };
     }
 }
+class Settlement {
+    constructor(opSender) {
+        this.hint = new Hint(HINT.CURRENCY.EXTENSION.SETTLEMENT);
+        this.opSender = opSender ? Address.from(opSender) : "";
+    }
+    toHintedObject() {
+        return {
+            _hint: this.hint.toString(),
+            op_sender: this.opSender.toString(),
+        };
+    }
+}
 class UserOperation extends Operation$1 {
-    constructor(networkID, fact, auth, settlement) {
+    constructor(networkID, fact, auth, proxyPayer, settlement) {
         super(networkID, fact);
         this.id = networkID;
         this.fact = fact;
@@ -1276,6 +1271,7 @@ class UserOperation extends Operation$1 {
             this.isSenderDidOwner(fact.sender, auth.authenticationId, true);
         }
         this.auth = auth;
+        this.proxyPayer = proxyPayer;
         this.settlement = settlement;
         this.hint = new Hint(fact.operationHint);
         this._factSigns = [];
@@ -1290,18 +1286,25 @@ class UserOperation extends Operation$1 {
         }
         this._factSigns = this._factSigns.sort(SortFunc);
         return Buffer.concat([
+            Buffer.from(JSON.stringify(this.toHintedExtension())),
             this.fact.hash,
             Buffer.concat(this._factSigns.map((fs) => fs.toBuffer())),
-            this.auth.toBuffer(),
-            this.settlement.toBuffer()
         ]);
     }
     toHintedObject() {
         const operation = {
             _hint: this.hint.toString(),
             fact: this.fact.toHintedObject(),
-            authentication: this.auth.toHintedObject(),
-            settlement: this.settlement.toHintedObject(),
+            extension: this.proxyPayer ?
+                {
+                    authentication: this.auth.toHintedObject(),
+                    proxy_payer: this.proxyPayer.toHintedObject(),
+                    settlement: this.settlement.toHintedObject(),
+                } :
+                {
+                    authentication: this.auth.toHintedObject(),
+                    settlement: this.settlement.toHintedObject(),
+                },
             hash: this._hash.length === 0 ? "" : base58.encode(this._hash)
         };
         const factSigns = this._factSigns.length === 0 ? [] : this._factSigns.sort(SortFunc);
@@ -1310,19 +1313,17 @@ class UserOperation extends Operation$1 {
             signs: factSigns.map(fs => fs.toHintedObject())
         };
     }
-    toHintedObjectWithOutFact(_hint, fact) {
-        const operation = {
-            _hint: _hint,
-            fact: fact,
-            authentication: this.auth.toHintedObject(),
-            settlement: this.settlement.toHintedObject(),
-            hash: this._hash.length === 0 ? "" : base58.encode(this._hash)
-        };
-        const factSigns = this._factSigns.length === 0 ? [] : this._factSigns.sort(SortFunc);
-        return {
-            ...operation,
-            signs: factSigns.map(fs => fs.toHintedObject())
-        };
+    toHintedExtension() {
+        return this.proxyPayer ?
+            {
+                authentication: this.auth.toHintedObject(),
+                proxy_payer: this.proxyPayer.toHintedObject(),
+                settlement: this.settlement.toHintedObject(),
+            } :
+            {
+                authentication: this.auth.toHintedObject(),
+                settlement: this.settlement.toHintedObject(),
+            };
     }
     isSenderDidOwner(sender, did, id) {
         Assert.check(sender.toString() === validateDID(did.toString(), id).toString(), MitumError.detail(ECODE.DID.INVALID_DID, `The owner of did must match the sender(${sender.toString()}). check the did (${did.toString()})`));
@@ -1342,15 +1343,20 @@ class UserOperation extends Operation$1 {
     /**
      * Updates the settlement details of a userOperation.
      * @param {string | Address} opSender - The opseration sender's address (Bundler's address).
+     * @returns void.
+     **/
+    setSettlement(opSender) {
+        Address.from(opSender);
+        this.settlement = new Settlement(opSender);
+    }
+    /**
+     * Updates the proxy payer details of a userOperation.
      * @param {string | Address} proxyPayer - The proxy payer's address. (address of CA)
      * @returns void.
      **/
-    setSettlement(opSender, proxyPayer) {
-        Address.from(opSender);
-        if (proxyPayer !== undefined) {
-            Address.from(proxyPayer);
-        }
-        this.settlement = new Settlement(opSender, proxyPayer ? proxyPayer : "");
+    setProxyPayer(proxyPayer) {
+        Address.from(proxyPayer);
+        this.proxyPayer = new ProxyPayer(proxyPayer);
     }
     /**
      * Sign the given userOperation in JSON format using given private key.
@@ -1481,14 +1487,15 @@ const isHintedObjectFromUserOp = (object) => {
     if ('_hint' in object &&
         'fact' in object &&
         'hash' in object &&
-        'authentication' in object &&
-        'settlement' in object) {
-        const { authentication, settlement } = object;
-        return ('contract' in authentication &&
+        'extension' in object) {
+        const { authentication, settlement, proxy_payer } = object.extension;
+        return ('_hint' in authentication &&
+            'contract' in authentication &&
             'authentication_id' in authentication &&
             'proof_data' in authentication &&
+            '_hint' in settlement &&
             'op_sender' in settlement &&
-            'proxy_payer' in settlement);
+            (proxy_payer ? '_hint' in proxy_payer && 'proxy_payer' in proxy_payer : true));
     }
     return false;
 };
@@ -2645,7 +2652,6 @@ class UpdateHandlerFact extends Fact {
         this.currency = CurrencyID.from(currency);
         this.handlers = handlers.map(a => Address.from(a));
         this._hash = this.hashing();
-        Assert.check((this.handlers.length !== 0), MitumError.detail(ECODE.INVALID_FACT, "empty handlers"));
         Assert.check(Config.CONTRACT_HANDLERS.satisfy(handlers.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of handlers array is out of range"));
         Assert.check(hasOverlappingAddress(this.handlers), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in handlers"));
     }
@@ -3467,7 +3473,7 @@ class AccountAbstraction extends Generator {
      * @returns {UserOperation<Fact>} - The created `UserOperation` instance.
      */
     createUserOperation(fact, contract, authentication_id) {
-        return new UserOperation(this.networkID, fact, new Authentication$1(contract, authentication_id, undefined), new Settlement(undefined, undefined));
+        return new UserOperation(this.networkID, fact, new Authentication$1(contract, authentication_id, undefined), null, new Settlement(undefined));
     }
     /**
      * Add alternative signature for userOperation, fill `proof_data` item of `authentication` object.
@@ -3482,23 +3488,56 @@ class AccountAbstraction extends Generator {
         privateKey = Key.from(privateKey);
         const keypair = KeyPair.fromPrivateKey(privateKey);
         const alterSign = keypair.sign(Buffer.from(base58.decode(hintedUserOp.fact.hash)));
-        hintedUserOp.authentication.proof_data = base58.encode(alterSign);
+        hintedUserOp.extension.authentication.proof_data = base58.encode(alterSign);
         return hintedUserOp;
     }
     /**
      * Updates the settlement details of a userOperation and returns a new hinted object of user operation.
-     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update settlment,
-     * @param {string | Address} opSender - The opseration sender's address (Bundler's address).
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update settlement.
+     * @param {string | Address} opSender - The operation sender's address (Bundler's address).
+     * @returns {HintedObject} A new hinted object representing the updated user operation.
+     **/
+    setSettlement(userOperation, opSender) {
+        const hintedUserOp = this.getHintedUserOperation(userOperation);
+        const { authentication, proxy_payer } = hintedUserOp.extension;
+        return this.buildHintedObject(hintedUserOp, {
+            authentication: this.createAuthentication(authentication),
+            settlement: new Settlement(opSender).toHintedObject(),
+            ...(proxy_payer && { proxy_payer: new ProxyPayer(proxy_payer.proxy_payer).toHintedObject() })
+        });
+    }
+    /**
+     * Updates the proxy payer details of a userOperation and returns a new hinted object of user operation.
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update proxy payer.
      * @param {string | Address} proxyPayer - The proxy payer's address. (address of CA)
      * @returns {HintedObject} A new hinted object representing the updated user operation.
      **/
-    setSettlement(userOperation, opSender, proxyPayer) {
-        Assert.check(isUserOp(userOperation) || isHintedObjectFromUserOp(userOperation), MitumError.detail(ECODE.INVALID_USER_OPERATION, `Input must in UserOperation format`));
-        const hintedUserOp = isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
-        const { contract, authentication_id, proof_data } = hintedUserOp.authentication;
-        const filledUO = new UserOperation(this.networkID, hintedUserOp.fact, new Authentication$1(contract, authentication_id, proof_data), new Settlement(opSender, proxyPayer));
+    setProxyPayer(userOperation, proxyPayer) {
+        const hintedUserOp = this.getHintedUserOperation(userOperation);
+        const { authentication, settlement } = hintedUserOp.extension;
+        return this.buildHintedObject(hintedUserOp, {
+            authentication: this.createAuthentication(authentication),
+            proxy_payer: new ProxyPayer(proxyPayer).toHintedObject(),
+            settlement: new Settlement(settlement.op_sender).toHintedObject(),
+        });
+    }
+    /** Private method to validate and convert userOperation to HintedObject */
+    getHintedUserOperation(userOperation) {
+        Assert.check(isUserOp(userOperation) || isHintedObjectFromUserOp(userOperation), MitumError.detail(ECODE.INVALID_USER_OPERATION, `Input must be in UserOperation format`));
+        return isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
+    }
+    /** Private method to create an Authentication object */
+    createAuthentication(authentication) {
+        return new Authentication$1(authentication.contract, authentication.authentication_id, authentication.proof_data).toHintedObject();
+    }
+    /** Private method to build a HintedObject with the updated extension */
+    buildHintedObject(hintedUserOp, extension) {
         return {
-            ...filledUO.toHintedObjectWithOutFact(hintedUserOp._hint, hintedUserOp.fact)
+            _hint: hintedUserOp._hint,
+            fact: hintedUserOp.fact,
+            extension,
+            hash: "",
+            signs: []
         };
     }
 }
@@ -3571,73 +3610,6 @@ class CreateFact extends ContractFact {
     }
     get operationHint() {
         return HINT.DID.CREATE_DID.OPERATION;
-    }
-}
-
-class DidFact extends ContractFact {
-    constructor(hint, token, sender, contract, did, currency) {
-        super(hint, token, sender, contract, currency);
-        this.did = LongString.from(did);
-        StringAssert.with(did.toString(), MitumError.detail(ECODE.DID.INVALID_DID, `The did must be starting with 'did:'`))
-            .startsWith('did:')
-            .excute();
-        const splited = did.toString().split(":");
-        Assert.check(splited.length === 3, MitumError.detail(ECODE.DID.INVALID_DID, "The did format must follow the standard."));
-        Assert.check(/^[0-9a-f]+$/.test(splited[2]), MitumError.detail(ECODE.INVALID_ADDRESS, `${splited[2]} is not a hexadecimal number`));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.did.toBuffer()
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            did: this.did.toString(),
-        };
-    }
-}
-
-class ReactivateDidFact extends DidFact {
-    constructor(token, sender, contract, did, currency) {
-        super(HINT.DID.REACTIVATE_DID.FACT, token, sender, contract, did, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-        };
-    }
-    get operationHint() {
-        return HINT.DID.REACTIVATE_DID.OPERATION;
-    }
-}
-
-class DeactivateDidFact extends DidFact {
-    constructor(token, sender, contract, did, currency) {
-        super(HINT.DID.DEACTIVATE_DID.FACT, token, sender, contract, did, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-        };
-    }
-    get operationHint() {
-        return HINT.DID.DEACTIVATE_DID.OPERATION;
     }
 }
 
@@ -3751,11 +3723,9 @@ class SocialLoginAuth extends Authentication {
     }
 }
 class Document {
-    constructor(context, status, created, id, authentication, verificationMethod, service_id, service_type, service_end_point) {
+    constructor(context, id, authentication, verificationMethod, service_id, service_type, service_end_point) {
         this.hint = new Hint(HINT.DID.DOCUMENT);
         this.context = LongString.from(context);
-        this.status = LongString.from(status);
-        this.created = LongString.from(created);
         this.id = LongString.from(id);
         Assert.check(new Set(authentication.map(i => i.toString())).size === authentication.length, MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "duplicate authentication id found in document"));
         this.authentication = authentication;
@@ -3768,8 +3738,6 @@ class Document {
         return Buffer.concat([
             this.context.toBuffer(),
             this.id.toBuffer(),
-            this.created.toBuffer(),
-            this.status.toBuffer(),
             Buffer.concat(this.authentication.map(el => el.toBuffer())),
             this.service_id.toBuffer(),
             this.service_type.toBuffer(),
@@ -3781,8 +3749,6 @@ class Document {
             _hint: this.hint.toString(),
             "@context": this.context.toString(),
             id: this.id.toString(),
-            created: this.created.toString(),
-            status: this.status.toString(),
             authentication: this.authentication.map(el => el.toHintedObject()),
             verificationMethod: [],
             service: {
@@ -3831,7 +3797,7 @@ class DID extends ContractGenerator {
         if (typeof doc !== "object" || doc === null) {
             throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "invalid document type");
         }
-        const requiredKeys = ["_hint", "@context", "status", "created", "id", "authentication", "verificationMethod", "service"];
+        const requiredKeys = ["_hint", "@context", "id", "authentication", "verificationMethod", "service"];
         if (!isOfType(doc, requiredKeys)) {
             throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "The document structure is invalid or missing required fields.");
         }
@@ -3855,8 +3821,8 @@ class DID extends ContractGenerator {
         return new SocialLoginAuth(id, controller, serviceEndpoint, verificationMethod);
     }
     ;
-    writeDocument(didContext, status, created, didID, authentications, serivceID, serviceType, serviceEndPoint) {
-        return new Document(didContext, status, created, didID, authentications, [], serivceID, serviceType, serviceEndPoint);
+    writeDocument(didContext, didID, authentications, serivceID, serviceType, serviceEndPoint) {
+        return new Document(didContext, didID, authentications, [], serivceID, serviceType, serviceEndPoint);
     }
     ;
     /**
@@ -3887,36 +3853,19 @@ class DID extends ContractGenerator {
         return new Operation$1(this.networkID, fact);
     }
     /**
-     * Generate `deactivate-did` operation to deactivate the did.
+     * Generate `update-did-document` operation to update the did document.
+     * `document` must comply with document type
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [did] - The did to deactivate.
+     * @param {document} [document] - The did document to be updated.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `deactivate-did` operation
+     * @returns `update-did-document` operation
      */
-    deactivate(contract, sender, did, currency) {
-        this.isSenderDidOwner(sender, did);
-        const fact = new DeactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
-        return new Operation$1(this.networkID, fact);
-    }
-    /**
-     * Generate `reactivate-did` operation to reactivate the did.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [did] - The did to reactivate.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `reactivate-did` operation
-     */
-    reactivate(contract, sender, did, currency) {
-        this.isSenderDidOwner(sender, did);
-        const fact = new ReactivateDidFact(TimeStamp.new().UTC(), sender, contract, did, currency);
-        return new Operation$1(this.networkID, fact);
-    }
-    updateDIDDocument(contract, sender, document, currency) {
+    updateDocument(contract, sender, document, currency) {
         this.validateDocument(document);
         this.isSenderDidOwner(sender, document.id);
         this.isSenderDidOwner(sender, document.service.id);
-        const fact = new UpdateDocumentFact(TimeStamp.new().UTC(), sender, contract, document.id.toString(), new Document(document["@context"], document.status, document.created, document.id, document.authentication.map((el) => {
+        const fact = new UpdateDocumentFact(TimeStamp.new().UTC(), sender, contract, document.id.toString(), new Document(document["@context"], document.id, document.authentication.map((el) => {
             this.isSenderDidOwner(sender, el.id, true);
             this.isSenderDidOwner(sender, el.controller);
             if ("proof" in el) {
@@ -3950,7 +3899,7 @@ class DID extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is did:
      * - `did`: The did value,
      */
-    async getDIDByAddress(contract, account) {
+    async getDID(contract, account) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         Address.from(account);
@@ -3969,8 +3918,6 @@ class DID extends ContractGenerator {
      * - `did_document`: object
      * - - `'@context'`: The context of did,
      * - - `id`: The did value,
-     * - - `created`: The fact hash of create-did operation,
-     * - - `status`: 0 means deactive, 1 means active,
      * - - `authentication`: object,
      * - - - `id`: The did value,
      * - - - `type`: The type of authentication
@@ -3981,7 +3928,7 @@ class DID extends ContractGenerator {
      * - - - `type`: The type of did service,
      * - - - `service_end_point`: The end point of did service,
      */
-    async getDDocByDID(contract, did) {
+    async getDocument(contract, did) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Address.from(contract);
         validateDID(did);
@@ -4069,31 +4016,36 @@ class Signer extends Generator {
         return operation;
     }
     FillUserOpHash(userOperation) {
-        const { contract, authentication_id, proof_data, op_sender, proxy_payer } = { ...userOperation.authentication, ...userOperation.settlement };
-        const userOperationFields = {
-            contract,
-            authentication_id,
-            proof_data,
-            op_sender,
-            proxy_payer,
-        };
-        Object.entries(userOperationFields).forEach(([key, value]) => {
-            StringAssert.with(value, MitumError.detail(ECODE.INVALID_USER_OPERATION, `Cannot sign the user operation: ${key} must not be empty.`)).empty().not().excute();
-        });
-        const auth = new Authentication$1(contract, authentication_id, proof_data);
-        const settlement = new Settlement(op_sender, proxy_payer);
+        const { extension } = userOperation;
+        const { authentication, settlement, proxy_payer } = extension;
+        this.validateUserOpFields({ ...authentication, ...settlement, ...proxy_payer });
+        const hintedExtension = (() => {
+            const auth = new Authentication$1(authentication.contract, authentication.authentication_id, authentication.proof_data).toHintedObject();
+            const settlementObj = new Settlement(settlement.op_sender).toHintedObject();
+            if (proxy_payer) {
+                const proxyPayerObj = new ProxyPayer(proxy_payer.proxy_payer).toHintedObject();
+                return { authentication: auth, proxy_payer: proxyPayerObj, settlement: settlementObj };
+            }
+            return { authentication: auth, settlement: settlementObj };
+        })();
         const msg = Buffer.concat([
+            Buffer.from(JSON.stringify(hintedExtension)),
             base58.decode(userOperation.fact.hash),
             Buffer.concat(userOperation.signs.map((s) => Buffer.concat([
                 Buffer.from(s.signer),
                 base58.decode(s.signature),
                 new FullTimeStamp(s.signed_at).toBuffer("super"),
             ]))),
-            auth.toBuffer(),
-            settlement.toBuffer()
         ]);
         userOperation.hash = base58.encode(sha3(msg));
         return userOperation;
+    }
+    validateUserOpFields(fields) {
+        Object.entries(fields).forEach(([key, value]) => {
+            if (value !== undefined) {
+                StringAssert.with(value, MitumError.detail(ECODE.INVALID_USER_OPERATION, `Cannot sign the user operation: ${key} must not be empty.`)).empty().not().excute();
+            }
+        });
     }
 }
 

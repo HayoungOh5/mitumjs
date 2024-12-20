@@ -56,6 +56,11 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
+        EXTENSION: {
+            AUTHENTICATION: string;
+            PROXY_PAYER: string;
+            SETTLEMENT: string;
+        };
     };
     DID: {
         REGISTER_MODEL: {
@@ -71,20 +76,10 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
-        DEACTIVATE_DID: {
-            FACT: string;
-            OPERATION: string;
-        };
-        REACTIVATE_DID: {
-            FACT: string;
-            OPERATION: string;
-        };
         UPDATE_DID_DOCUMENT: {
             FACT: string;
             OPERATION: string;
         };
-        DATA: string;
-        RESOURCE: string;
         DOCUMENT: string;
         AUTHENTICATION: {
             ASYMMETRIC_KEY: string;

@@ -1,7 +1,5 @@
 import { RegisterModelFact } from "./register-model";
 import { CreateFact } from "./create-did";
-import { ReactivateDidFact } from "./reactive-did";
-import { DeactivateDidFact } from "./deactive-did";
 import { UpdateDocumentFact } from "./update_did_document";
 import { AsymKeyAuth, SocialLoginAuth, Document } from "./document";
 import { ContractGenerator, Operation } from "../base";
@@ -28,8 +26,6 @@ type socialLoginAuth = {
 type document = {
     _hint: string;
     "@context": string | LongString;
-    status: string;
-    created: string;
     id: string | LongString;
     authentication: (asymkeyAuth | socialLoginAuth)[];
     verificationMethod: [];
@@ -45,7 +41,7 @@ export declare class DID extends ContractGenerator {
     private isSenderDidOwner;
     writeAsymkeyAuth(id: string, authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019", controller: string, publicKey: string): AsymKeyAuth;
     writeSocialLoginAuth(id: string, controller: string, serviceEndpoint: string, verificationMethod: string): SocialLoginAuth;
-    writeDocument(didContext: string, status: string, created: string, didID: string, authentications: (SocialLoginAuth | AsymKeyAuth)[], serivceID: string, serviceType: string, serviceEndPoint: string): Document;
+    writeDocument(didContext: string, didID: string, authentications: (SocialLoginAuth | AsymKeyAuth)[], serivceID: string, serviceType: string, serviceEndPoint: string): Document;
     /**
      * Generate a `register-model` operation to register new did registry model on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -69,24 +65,15 @@ export declare class DID extends ContractGenerator {
     create(contract: string | Address, sender: string | Address, authType: "ECDSA", //"ECDSA" | "EdDSA"
     publicKey: string, serviceType: string, serviceEndpoints: string, currency: string | CurrencyID): Operation<CreateFact>;
     /**
-     * Generate `deactivate-did` operation to deactivate the did.
+     * Generate `update-did-document` operation to update the did document.
+     * `document` must comply with document type
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [did] - The did to deactivate.
+     * @param {document} [document] - The did document to be updated.
      * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `deactivate-did` operation
+     * @returns `update-did-document` operation
      */
-    deactivate(contract: string | Address, sender: string | Address, did: string, currency: string | CurrencyID): Operation<DeactivateDidFact>;
-    /**
-     * Generate `reactivate-did` operation to reactivate the did.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [did] - The did to reactivate.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `reactivate-did` operation
-     */
-    reactivate(contract: string | Address, sender: string | Address, did: string, currency: string | CurrencyID): Operation<ReactivateDidFact>;
-    updateDIDDocument(contract: string | Address, sender: string | Address, document: document, currency: string | CurrencyID): Operation<UpdateDocumentFact>;
+    updateDocument(contract: string | Address, sender: string | Address, document: document, currency: string | CurrencyID): Operation<UpdateDocumentFact>;
     /**
      * Get information for did-registry model.
      * @async
@@ -104,7 +91,7 @@ export declare class DID extends ContractGenerator {
      * @returns `data` of `SuccessResponse` is did:
      * - `did`: The did value,
      */
-    getDIDByAddress(contract: string | Address, account: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getDID(contract: string | Address, account: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
     /**
      * Get did document by did.
      * @async
@@ -114,8 +101,6 @@ export declare class DID extends ContractGenerator {
      * - `did_document`: object
      * - - `'@context'`: The context of did,
      * - - `id`: The did value,
-     * - - `created`: The fact hash of create-did operation,
-     * - - `status`: 0 means deactive, 1 means active,
      * - - `authentication`: object,
      * - - - `id`: The did value,
      * - - - `type`: The type of authentication
@@ -126,6 +111,6 @@ export declare class DID extends ContractGenerator {
      * - - - `type`: The type of did service,
      * - - - `service_end_point`: The end point of did service,
      */
-    getDDocByDID(contract: string | Address, did: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
+    getDocument(contract: string | Address, did: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }
 export {};

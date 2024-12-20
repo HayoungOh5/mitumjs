@@ -39,15 +39,13 @@ export declare class Service implements IBuffer, IHintedObject {
 export declare class Document implements IBuffer, IHintedObject {
     private hint;
     readonly context: LongString;
-    readonly status: LongString;
-    readonly created: LongString;
     readonly id: LongString;
     readonly authentication: (AsymKeyAuth | SocialLoginAuth)[];
     readonly verificationMethod: [];
     readonly service_id: LongString;
     readonly service_type: LongString;
     readonly service_end_point: LongString;
-    constructor(context: string | LongString, status: string | LongString, created: string | LongString, id: string | LongString, authentication: (AsymKeyAuth | SocialLoginAuth)[], verificationMethod: [], service_id: string | LongString, service_type: string | LongString, service_end_point: string | LongString);
+    constructor(context: string | LongString, id: string | LongString, authentication: (AsymKeyAuth | SocialLoginAuth)[], verificationMethod: [], service_id: string | LongString, service_type: string | LongString, service_end_point: string | LongString);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
 }

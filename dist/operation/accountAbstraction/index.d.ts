@@ -20,10 +20,22 @@ export declare class AccountAbstraction extends Generator {
     addAlterSign(privateKey: string | Key, userOperation: UserOperation<Fact> | HintedObject): HintedObject;
     /**
      * Updates the settlement details of a userOperation and returns a new hinted object of user operation.
-     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update settlment,
-     * @param {string | Address} opSender - The opseration sender's address (Bundler's address).
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update settlement.
+     * @param {string | Address} opSender - The operation sender's address (Bundler's address).
+     * @returns {HintedObject} A new hinted object representing the updated user operation.
+     **/
+    setSettlement(userOperation: UserOperation<Fact> | HintedObject, opSender: string | Address): HintedObject;
+    /**
+     * Updates the proxy payer details of a userOperation and returns a new hinted object of user operation.
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update proxy payer.
      * @param {string | Address} proxyPayer - The proxy payer's address. (address of CA)
      * @returns {HintedObject} A new hinted object representing the updated user operation.
      **/
-    setSettlement(userOperation: UserOperation<Fact> | HintedObject, opSender: string | Address, proxyPayer: string | Address | undefined): HintedObject;
+    setProxyPayer(userOperation: UserOperation<Fact> | HintedObject, proxyPayer: string | Address): HintedObject;
+    /** Private method to validate and convert userOperation to HintedObject */
+    private getHintedUserOperation;
+    /** Private method to create an Authentication object */
+    private createAuthentication;
+    /** Private method to build a HintedObject with the updated extension */
+    private buildHintedObject;
 }

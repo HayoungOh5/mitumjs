@@ -54,5 +54,10 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
+    EXTENSION: {
+        AUTHENTICATION: string;
+        PROXY_PAYER: string;
+        SETTLEMENT: string;
+    };
 };
 export default _default;

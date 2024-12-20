@@ -38,6 +38,7 @@ declare const _default: {
         getOperations: (api: string | undefined, delegateIP: string | undefined, limit?: number | undefined, offset?: [number, number] | undefined, reverse?: true | undefined) => Promise<AxiosResponse<any, any>>;
         getOperation: (api: string | undefined, hash: string, delegateIP: string | undefined) => Promise<AxiosResponse<any, any>>;
         getBlockOperationsByHeight: (api: string | undefined, height: string | number | import("../types").Big, delegateIP: string | undefined, limit?: number | undefined, offset?: number | undefined, reverse?: true | undefined) => Promise<AxiosResponse<any, any>>;
+        getMultiOperations: (api: string | undefined, hashes: string[], delegateIP: string | undefined) => Promise<AxiosResponse<any, any>>;
         getAccountOperations: (api: string | undefined, address: string | import("../key").Address, delegateIP: string | undefined, limit?: number | undefined, offset?: [number, number] | undefined, reverse?: true | undefined) => Promise<AxiosResponse<any, any>>;
         send: (api: string | undefined, operation: string | import("../types").HintedObject, delegateIP: string | undefined, config?: {
             [i: string]: any;
