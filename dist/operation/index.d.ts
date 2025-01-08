@@ -1,7 +1,7 @@
 import { SignOption, Operation as OP, Fact } from "./base";
 import { Currency, Account, Contract } from "./currency";
 import { AccountAbstraction } from "./accountAbstraction";
-import { DID } from "./did";
+import { AuthDID } from "./authdid";
 import { Signer } from "./signer";
 import { Key, KeyPair } from "../key";
 import { Generator, HintedObject, IP, SuccessResponse, ErrorResponse } from "../types";
@@ -126,4 +126,4 @@ export declare class OperationResponse extends Operation {
      */
     wait(timeout?: number, interval?: number): Promise<any>;
 }
-export { Currency, Account, Contract, DID, AccountAbstraction, Signer, Base, };
+export { Currency, Account, Contract, AuthDID, AccountAbstraction, Signer, Base, };

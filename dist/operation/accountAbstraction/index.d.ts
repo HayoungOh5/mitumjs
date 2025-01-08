@@ -1,16 +1,17 @@
 import { Fact, UserOperation } from "../base";
 import { Generator, HintedObject, IP } from "../../types";
 import { Key, Address } from "../../key";
+import { FactJson } from "../base";
 export declare class AccountAbstraction extends Generator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
      * Creates a `UserOperation` for account abstraction.
-     * @param {Fact} fact - The operation fact.
+     * @param {Fact | FactJson} fact - The operation fact or fact property (json) of HintedObject of operation.
      * @param {string | Address} contract - The did contract address.
      * @param {string} authentication_id - The authentication ID for the did contract.
      * @returns {UserOperation<Fact>} - The created `UserOperation` instance.
      */
-    createUserOperation(fact: Fact, contract: string | Address, authentication_id: string): UserOperation<Fact>;
+    createUserOperation(fact: Fact | FactJson, contract: string | Address, authentication_id: string): UserOperation<Fact>;
     /**
      * Add alternative signature for userOperation, fill `proof_data` item of `authentication` object.
      * @param {string | Key | KeyPair} [privateKey] - The private key or key pair for signing.

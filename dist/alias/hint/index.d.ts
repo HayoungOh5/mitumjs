@@ -62,7 +62,7 @@ declare const _default: {
             SETTLEMENT: string;
         };
     };
-    DID: {
+    AUTH_DID: {
         REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;

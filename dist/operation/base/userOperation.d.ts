@@ -5,6 +5,7 @@ import { Operation } from "./operation";
 import { Hint } from "../../common";
 import { Address, Key } from "../../key";
 import { HintedObject, IHintedObject } from "../../types";
+import { FactJson } from "./types";
 type FactSign = GeneralFactSign | NodeFactSign;
 export declare class Authentication implements IHintedObject {
     readonly contract: Address;
@@ -35,7 +36,8 @@ export declare class UserOperation<T extends Fact> extends Operation<T> {
     protected settlement: Settlement;
     protected _factSigns: FactSign[];
     protected _hash: Buffer;
-    constructor(networkID: string, fact: T, auth: Authentication, proxyPayer: null | ProxyPayer, settlement: Settlement);
+    constructor(networkID: string, fact: T | FactJson, auth: Authentication, proxyPayer: null | ProxyPayer, settlement: Settlement);
+    static restoreFactFromJson<T extends Fact>(factJson: FactJson): T;
     get hash(): Buffer;
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;

@@ -1,4 +1,4 @@
-export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.HDWALLET[keyof typeof ECODE.HDWALLET] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.DID[keyof typeof ECODE.DID]);
+export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.HDWALLET[keyof typeof ECODE.HDWALLET] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.AUTH_DID[keyof typeof ECODE.AUTH_DID]);
 export declare const ECODE: {
     readonly NO_API: "EC_NO_API";
     readonly UNKNOWN: "EC_UNKNOWN";
@@ -60,7 +60,7 @@ export declare const ECODE: {
         readonly INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY";
         readonly INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN";
     };
-    readonly DID: {
+    readonly AUTH_DID: {
         readonly INVALID_DID: "EC_INVALID_DID";
         readonly INVALID_DOCUMENT: "EC_INVALID_DOCUMENT";
         readonly INVALID_AUTHENTICATION: "EC_INVALID_AUTHENTICATION";

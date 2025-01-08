@@ -1,7 +1,7 @@
 import { Generator, IP } from "./types";
 import { Block, Node } from "./node";
 import { Utils } from "./utils/transformUnit";
-import { Account, Currency, Contract, Operation, Signer, DID, AccountAbstraction } from "./operation";
+import { Account, Currency, Contract, Operation, Signer, AuthDID, AccountAbstraction } from "./operation";
 export declare class Mitum extends Generator {
     private _node;
     private _account;
@@ -10,7 +10,7 @@ export declare class Mitum extends Generator {
     private _block;
     private _operation;
     private _signer;
-    private _did;
+    private _authdid;
     private _accountAbstraction;
     ECODE: Object;
     PCODE: Object;
@@ -25,8 +25,8 @@ export declare class Mitum extends Generator {
     get operation(): Operation;
     get signer(): Signer;
     get contract(): Contract;
-    get did(): DID;
-    get accountAbstraction(): AccountAbstraction;
+    get authdid(): AuthDID;
+    get aa(): AccountAbstraction;
     get utils(): Utils;
     /**
      * Set the API URL to interact with Mitum network.
