@@ -1347,9 +1347,9 @@ class RestoredFact extends Fact {
 }
 class UserOperation extends Operation$1 {
     constructor(networkID, fact, auth, proxyPayer, settlement) {
-        super(networkID, (fact instanceof Fact ? fact : UserOperation.restoreFactFromJson(fact)));
+        super(networkID, (!isFactJson(fact) ? fact : UserOperation.restoreFactFromJson(fact)));
         this.id = networkID;
-        this.fact = (fact instanceof Fact ? fact : UserOperation.restoreFactFromJson(fact));
+        this.fact = (!isFactJson(fact) ? fact : UserOperation.restoreFactFromJson(fact));
         if ("sender" in fact) {
             this.isSenderDidOwner(fact.sender, auth.authenticationId, true);
         }
@@ -1541,6 +1541,16 @@ const validateDID = (did, id) => {
     else {
         return Address.from(parts[2]);
     }
+};
+// export const isFactInstance = (obj: unknown): obj is Fact => {
+//     return obj instanceof Fact;
+// }
+const isFactJson = (obj) => {
+    return (typeof obj === "object" &&
+        obj !== null &&
+        "_hint" in obj &&
+        "token" in obj &&
+        "hash" in obj);
 };
 
 class BaseAddress {
