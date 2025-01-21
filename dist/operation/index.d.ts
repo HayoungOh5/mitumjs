@@ -8,6 +8,7 @@ import { KYC } from "./kyc";
 import { TimeStamp } from "./timestamp";
 import { Token } from "./token";
 import { Point } from "./point";
+import { Storage } from "./storage";
 import { Signer } from "./signer";
 import { Key, KeyPair } from "../key";
 import { Generator, HintedObject, IP, SuccessResponse, ErrorResponse } from "../types";
@@ -59,7 +60,7 @@ export declare class Operation extends Generator {
      * Get multiple operations by array of fact hashes.
      * Returns excluding operations that have not yet been recorded.
      * @async
-     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 44 length.
+     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 43 or 44 length.
      * @returns The `data` of `SuccessResponse` is array of infomation of the operations:
      * - `_hint`: Hint for the operation,
      * - `hash`: Hash for the fact,
@@ -132,4 +133,4 @@ export declare class OperationResponse extends Operation {
      */
     wait(timeout?: number, interval?: number): Promise<any>;
 }
-export { Currency, Account, Contract, NFT, Credential, DAO, STO, KYC, TimeStamp, Token, Point, Signer, Base, };
+export { Currency, Account, Contract, NFT, Credential, DAO, STO, KYC, TimeStamp, Token, Point, Storage, Signer, Base, };

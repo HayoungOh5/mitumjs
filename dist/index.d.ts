@@ -1,7 +1,7 @@
 import { Generator, IP } from "./types";
 import { Block, Node } from "./node";
 import { Utils } from "./utils/transformUnit";
-import { Account, Currency, Contract, NFT, DAO, KYC, STO, TimeStamp, Credential, Token, Point, Operation, Signer } from "./operation";
+import { Account, Currency, Contract, NFT, DAO, KYC, STO, TimeStamp, Credential, Token, Point, Storage, Operation, Signer } from "./operation";
 export declare class Mitum extends Generator {
     private _node;
     private _account;
@@ -18,6 +18,7 @@ export declare class Mitum extends Generator {
     private _dao;
     private _token;
     private _point;
+    private _storage;
     ECODE: Object;
     PCODE: Object;
     DCODE: Object;
@@ -39,6 +40,7 @@ export declare class Mitum extends Generator {
     get dao(): DAO;
     get token(): Token;
     get point(): Point;
+    get storage(): Storage;
     get utils(): Utils;
     /**
      * Set the API URL to interact with Mitum network.

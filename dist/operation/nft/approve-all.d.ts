@@ -12,7 +12,7 @@ export declare class ApproveAllItem extends NFTItem {
     toHintedObject(): HintedObject;
     toString(): string;
 }
-export declare class ApproveAlleFact extends OperationFact<ApproveAllItem> {
+export declare class ApproveAllFact extends OperationFact<ApproveAllItem> {
     constructor(token: string, sender: string | Address, items: ApproveAllItem[]);
     get operationHint(): string;
 }

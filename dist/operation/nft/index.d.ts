@@ -2,7 +2,7 @@ import { RegisterModelFact } from "./register-model";
 import { UpdateModelConfigFact } from "./update-model-config";
 import { MintFact } from "./mint";
 import { ApproveFact } from "./approve";
-import { ApproveAlleFact } from "./approve-all";
+import { ApproveAllFact } from "./approve-all";
 import { TransferFact } from "./transfer";
 import { AddSignatureFact } from "./add-signature";
 import { ContractGenerator, Operation } from "../base";
@@ -21,7 +21,6 @@ type Creator = {
 };
 export declare class NFT extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
-    private checkArrayLength;
     /**
      * Generate `register-model` operation to register a new NFT model for creating a collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -61,18 +60,17 @@ export declare class NFT extends ContractGenerator {
      */
     mint(contract: string | Address, sender: string | Address, receiver: string | Address, uri: string | LongString, hash: string | LongString, currency: string | CurrencyID, creator: string | Address): Operation<MintFact>;
     /**
-     * Generate `mint` operation with multiple item for minting N number of NFT and assigns it to a receiver.
-     * @param {string | Address} [contract] - The contract's address.
+     * Generate `mint` operation with multiple item for minting multiple NFT and assigns it to a receiver.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receivers] - The array of address of the receiver of the newly minted NFT.
-     * @param {number} [n] - The number of NFT to be minted.
      * @param {string | LongString} [uri] - The array of URI for the NFTs to mint.
      * @param {string | LongString} [hash] - The array of hash for the NFT to mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
      * @returns `mint` operation.
      */
-    multiMint(contract: string | Address, sender: string | Address, receivers: string[] | Address[], n: number, uri: string[] | LongString[], hash: string[] | LongString[], currency: string | CurrencyID, creator: string | Address): Operation<MintFact>;
+    multiMint(contract: string | Address | string[] | Address[], sender: string | Address, receivers: string[] | Address[], uri: string[] | LongString[], hash: string[] | LongString[], currency: string | CurrencyID, creator: string | Address): Operation<MintFact>;
     /**
      * Generate `mint` operation in case of multiple creators.
      * @param {string | Address} [contract] - The contract's address.
@@ -98,7 +96,17 @@ export declare class NFT extends ContractGenerator {
      */
     transfer(contract: string | Address, sender: string | Address, receiver: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<TransferFact>;
     /**
-     * Generate `approve` operation to approves NFT to another account (approved).
+     * Generate `transfer` operation with multiple itmes to transfer NFTs from one address to another.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | Address[]} [receiver] - The array of address of the receiver of the NFT.
+     * @param {string[] | number[] | Big[]} [nftIdx] - The array of index of the NFT (Indicate the order of minted).
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `transfer` operation with multiple items.
+     */
+    multiTransfer(contract: string | Address | string[] | Address[], sender: string | Address, receiver: string[] | Address[], nftIdx: string[] | number[] | Big[], currency: string | CurrencyID): Operation<TransferFact>;
+    /**
+     * Generate `approve` operation to approve NFT to another account (approved).
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The address of the sender of the NFT.
      * @param {string | Address} [approved] - The address being granted approval to manage the NFT.
@@ -108,6 +116,16 @@ export declare class NFT extends ContractGenerator {
      */
     approve(contract: string | Address, sender: string | Address, approved: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<ApproveFact>;
     /**
+     * Generate `approve` operation with multiple items to approve NFT to another account (approved).
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The address of the sender of the NFT.
+     * @param {string[] | Address[]} [approved] - The array of address being granted approval to manage the NFT.
+     * @param {string[] | number[] | Big[]} [nftIdx] - The index of the NFT (Indicate the order of minted).
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `approve` operation with multiple items.
+     */
+    multiApprove(contract: string | Address | string[] | Address[], sender: string | Address, approved: string[] | Address[], nftIdx: string[] | number[] | Big[], currency: string | CurrencyID): Operation<ApproveFact>;
+    /**
      * Generate `approve-all` operation to grant or revoke approval for an account to manage all NFTs of the sender.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The address of the sender giving or revoking approval.
@@ -116,7 +134,17 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `approve-all` operation.
      */
-    approveAll(contract: string | Address, sender: string | Address, approved: string | Address, mode: "allow" | "cancel", currency: string | CurrencyID): Operation<ApproveAlleFact>;
+    approveAll(contract: string | Address, sender: string | Address, approved: string | Address, mode: "allow" | "cancel", currency: string | CurrencyID): Operation<ApproveAllFact>;
+    /**
+     * Generate `approve-all` operation with multiple items to grant or revoke approval for an account to manage all NFTs of the sender.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The address of the sender giving or revoking approval.
+     * @param {string | Address} [approved] - The address being granted or denied approval to manage all NFTs.
+     * @param {"allow" | "cancel"} [mode] - The mode indicating whether to allow or cancel the approval.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `approve-all` operation with multiple items.
+     */
+    multiApproveAll(contract: string | Address | string[] | Address[], sender: string | Address, approved: string[] | Address[], mode: "allow" | "cancel", currency: string | CurrencyID): Operation<ApproveAllFact>;
     /**
      * Generate `add-signature` operation to signs an NFT as creator of the artwork.
      * @param {string | Address} [contract] - The contract's address.

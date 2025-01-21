@@ -25,6 +25,7 @@ export declare const Config: {
         ZERO: RangeConfig;
         NODE: RangeConfig;
     };
+    CONTRACT_HANDLERS: RangeConfig;
     KEYS_IN_ACCOUNT: RangeConfig;
     AMOUNTS_IN_ITEM: RangeConfig;
     ITEMS_IN_FACT: RangeConfig;
@@ -64,5 +65,10 @@ export declare const Config: {
         ADDRESS_IN_WHITELIST: RangeConfig;
         QUORUM: RangeConfig;
         VOTE: RangeConfig;
+    };
+    STORAGE: {
+        PROJECT: RangeConfig;
+        DATA_KEY: RangeConfig;
+        DATA_VALUE: RangeConfig;
     };
 };

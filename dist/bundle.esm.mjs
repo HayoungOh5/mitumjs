@@ -443,6 +443,68 @@ class StringAssert {
         }
     }
 }
+class ArrayAssert {
+    constructor(array, arrayName) {
+        this.validType = false;
+        this.array = array;
+        this.arrayName = arrayName;
+    }
+    validateType() {
+        if (this.validType)
+            return;
+        if (!Array.isArray(this.array)) {
+            throw MitumError.detail(ECODE.INVALID_TYPE, `the ${this.arrayName} must be in array type`);
+        }
+        this.validType = true;
+    }
+    notEmpty() {
+        this.validateType();
+        if (this.array.length === 0) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `${this.arrayName} cannot be an empty array`);
+        }
+        return this;
+    }
+    exactLength(length) {
+        this.validateType();
+        if (this.array.length !== length) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `the length of ${this.arrayName} must be ${length}, but got ${this.array.length}`);
+        }
+        return this;
+    }
+    rangeLength(rangeConfig) {
+        this.validateType();
+        Assert.check(rangeConfig.satisfy(this.array.length), MitumError.detail(ECODE.INVALID_LENGTH, `The length of ${this.arrayName} must be between ${rangeConfig.min} and ${rangeConfig.max}, but got ${this.array.length}`));
+        return this;
+    }
+    maxLength(max) {
+        this.validateType();
+        if (this.array.length > max) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `the length of ${this.arrayName} must not exceed ${max}`);
+        }
+        return this;
+    }
+    sameLength(array2, arrayName2) {
+        this.validateType();
+        if (!Array.isArray(array2)) {
+            throw MitumError.detail(ECODE.INVALID_TYPE, `the ${arrayName2} must be in array type`);
+        }
+        if (this.array.length !== array2.length) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `The lengths of the ${this.arrayName} and ${arrayName2} must be the same.`);
+        }
+        return this;
+    }
+    noDuplicates() {
+        this.validateType();
+        const uniqueItems = new Set(this.array.map((el) => { return el.toString(); }));
+        if (uniqueItems.size !== this.array.length) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `${this.arrayName} cannot contain duplicate elements`);
+        }
+        return this;
+    }
+    static check(array, arrayName) {
+        return new ArrayAssert(array, arrayName);
+    }
+}
 
 class LongString {
     constructor(s) {
@@ -783,11 +845,12 @@ const Config = {
         ZERO: getRangeConfig(8, 15),
         NODE: getRangeConfig(4, Number.MAX_SAFE_INTEGER),
     },
+    CONTRACT_HANDLERS: getRangeConfig(0, 20),
     KEYS_IN_ACCOUNT: getRangeConfig(1, 100),
     AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
     ITEMS_IN_FACT: getRangeConfig(1, 100),
     OP_SIZE: getRangeConfig(1, 262144),
-    FACT_HASHES: getRangeConfig(1, 44),
+    FACT_HASHES: getRangeConfig(1, 40),
     KEY: {
         MITUM: {
             PRIVATE: getRangeConfig(67),
@@ -822,6 +885,11 @@ const Config = {
         ADDRESS_IN_WHITELIST: getRangeConfig(0, 10),
         QUORUM: getRangeConfig(1, 100),
         VOTE: getRangeConfig(0, 255),
+    },
+    STORAGE: {
+        PROJECT: getRangeConfig(1, 10),
+        DATA_KEY: getRangeConfig(1, 200),
+        DATA_VALUE: getRangeConfig(1, 20000)
     }
 };
 
@@ -1077,9 +1145,19 @@ var TOKEN = {
         FACT: "mitum-token-transfer-operation-fact",
         OPERATION: "mitum-token-transfer-operation",
     },
+    TRANSFERS: {
+        ITEM: "mitum-token-transfers-item",
+        FACT: "mitum-token-transfers-operation-fact",
+        OPERATION: "mitum-token-transfers-operation"
+    },
     APPROVE: {
         FACT: "mitum-token-approve-operation-fact",
         OPERATION: "mitum-token-approve-operation",
+    },
+    APPROVES: {
+        ITEM: "mitum-token-approves-item",
+        FACT: "mitum-token-approves-operation-fact",
+        OPERATION: "mitum-token-approves-operation",
     },
     BURN: {
         FACT: "mitum-token-burn-operation-fact",
@@ -1088,6 +1166,11 @@ var TOKEN = {
     TRANSFER_FROM: {
         FACT: "mitum-token-transfer-from-operation-fact",
         OPERATION: "mitum-token-transfer-from-operation",
+    },
+    TRANSFERS_FROM: {
+        ITEM: "mitum-token-transfers-from-item",
+        FACT: "mitum-token-transfers-from-operation-fact",
+        OPERATION: "mitum-token-transfers-from-operation",
     }
 };
 
@@ -1104,9 +1187,19 @@ var POINT = {
         FACT: "mitum-point-transfer-operation-fact",
         OPERATION: "mitum-point-transfer-operation",
     },
+    TRANSFERS: {
+        ITEM: "mitum-point-transfers-item",
+        FACT: "mitum-point-transfers-operation-fact",
+        OPERATION: "mitum-point-transfers-operation"
+    },
     APPROVE: {
         FACT: "mitum-point-approve-operation-fact",
         OPERATION: "mitum-point-approve-operation",
+    },
+    APPROVES: {
+        ITEM: "mitum-point-approves-item",
+        FACT: "mitum-point-approves-operation-fact",
+        OPERATION: "mitum-point-approves-operation",
     },
     BURN: {
         FACT: "mitum-point-burn-operation-fact",
@@ -1115,7 +1208,41 @@ var POINT = {
     TRANSFER_FROM: {
         FACT: "mitum-point-transfer-from-operation-fact",
         OPERATION: "mitum-point-transfer-from-operation",
+    },
+    TRANSFERS_FROM: {
+        ITEM: "mitum-point-transfers-from-item",
+        FACT: "mitum-point-transfers-from-operation-fact",
+        OPERATION: "mitum-point-transfers-from-operation",
     }
+};
+
+var STORAGE = {
+    REGISTER_MODEL: {
+        FACT: "mitum-storage-register-model-operation-fact",
+        OPERATION: "mitum-storage-register-model-operation",
+    },
+    CREATE_DATA: {
+        FACT: "mitum-storage-create-data-operation-fact",
+        OPERATION: "mitum-storage-create-data-operation",
+    },
+    CREATE_DATAS: {
+        ITEM: "mitum-storage-create-datas-item",
+        FACT: "mitum-storage-create-datas-operation-fact",
+        OPERATION: "mitum-storage-create-datas-operation",
+    },
+    DELETE_DATA: {
+        FACT: "mitum-storage-delete-data-operation-fact",
+        OPERATION: "mitum-storage-delete-data-operation",
+    },
+    UPDATE_DATA: {
+        FACT: "mitum-storage-update-data-operation-fact",
+        OPERATION: "mitum-storage-update-data-operation",
+    },
+    UPDATE_DATAS: {
+        ITEM: "mitum-storage-update-datas-item",
+        FACT: "mitum-storage-update-datas-operation-fact",
+        OPERATION: "mitum-storage-update-datas-operation",
+    },
 };
 
 var HINT = {
@@ -1129,6 +1256,7 @@ var HINT = {
     TIMESTAMP,
     TOKEN,
     POINT,
+    STORAGE
 };
 
 const KEY = {
@@ -1242,8 +1370,6 @@ class Fee {
 
 const SortFunc = (a, b) => Buffer.compare(a.toBuffer(), b.toBuffer());
 
-const hasOverlappingAddress = (arr) => (new Set(arr.map(a => a instanceof Address ? a.toString() : a)).size == arr.length);
-
 const sha256 = (msg) => Buffer.from(sha256$1(msg));
 const sha3 = (msg) => Buffer.from(sha3_256.create().update(msg).digest());
 const keccak256 = (msg) => Buffer.from(keccak256$1.create().update(msg).digest());
@@ -1265,7 +1391,7 @@ const getChecksum = (hex) => {
 const delegateUri = (delegateIP) => `${delegateIP}?uri=`;
 const validatePositiveInteger = (val, name) => {
     if (!Number.isSafeInteger(val) || val < 0) {
-        throw new Error(`${name} must be a integer >= 0`);
+        throw MitumError.detail(ECODE.INVALID_FLOAT, `${name} must be a integer >= 0`);
     }
 };
 const isNumberTuple = (arr) => {
@@ -1285,7 +1411,7 @@ const apiPathWithParams = (apiPath, limit, offset, reverse) => {
     }
     if (reverse !== undefined) {
         if (reverse !== true) {
-            throw new Error("reverse must be true(bool)");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "reverse must be true(bool)");
         }
         query3 = `reverse=1`;
     }
@@ -1299,9 +1425,7 @@ const apiPathWithHashParams = (apiPath, factHash, limit, offset, reverse) => {
     let query3;
     if (factHash !== undefined) {
         if (typeof (factHash) !== "string") {
-            {
-                throw new Error("factHash must be a string");
-            }
+            throw MitumError.detail(ECODE.INVALID_TYPE, "factHash must be a string");
         }
         hash = `facthash=${factHash}`;
     }
@@ -1315,7 +1439,7 @@ const apiPathWithHashParams = (apiPath, factHash, limit, offset, reverse) => {
     }
     if (reverse !== undefined) {
         if (reverse !== true) {
-            throw new Error("reverse must be true(bool)");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "reverse must be true(bool)");
         }
         query3 = `reverse=1`;
     }
@@ -1332,7 +1456,7 @@ const apiPathWithParamsExt = (apiPath, limit, offset, reverse) => {
     }
     if (offset !== undefined) {
         if (!isNumberTuple(offset)) {
-            throw new Error("offset must be a tuple with number");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "offset must be a tuple with number");
         }
         validatePositiveInteger(offset[0], "offset element");
         validatePositiveInteger(offset[1], "offset element");
@@ -1340,12 +1464,44 @@ const apiPathWithParamsExt = (apiPath, limit, offset, reverse) => {
     }
     if (reverse !== undefined) {
         if (reverse !== true) {
-            throw new Error("reverse must be true(bool)");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "reverse must be true(bool)");
         }
         query3 = `reverse=1`;
     }
     const query = [query1, query2, query3].filter(str => str !== undefined).join("&");
     return query == "" ? apiPath : apiPath + "?" + query;
+};
+
+const calculateAllowance = (response, owner, approved) => {
+    let amount = '0';
+    if (response.data.policy && response.data.policy.approve_list) {
+        const approveList = response.data.policy.approve_list;
+        const approval = approveList.find(item => item.account === owner);
+        if (approval) {
+            const allowance = approval.approved.find(item => item.account === approved);
+            if (allowance) {
+                amount = allowance.amount;
+            }
+        }
+        return { 'amount': amount };
+    }
+    else {
+        throw MitumError.detail(ECODE.UNKNOWN, `Unknown error orccur: token policy or policy.approve_list does not exist`);
+    }
+};
+const convertToArray = (contracts, length) => {
+    if (typeof contracts === "string") {
+        return Array(length).fill(contracts);
+    }
+    else if (Array.isArray(contracts)) {
+        if (contracts.length !== length) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `length of contracts must be the same as length of the other array.`);
+        }
+        return contracts;
+    }
+    else {
+        throw MitumError.detail(ECODE.INVALID_TYPE, `contracts must be a string or an array.`);
+    }
 };
 
 class Item {
@@ -1820,10 +1976,9 @@ const privateKeyToPublicKey = (privateKey) => {
     let privateBuf;
     if (!Buffer.isBuffer(privateKey)) {
         if (typeof privateKey !== "string") {
-            throw new Error("Expected Buffer or string as argument");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "Expected Buffer or string as argument");
         }
-        privateKey =
-            privateKey.slice(0, 2) === "0x" ? privateKey.slice(2) : privateKey;
+        privateKey = privateKey.slice(0, 2) === "0x" ? privateKey.slice(2) : privateKey;
         privateBuf = Buffer.from(privateKey, "hex");
     }
     else {
@@ -2243,87 +2398,87 @@ var currency$1 = {
     getCurrency,
 };
 
-const url$6 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
+const url$7 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
 async function getNFT(api, contract, nftIdx, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/nftidx/${nftIdx}`;
+    const apiPath = `${url$7(api, contract)}/nftidx/${nftIdx}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTs(api, contract, delegateIP, factHash, limit, offset, reverse) {
-    const apiPath = apiPathWithHashParams(`${url$6(api, contract)}/nfts`, factHash, limit, offset, reverse);
+    const apiPath = apiPathWithHashParams(`${url$7(api, contract)}/nfts`, factHash, limit, offset, reverse);
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTCount(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/totalsupply`;
+    const apiPath = `${url$7(api, contract)}/totalsupply`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getModel$5(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}`;
+async function getModel$6(api, contract, delegateIP) {
+    const apiPath = `${url$7(api, contract)}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountOperators(api, contract, account, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
+    const apiPath = `${url$7(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var nft = {
     getNFT,
     getNFTs,
     getNFTCount,
-    getModel: getModel$5,
+    getModel: getModel$6,
     getAccountOperators,
 };
 
-const url$5 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
-async function getModel$4(api, contract, delegateIP) {
-    const apiPath = `${url$5(api, contract)}`;
+const url$6 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
+async function getModel$5(api, contract, delegateIP) {
+    const apiPath = `${url$6(api, contract)}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredential(api, contract, templateID, credentialID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}/credential/${credentialID}`;
+    const apiPath = `${url$6(api, contract)}/template/${templateID}/credential/${credentialID}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getTemplate(api, contract, templateID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}`;
+    const apiPath = `${url$6(api, contract)}/template/${templateID}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredentials(api, contract, templateID, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/template/${templateID}/credentials`;
+    const apiPath = `${url$6(api, contract)}/template/${templateID}/credentials`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredentialByHolder(api, contract, holder, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/holder/${Address.from(holder).toString()}`;
+    const apiPath = `${url$6(api, contract)}/holder/${Address.from(holder).toString()}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var credential = {
-    getModel: getModel$4,
+    getModel: getModel$5,
     getCredential,
     getTemplate,
     getCredentials,
     getCredentialByHolder,
 };
 
-const url$4 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
-async function getModel$3(api, contract, delegateIP) {
-    const apiPath = `${url$4(api, contract)}`;
+const url$5 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
+async function getModel$4(api, contract, delegateIP) {
+    const apiPath = `${url$5(api, contract)}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getProposal(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}`;
+    const apiPath = `${url$5(api, contract)}/proposal/${proposalID}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getApproved(api, contract, proposalID, registrant, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
+    const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getVoters(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/voter`;
+    const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/voter`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getVotingStatus(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/proposal/${proposalID}/votingpower`;
+    const apiPath = `${url$5(api, contract)}/proposal/${proposalID}/votingpower`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var dao = {
-    getModel: getModel$3,
+    getModel: getModel$4,
     getProposal,
     getApproved,
     getVoters,
@@ -2332,30 +2487,30 @@ var dao = {
 
 var kyc = {};
 
-const url$3 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
+const url$4 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
 async function getService(api, contract, delegateIP) {
-    const apiPath = `${url$3(api, contract)}`;
+    const apiPath = `${url$4(api, contract)}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitions(api, contract, holder, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
+    const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBalanceByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
+    const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getOperatorsByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
+    const apiPath = `${url$4(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitionBalance(api, contract, partition, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/p
+    const apiPath = `${url$4(api, contract)}/p
     artition/${partition}/balance`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAuthorized(api, contract, operator, delegateIP) {
-    const apiPath = `${url$3(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
+    const apiPath = `${url$4(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var sto = {
@@ -2367,46 +2522,70 @@ var sto = {
     getAuthorized,
 };
 
-const url$2 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
+const url$3 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
+async function getModel$3(api, contract, delegateIP) {
+    const apiPath = `${url$3(api, contract)}`;
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
+    const apiPath = `${url$3(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var timestamp = {
+    getModel: getModel$3,
+    getTimeStamp,
+};
+
+const url$2 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
 async function getModel$2(api, contract, delegateIP) {
     const apiPath = `${url$2(api, contract)}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
-    const apiPath = `${url$2(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
+async function getTokenBalance(api, contract, account, delegateIP) {
+    const apiPath = `${url$2(api, contract)}/account/${Address.from(account).toString()}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var timestamp = {
+var token = {
     getModel: getModel$2,
-    getTimeStamp,
+    getTokenBalance,
 };
 
-const url$1 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
+const url$1 = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
 async function getModel$1(api, contract, delegateIP) {
     const apiPath = `${url$1(api, contract)}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getTokenBalance(api, contract, account, delegateIP) {
+async function getPointBalance(api, contract, account, delegateIP) {
     const apiPath = `${url$1(api, contract)}/account/${Address.from(account).toString()}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var token = {
+var point = {
     getModel: getModel$1,
-    getTokenBalance,
+    getPointBalance,
 };
 
-const url = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
+const url = (api, contract) => `${api}/storage/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getPointBalance(api, contract, account, delegateIP) {
-    const apiPath = `${url(api, contract)}/account/${Address.from(account).toString()}`;
+async function getData(api, contract, dataKey, delegateIP) {
+    const apiPath = `${url(api, contract)}/datakey/${dataKey}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var point = {
+async function getDataHistory(api, contract, dataKey, delegateIP, limit, offset, reverse) {
+    const apiPath = apiPathWithParams(`${url(api, contract)}/datakey/${dataKey}/history`, limit, offset, reverse);
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getDataCount(api, contract, delegateIP, deleted) {
+    const apiPath = `${url(api, contract)}/datacount?deleted=${deleted ? 1 : 0}`;
+    return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var storage = {
     getModel,
-    getPointBalance,
+    getData,
+    getDataHistory,
+    getDataCount
 };
 
 var models = {
@@ -2420,6 +2599,7 @@ var models = {
         timestamp,
         token,
         point,
+        storage
     },
 };
 
@@ -2470,7 +2650,7 @@ async function getAPIData(f, _links) {
             return parsedError;
         }
         else {
-            throw new Error(`Unknown error orccur!\n${error}`);
+            throw MitumError.detail(ECODE.UNKNOWN, `Unknown error orccur!\n${error}`);
         }
     }
 }
@@ -2879,8 +3059,9 @@ class UpdateHandlerFact extends Fact {
         this.currency = CurrencyID.from(currency);
         this.handlers = handlers.map(a => Address.from(a));
         this._hash = this.hashing();
-        Assert.check((this.handlers.length !== 0), MitumError.detail(ECODE.INVALID_FACT, "empty handlers"));
-        Assert.check(hasOverlappingAddress(this.handlers), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in handlers"));
+        ArrayAssert.check(handlers, "handlers")
+            .rangeLength(Config.CONTRACT_HANDLERS)
+            .noDuplicates();
     }
     toBuffer() {
         return Buffer.concat([
@@ -3216,8 +3397,7 @@ class Currency extends Generator {
      * @returns `transfer` operation.
      */
     batchTransfer(sender, receivers, currency, amounts) {
-        Assert.check(receivers.length !== 0 && amounts.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
-        Assert.check(receivers.length === amounts.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the receivers and amounts must be the same."));
+        ArrayAssert.check(receivers, "receivers").rangeLength(Config.ITEMS_IN_FACT).noDuplicates().sameLength(amounts, "amounts");
         return new Operation$1(this.networkID, new TransferFact$3(TimeStamp$1.new().UTC(), sender, receivers.map((receiver, idx) => new TransferItem$1(receiver, [new Amount(currency, amounts[idx])]))));
     }
     /**
@@ -3233,6 +3413,20 @@ class Currency extends Generator {
         return new Operation$1(this.networkID, new WithdrawFact(TimeStamp$1.new().UTC(), sender, [
             new WithdrawItem(target, [new Amount(currency, amount)])
         ]));
+    }
+    /**
+     * Generate a `withdraw` operation with multiple items for withdrawing currency from multiple contract accounts.
+     * Only the owner account of the contract can execute the operation.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | Address[]} [targets] - The array of target contract account's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amounts] - The array of withdrawal amount.
+     * @returns `withdraw`operation
+     */
+    multiWithdraw(sender, targets, currency, amounts) {
+        ArrayAssert.check(targets, "targets").rangeLength(Config.ITEMS_IN_FACT).sameLength(amounts, "amounts");
+        const items = targets.map((el, idx) => { return new WithdrawItem(el, [new Amount(currency, amounts[idx])]); });
+        return new Operation$1(this.networkID, new WithdrawFact(TimeStamp$1.new().UTC(), sender, items));
     }
     /**
      * Generate a `mint` operation for minting currency and allocating it to a receiver.
@@ -3512,7 +3706,7 @@ class Account extends KeyG {
         return response;
     }
 }
-class Contract extends Generator {
+class Contract extends KeyG {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
@@ -3522,12 +3716,11 @@ class Contract extends Generator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
      * @param {string} [seed] - (Optional) The seed for deterministic key generation. If not provided, a random key pair will be generated.
-     * @param {string | number | Big} [weight] - (Optional) The weight for the public key. If not provided, the default value is 100.
      * @returns An object containing the wallet(key pair) and the `create-contract-account` operation.
      */
-    createWallet(sender, currency, amount, seed, weight) {
+    createWallet(sender, currency, amount, seed) {
         const kp = seed ? KeyPair.fromSeed(seed, "mitum") : KeyPair.random("mitum");
-        const ks = new Keys([new PubKey(kp.publicKey, weight ?? 100)], weight ?? 100);
+        const ks = new Keys([new PubKey(kp.publicKey, 100)], 100);
         return {
             wallet: {
                 privatekey: kp.privateKey.toString(),
@@ -3537,6 +3730,22 @@ class Contract extends Generator {
             operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
                 new CreateContractAccountItem(ks, [new Amount(currency, amount)])
             ])),
+        };
+    }
+    /**
+     * Generate `n` number of key pairs and the corresponding `create-contract-account` operation with multiple items.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {number} [n] - The number of account to create.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @returns An object containing the wallet (key pairs) and the `create-contract-account` operation with multiple items.
+     */
+    createBatchWallet(sender, n, currency, amount) {
+        const keyArray = this.keys(n);
+        const items = keyArray.map((ks) => new CreateContractAccountItem(new Keys([new PubKey(ks.publickey, 100)], 100), [new Amount(currency, amount)]));
+        return {
+            wallet: keyArray,
+            operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, items)),
         };
     }
     /**
@@ -3550,31 +3759,6 @@ class Contract extends Generator {
     createAccount(sender, key, currency, amount) {
         return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
             new CreateContractAccountItem(new Keys([new PubKey(key, 100)], 100), [new Amount(currency, amount)])
-        ]));
-    }
-    /**
-     * Generate a `create-contract-account` operation for the multi-signature account.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {keysType} [keys] - An array of object {`key`: publickey, `weight`: weight for the key}
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
-     * @param {string | number | Big} [threshold] - The threshold for the multi-signature.
-     * @returns `create-contract-account` operation.
-     * @example
-     * // Example of parameter keys
-     * const pubkey01 = {
-     *     key: "02cb1d73c49d638d98092e35603414b575f3f5b5ce01162cdd80ab68ab77e50e14fpu",
-     *     weight: 50
-     * };
-     * const pubkey02 = {
-     *     key: "0377241675aabafca6b1a49f3bc08a581beb0daa330a4ac2008464d63ed7635a22fpu",
-     *     weight: 50
-     * };
-     * const keysArray = [pubkey01, pubkey02];
-     */
-    createMultiSig(sender, keys, currency, amount, threshold) {
-        return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateContractAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)])
         ]));
     }
     /**
@@ -3643,7 +3827,7 @@ class Contract extends Generator {
     }
 }
 
-let RegisterModelFact$5 = class RegisterModelFact extends ContractFact {
+let RegisterModelFact$6 = class RegisterModelFact extends ContractFact {
     constructor(token, sender, contract, name, royalty, uri, minterWhitelist, currency) {
         super(HINT.NFT.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.name = LongString.from(name);
@@ -3651,8 +3835,9 @@ let RegisterModelFact$5 = class RegisterModelFact extends ContractFact {
         this.uri = LongString.from(uri);
         this.minterWhitelist = minterWhitelist ? minterWhitelist.map(w => Address.from(w)) : [];
         Assert.check(Config.NFT.ROYALTY.satisfy(this.royalty.v), MitumError.detail(ECODE.INVALID_FACT, "royalty out of range"));
-        Assert.check(Config.NFT.ADDRESS_IN_MINTER_WHITELIST.satisfy(this.minterWhitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
-        Assert.check(hasOverlappingAddress(this.minterWhitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
+        ArrayAssert.check(this.minterWhitelist, "whitelist")
+            .rangeLength(Config.NFT.ADDRESS_IN_MINTER_WHITELIST)
+            .noDuplicates();
         this.minterWhitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
@@ -3688,8 +3873,9 @@ let UpdateModelConfigFact$1 = class UpdateModelConfigFact extends ContractFact {
         this.uri = LongString.from(uri);
         this.minterWhitelist = minterWhitelist ? minterWhitelist.map(w => Address.from(w)) : [];
         Assert.check(Config.NFT.ROYALTY.satisfy(this.royalty.v), MitumError.detail(ECODE.INVALID_FACT, "royalty out of range"));
-        Assert.check(Config.NFT.ADDRESS_IN_MINTER_WHITELIST.satisfy(this.minterWhitelist.length), MitumError.detail(ECODE.INVALID_FACT, "whitelist length out of range"));
-        Assert.check(hasOverlappingAddress(this.minterWhitelist), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in whitelist"));
+        ArrayAssert.check(this.minterWhitelist, "whitelist")
+            .rangeLength(Config.NFT.ADDRESS_IN_MINTER_WHITELIST)
+            .noDuplicates();
         this.minterWhitelist.forEach(account => Assert.check(this.contract.toString() !== account.toString(), MitumError.detail(ECODE.INVALID_FACT, "contract is same with whitelist address")));
         this._hash = this.hashing();
     }
@@ -3806,7 +3992,7 @@ class ApproveItem extends NFTItem {
         };
     }
     toString() {
-        return `${super.toString()}-${this.nftIdx.v}-${this.approved.toString()}`;
+        return `${super.toString()}-${this.nftIdx.v}`;
     }
 }
 let ApproveFact$2 = class ApproveFact extends OperationFact {
@@ -3848,7 +4034,7 @@ class ApproveAllItem extends NFTItem {
         return `${super.toString()}-${this.approved.toString()}`;
     }
 }
-class ApproveAlleFact extends OperationFact {
+class ApproveAllFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.NFT.APPROVE_ALL.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate approved found in items"));
@@ -3980,10 +4166,6 @@ class NFT extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
-    checkArrayLength(array, expectedLength, arrayName) {
-        Assert.check(Array.isArray(array), MitumError.detail(ECODE.INVALID_TYPE, `the ${arrayName} must be in array type`));
-        Assert.check(array.length === expectedLength, MitumError.detail(ECODE.INVALID_LENGTH, `length of ${arrayName} must be ${expectedLength}, but got ${array.length}`));
-    }
     /**
      * Generate `register-model` operation to register a new NFT model for creating a collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -4001,7 +4183,7 @@ class NFT extends ContractGenerator {
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the collectionData structure`));
         });
-        return new Operation$1(this.networkID, new RegisterModelFact$5(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.minterWhitelist, currency));
+        return new Operation$1(this.networkID, new RegisterModelFact$6(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.minterWhitelist, currency));
     }
     /**
      * Generate `update-model-config` operation to update the policy of the nft collection on the contract.
@@ -4037,23 +4219,20 @@ class NFT extends ContractGenerator {
         return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, [new MintItem(contract, receiver, hash, uri, new Signers([new Signer$1(creator, 100, false)]), currency)]));
     }
     /**
-     * Generate `mint` operation with multiple item for minting N number of NFT and assigns it to a receiver.
-     * @param {string | Address} [contract] - The contract's address.
+     * Generate `mint` operation with multiple item for minting multiple NFT and assigns it to a receiver.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | Address} [receivers] - The array of address of the receiver of the newly minted NFT.
-     * @param {number} [n] - The number of NFT to be minted.
      * @param {string | LongString} [uri] - The array of URI for the NFTs to mint.
      * @param {string | LongString} [hash] - The array of hash for the NFT to mint.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
      * @returns `mint` operation.
      */
-    multiMint(contract, sender, receivers, n, uri, hash, currency, creator) {
-        Assert.check(Config.ITEMS_IN_FACT.satisfy(n), MitumError.detail(ECODE.INVALID_ITEMS, "n is out of range"));
-        this.checkArrayLength(receivers, n, "receivers");
-        this.checkArrayLength(uri, n, "uri");
-        this.checkArrayLength(hash, n, "hash");
-        const items = Array.from({ length: n }).map((_, idx) => new MintItem(contract, receivers[idx], hash[idx], uri[idx], new Signers([new Signer$1(creator, 100, false)]), currency));
+    multiMint(contract, sender, receivers, uri, hash, currency, creator) {
+        ArrayAssert.check(receivers, "receivers").rangeLength(Config.ITEMS_IN_FACT).sameLength(uri, "uri").sameLength(hash, "hash");
+        const contractsArray = convertToArray(contract, receivers.length);
+        const items = Array.from({ length: receivers.length }).map((_, idx) => new MintItem(contractsArray[idx], receivers[idx], hash[idx], uri[idx], new Signers([new Signer$1(creator, 100, false)]), currency));
         return new Operation$1(this.networkID, new MintFact$2(TimeStamp$1.new().UTC(), sender, items));
     }
     /**
@@ -4096,7 +4275,22 @@ class NFT extends ContractGenerator {
         return new Operation$1(this.networkID, fact);
     }
     /**
-     * Generate `approve` operation to approves NFT to another account (approved).
+     * Generate `transfer` operation with multiple itmes to transfer NFTs from one address to another.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | Address[]} [receiver] - The array of address of the receiver of the NFT.
+     * @param {string[] | number[] | Big[]} [nftIdx] - The array of index of the NFT (Indicate the order of minted).
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `transfer` operation with multiple items.
+     */
+    multiTransfer(contract, sender, receiver, nftIdx, currency) {
+        ArrayAssert.check(receiver, "receiver").rangeLength(Config.ITEMS_IN_FACT).sameLength(nftIdx, "nftIdx");
+        const contractsArray = convertToArray(contract, receiver.length);
+        const items = Array.from({ length: receiver.length }).map((_, idx) => new TransferItem(contractsArray[idx], receiver[idx], nftIdx[idx], currency));
+        return new Operation$1(this.networkID, new TransferFact$2(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
+     * Generate `approve` operation to approve NFT to another account (approved).
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The address of the sender of the NFT.
      * @param {string | Address} [approved] - The address being granted approval to manage the NFT.
@@ -4110,6 +4304,21 @@ class NFT extends ContractGenerator {
         ]));
     }
     /**
+     * Generate `approve` operation with multiple items to approve NFT to another account (approved).
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The address of the sender of the NFT.
+     * @param {string[] | Address[]} [approved] - The array of address being granted approval to manage the NFT.
+     * @param {string[] | number[] | Big[]} [nftIdx] - The index of the NFT (Indicate the order of minted).
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `approve` operation with multiple items.
+     */
+    multiApprove(contract, sender, approved, nftIdx, currency) {
+        ArrayAssert.check(approved, "approved").rangeLength(Config.ITEMS_IN_FACT).sameLength(nftIdx, "nftIdx");
+        const contractsArray = convertToArray(contract, approved.length);
+        const items = Array.from({ length: approved.length }).map((_, idx) => new ApproveItem(contractsArray[idx], approved[idx], nftIdx[idx], currency));
+        return new Operation$1(this.networkID, new ApproveFact$2(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
      * Generate `approve-all` operation to grant or revoke approval for an account to manage all NFTs of the sender.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The address of the sender giving or revoking approval.
@@ -4119,9 +4328,24 @@ class NFT extends ContractGenerator {
      * @returns `approve-all` operation.
      */
     approveAll(contract, sender, approved, mode, currency) {
-        return new Operation$1(this.networkID, new ApproveAlleFact(TimeStamp$1.new().UTC(), sender, [
+        return new Operation$1(this.networkID, new ApproveAllFact(TimeStamp$1.new().UTC(), sender, [
             new ApproveAllItem(contract, approved, mode, currency)
         ]));
+    }
+    /**
+     * Generate `approve-all` operation with multiple items to grant or revoke approval for an account to manage all NFTs of the sender.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The address of the sender giving or revoking approval.
+     * @param {string | Address} [approved] - The address being granted or denied approval to manage all NFTs.
+     * @param {"allow" | "cancel"} [mode] - The mode indicating whether to allow or cancel the approval.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `approve-all` operation with multiple items.
+     */
+    multiApproveAll(contract, sender, approved, mode, currency) {
+        ArrayAssert.check(approved, "approved").rangeLength(Config.ITEMS_IN_FACT);
+        const contractsArray = convertToArray(contract, approved.length);
+        const items = Array.from({ length: approved.length }).map((_, idx) => new ApproveAllItem(contractsArray[idx], approved[idx], mode, currency));
+        return new Operation$1(this.networkID, new ApproveAllFact(TimeStamp$1.new().UTC(), sender, items));
     }
     /**
      * Generate `add-signature` operation to signs an NFT as creator of the artwork.
@@ -4283,7 +4507,7 @@ class NFT extends ContractGenerator {
     }
 }
 
-let RegisterModelFact$4 = class RegisterModelFact extends ContractFact {
+let RegisterModelFact$5 = class RegisterModelFact extends ContractFact {
     constructor(token, sender, contract, currency) {
         super(HINT.CREDENTIAL.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this._hash = this.hashing();
@@ -4478,7 +4702,7 @@ class Credential extends ContractGenerator {
      * @returns `register-model` operation.
      */
     registerModel(contract, sender, currency) {
-        return new Operation$1(this.networkID, new RegisterModelFact$4(TimeStamp$1.new().UTC(), sender, contract, currency));
+        return new Operation$1(this.networkID, new RegisterModelFact$5(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     /**
      * Generate an `add-template` operation for adding a new credential template to the credential service.
@@ -4675,7 +4899,7 @@ class Credential extends ContractGenerator {
     }
 }
 
-let RegisterModelFact$3 = class RegisterModelFact extends ContractFact {
+let RegisterModelFact$4 = class RegisterModelFact extends ContractFact {
     constructor(votingPowerToken, sender, contract, option, policy, currency) {
         super(HINT.DAO.REGISTER_MODEL.FACT, votingPowerToken, sender, contract, currency);
         this.option = option;
@@ -4926,8 +5150,7 @@ class Whitelist {
         this.hint = new Hint(HINT.DAO.WHITELIST);
         this.active = Bool.from(active);
         this.accounts = accounts ? accounts.map(a => Address.from(a)) : [];
-        Assert.check(Config.DAO.ADDRESS_IN_WHITELIST.satisfy(accounts.length), MitumError.detail(ECODE.DAO.INVALID_WHITELIST, "whitelist length out of range"));
-        Assert.check(hasOverlappingAddress(accounts), MitumError.detail(ECODE.DAO.INVALID_WHITELIST, "duplicate account found in whitelist"));
+        ArrayAssert.check(accounts, "whitelist").rangeLength(Config.DAO.ADDRESS_IN_WHITELIST).noDuplicates();
     }
     toBuffer() {
         return Buffer.concat([
@@ -5122,7 +5345,7 @@ class DAO extends ContractGenerator {
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the daoData structure`));
         });
-        return new Operation$1(this.networkID, new RegisterModelFact$3(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
+        return new Operation$1(this.networkID, new RegisterModelFact$4(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
     }
     /**
      * Generate `update-model-config` operation for updating the DAO policy on the contract.
@@ -5311,6 +5534,7 @@ class DAO extends ContractGenerator {
      * @param {string} [proposalID] - The proposal ID.
      * @returns `data` of `SuccessResponse` is information about the DAO proposal:
      * - `_hint`: Hint for the dao proposal state value,
+     * - `reason`: Indicates the reason if the propose was canceled before voting,
      * - `status`: Proposal status - Proposed (0), Canceled (1), PreSnapped (2), PostSnapped (3), Completed (4), Rejected (5), Executed (6), NilStatus (7),
      * - `proposal`: [BizProposal] or [CryptoProposal],
      * - `policy`: [Policy]
@@ -6111,7 +6335,7 @@ class TimeStampFact extends ContractFact {
     }
 }
 
-let RegisterModelFact$2 = class RegisterModelFact extends TimeStampFact {
+let RegisterModelFact$3 = class RegisterModelFact extends TimeStampFact {
     constructor(token, sender, contract, currency) {
         super(HINT.TIMESTAMP.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this._hash = this.hashing();
@@ -6170,7 +6394,7 @@ class TimeStamp extends ContractGenerator {
      * @returns `register-model` operation.
      */
     registerModel(contract, sender, currency) {
-        return new Operation$1(this.networkID, new RegisterModelFact$2(TimeStamp$1.new().UTC(), sender, contract, currency));
+        return new Operation$1(this.networkID, new RegisterModelFact$3(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     /**
      * Generate `issue` operation to issue new timestamp to the project on the timestamp model.
@@ -6239,7 +6463,7 @@ class TokenFact extends ContractFact {
     }
 }
 
-let RegisterModelFact$1 = class RegisterModelFact extends TokenFact {
+let RegisterModelFact$2 = class RegisterModelFact extends TokenFact {
     constructor(token, sender, contract, currency, symbol, name, decimal, initialSupply) {
         super(HINT.TOKEN.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.symbol = CurrencyID.from(symbol);
@@ -6361,6 +6585,68 @@ let TransferFact$1 = class TransferFact extends TokenFact {
     }
 };
 
+class TokenItem extends Item {
+    constructor(hint, contract, amount, currency) {
+        super(hint);
+        this.contract = Address.from(contract);
+        this.amount = Big.from(amount);
+        this.currency = CurrencyID.from(currency);
+    }
+    toBuffer() {
+        return this.contract.toBuffer();
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+        };
+    }
+    toString() {
+        return this.contract.toString();
+    }
+}
+
+let TransfersItem$1 = class TransfersItem extends TokenItem {
+    constructor(contract, receiver, amount, currency) {
+        super(HINT.TOKEN.TRANSFERS.ITEM, contract, amount, currency);
+        this.receiver = Address.from(receiver);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.receiver.toBuffer(),
+            this.amount.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            receiver: this.receiver.toString(),
+            amount: this.amount.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return `${super.toString()}-${this.receiver.toString()}`;
+    }
+};
+let TransfersFact$1 = class TransfersFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.TOKEN.TRANSFERS.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated receiver found in items"));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.receiver.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with sender address"));
+            Assert.check(it.receiver.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "receiver is same with contract address"));
+            Assert.check(it.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "amount must not be under zero"));
+        });
+    }
+    get operationHint() {
+        return HINT.TOKEN.TRANSFERS.OPERATION;
+    }
+};
+
 let ApproveFact$1 = class ApproveFact extends TokenFact {
     constructor(token, sender, contract, currency, approved, amount) {
         super(HINT.TOKEN.APPROVE.FACT, token, sender, contract, currency);
@@ -6386,6 +6672,46 @@ let ApproveFact$1 = class ApproveFact extends TokenFact {
     }
     get operationHint() {
         return HINT.TOKEN.APPROVE.OPERATION;
+    }
+};
+
+let ApprovesItem$1 = class ApprovesItem extends TokenItem {
+    constructor(contract, approved, amount, currency) {
+        super(HINT.TOKEN.APPROVES.ITEM, contract, amount, currency);
+        this.approved = Address.from(approved);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.approved.toBuffer(),
+            this.amount.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            approved: this.approved.toString(),
+            amount: this.amount.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return `${super.toString()}-${this.approved.toString()}`;
+    }
+};
+let ApprovesFact$1 = class ApprovesFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.TOKEN.APPROVES.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated approve found in items"));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.approved.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "approved is same with contract address"));
+            Assert.check(it.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "amount must not be under zero"));
+        });
+    }
+    get operationHint() {
+        return HINT.TOKEN.APPROVES.OPERATION;
     }
 };
 
@@ -6423,21 +6749,49 @@ let TransferFromFact$1 = class TransferFromFact extends TokenFact {
     }
 };
 
-const calculateAllowance = (response, owner, approved) => {
-    let amount = '0';
-    if (response.data.policy && response.data.policy.approve_list) {
-        const approveList = response.data.policy.approve_list;
-        const approval = approveList.find(item => item.account === owner);
-        if (approval) {
-            const allowance = approval.approved.find(item => item.account === approved);
-            if (allowance) {
-                amount = allowance.amount;
-            }
-        }
-        return { 'amount': amount };
+let TransfersFromItem$1 = class TransfersFromItem extends TokenItem {
+    constructor(contract, receiver, target, amount, currency) {
+        super(HINT.TOKEN.TRANSFERS_FROM.ITEM, contract, amount, currency);
+        this.receiver = Address.from(receiver);
+        this.target = Address.from(target);
     }
-    else {
-        throw new Error(`Unknown error orccur: token policy or policy.approve_list does not exist`);
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.receiver.toBuffer(),
+            this.target.toBuffer(),
+            this.amount.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            receiver: this.receiver.toString(),
+            target: this.target.toString(),
+            amount: this.amount.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return `${super.toString()}-${this.receiver.toString()}-${this.target.toString()}`;
+    }
+};
+let TransfersFromFact$1 = class TransfersFromFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.TOKEN.TRANSFERS_FROM.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated target-receiver pair found in items"));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.receiver.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "receiver is same with contract address"));
+            Assert.check(it.target.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "target is same with contract address"));
+            Assert.check(it.receiver.toString() != it.target.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "target is same with receiver address"));
+            Assert.check(this.sender.toString() != it.target.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "target is same with sender address, use 'transfer' instead"));
+            Assert.check(it.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_ITEMS, "amount must not be under zero"));
+        });
+    }
+    get operationHint() {
+        return HINT.TOKEN.TRANSFERS_FROM.OPERATION;
     }
 };
 
@@ -6457,7 +6811,7 @@ class Token extends ContractGenerator {
      * @returns `register-model` operation.
      */
     registerModel(contract, sender, currency, name, symbol, decimal, initialSupply) {
-        return new Operation$1(this.networkID, new RegisterModelFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
+        return new Operation$1(this.networkID, new RegisterModelFact$2(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
     }
     /**
      * Generate a `mint` operation for minting tokens and allocating them to a receiver.
@@ -6495,6 +6849,21 @@ class Token extends ContractGenerator {
         return new Operation$1(this.networkID, new TransferFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
     }
     /**
+     * Generate an `transfers` operation with multi items to transfer tokens from the sender to a receiver.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string[] | Address[]} [receiver] - The array of receiver's address.
+     * @param {string[] | number[] | Big[]} [amount] - The array of amounts to transfer.
+     * @returns `transfers` operation with multi items.
+     */
+    multiTransfer(contract, sender, currency, receiver, amount) {
+        ArrayAssert.check(receiver, "receiver").rangeLength(Config.ITEMS_IN_FACT).sameLength(amount, "amount");
+        const contractsArray = convertToArray(contract, receiver.length);
+        const items = Array.from({ length: receiver.length }).map((_, idx) => new TransfersItem$1(contractsArray[idx], receiver[idx], amount[idx], currency));
+        return new Operation$1(this.networkID, new TransfersFact$1(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
      * Generate a `transfer-from` operation for transferring tokens from target account to receiver.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
@@ -6508,6 +6877,25 @@ class Token extends ContractGenerator {
         return new Operation$1(this.networkID, new TransferFromFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, target, amount));
     }
     /**
+     * Generate a `transfers-from` operation with multi item to transfer tokens from targets account to receivers.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string[] | Address[]} [receiver] - The array of receiver's addresses.
+     * @param {string[] | Address[]} [target] - The array of target account's addresses.
+     * @param {string[] | number[] | Big[]} [amount] - The array of amounts to transfer.
+     * @returns `transfer-from` operation.
+     */
+    multiTransferFrom(contract, sender, currency, receiver, target, amount) {
+        ArrayAssert.check(receiver, "receiver")
+            .rangeLength(Config.ITEMS_IN_FACT)
+            .sameLength(amount, "amount")
+            .sameLength(target, "target");
+        const contractsArray = convertToArray(contract, receiver.length);
+        const items = Array.from({ length: receiver.length }).map((_, idx) => new TransfersFromItem$1(contractsArray[idx], receiver[idx], target[idx], amount[idx], currency));
+        return new Operation$1(this.networkID, new TransfersFromFact$1(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
      * Generate an `approve` operation for approving certain amount tokens to approved account.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
@@ -6518,6 +6906,21 @@ class Token extends ContractGenerator {
      */
     approve(contract, sender, currency, approved, amount) {
         return new Operation$1(this.networkID, new ApproveFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, approved, amount));
+    }
+    /**
+     * Generate an `approves` operation with multi items to approve certain amount tokens to approved account.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string[] | Address[]} [approved] - The array of addresses to approve.
+     * @param {string[] | number[] | Big[]} [amount] - The array amounts to approve.
+     * @returns `approves` operation with multi item
+     */
+    multiApprove(contract, sender, currency, approved, amount) {
+        ArrayAssert.check(approved, "approved").rangeLength(Config.ITEMS_IN_FACT).sameLength(amount, "amount");
+        const contractsArray = convertToArray(contract, approved.length);
+        const items = Array.from({ length: approved.length }).map((_, idx) => new ApprovesItem$1(contractsArray[idx], approved[idx], amount[idx], currency));
+        return new Operation$1(this.networkID, new ApprovesFact$1(TimeStamp$1.new().UTC(), sender, items));
     }
     /**
      * Get information about the specific token model on the contract.
@@ -6587,7 +6990,7 @@ class PointFact extends ContractFact {
     }
 }
 
-class RegisterModelFact extends PointFact {
+let RegisterModelFact$1 = class RegisterModelFact extends PointFact {
     constructor(token, sender, contract, currency, symbol, name, decimal, initialSupply) {
         super(HINT.POINT.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.symbol = CurrencyID.from(symbol);
@@ -6619,7 +7022,7 @@ class RegisterModelFact extends PointFact {
     get operationHint() {
         return HINT.POINT.REGISTER_MODEL.OPERATION;
     }
-}
+};
 
 class MintFact extends PointFact {
     constructor(token, sender, contract, currency, receiver, amount) {
@@ -6709,6 +7112,68 @@ class TransferFact extends PointFact {
     }
 }
 
+class PointItem extends Item {
+    constructor(hint, contract, amount, currency) {
+        super(hint);
+        this.contract = Address.from(contract);
+        this.amount = Big.from(amount);
+        this.currency = CurrencyID.from(currency);
+    }
+    toBuffer() {
+        return this.contract.toBuffer();
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+        };
+    }
+    toString() {
+        return this.contract.toString();
+    }
+}
+
+class TransfersItem extends PointItem {
+    constructor(contract, receiver, amount, currency) {
+        super(HINT.POINT.TRANSFERS.ITEM, contract, amount, currency);
+        this.receiver = Address.from(receiver);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.receiver.toBuffer(),
+            this.amount.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            receiver: this.receiver.toString(),
+            amount: this.amount.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return `${super.toString()}-${this.receiver.toString()}`;
+    }
+}
+class TransfersFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.POINT.TRANSFERS.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated receiver found in items"));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.receiver.toString() !== this.sender.toString(), MitumError.detail(ECODE.INVALID_FACT, "receiver is same with sender address"));
+            Assert.check(it.receiver.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "receiver is same with contract address"));
+            Assert.check(it.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "amount must not be under zero"));
+        });
+    }
+    get operationHint() {
+        return HINT.POINT.TRANSFERS.OPERATION;
+    }
+}
+
 class ApproveFact extends PointFact {
     constructor(token, sender, contract, currency, approved, amount) {
         super(HINT.POINT.APPROVE.FACT, token, sender, contract, currency);
@@ -6734,6 +7199,46 @@ class ApproveFact extends PointFact {
     }
     get operationHint() {
         return HINT.POINT.APPROVE.OPERATION;
+    }
+}
+
+class ApprovesItem extends PointItem {
+    constructor(contract, approved, amount, currency) {
+        super(HINT.POINT.APPROVES.ITEM, contract, amount, currency);
+        this.approved = Address.from(approved);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.approved.toBuffer(),
+            this.amount.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            approved: this.approved.toString(),
+            amount: this.amount.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return `${super.toString()}-${this.approved.toString()}`;
+    }
+}
+class ApprovesFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.POINT.APPROVES.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated approve found in items"));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.approved.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "approved is same with contract address"));
+            Assert.check(it.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_FACT, "amount must not be under zero"));
+        });
+    }
+    get operationHint() {
+        return HINT.POINT.APPROVES.OPERATION;
     }
 }
 
@@ -6771,6 +7276,52 @@ class TransferFromFact extends PointFact {
     }
 }
 
+class TransfersFromItem extends PointItem {
+    constructor(contract, receiver, target, amount, currency) {
+        super(HINT.POINT.TRANSFERS_FROM.ITEM, contract, amount, currency);
+        this.receiver = Address.from(receiver);
+        this.target = Address.from(target);
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.receiver.toBuffer(),
+            this.target.toBuffer(),
+            this.amount.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            receiver: this.receiver.toString(),
+            target: this.target.toString(),
+            amount: this.amount.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return `${super.toString()}-${this.receiver.toString()}-${this.target.toString()}`;
+    }
+}
+class TransfersFromFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.POINT.TRANSFERS_FROM.FACT, token, sender, items);
+        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicated target-receiver pair found in items"));
+        this.items.forEach(it => {
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+            Assert.check(it.receiver.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "receiver is same with contract address"));
+            Assert.check(it.target.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "target is same with contract address"));
+            Assert.check(it.receiver.toString() != it.target.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "target is same with receiver address"));
+            Assert.check(this.sender.toString() != it.target.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "target is same with sender address, use 'transfer' instead"));
+            Assert.check(it.amount.compare(0) >= 0, MitumError.detail(ECODE.INVALID_ITEMS, "amount must not be under zero"));
+        });
+    }
+    get operationHint() {
+        return HINT.POINT.TRANSFERS_FROM.OPERATION;
+    }
+}
+
 class Point extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
@@ -6787,7 +7338,7 @@ class Point extends ContractGenerator {
      * @returns `register-model` operation.
      */
     registerModel(contract, sender, currency, name, symbol, decimal, initialSupply) {
-        return new Operation$1(this.networkID, new RegisterModelFact(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
+        return new Operation$1(this.networkID, new RegisterModelFact$1(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
     }
     /**
      * Generate a `mint` operation for minting points and allocating them to a receiver.
@@ -6825,6 +7376,21 @@ class Point extends ContractGenerator {
         return new Operation$1(this.networkID, new TransferFact(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, amount));
     }
     /**
+     * Generate an `transfers` operation with multi items to transfer points from the sender to a receiver.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string[] | Address[]} [receiver] - The array of receiver's address.
+     * @param {string[] | number[] | Big[]} [amount] - The array of amounts to transfer.
+     * @returns `transfers` operation with multi items.
+     */
+    multiTransfer(contract, sender, currency, receiver, amount) {
+        ArrayAssert.check(receiver, "receiver").rangeLength(Config.ITEMS_IN_FACT).sameLength(amount, "amount");
+        const contractsArray = convertToArray(contract, receiver.length);
+        const items = Array.from({ length: receiver.length }).map((_, idx) => new TransfersItem(contractsArray[idx], receiver[idx], amount[idx], currency));
+        return new Operation$1(this.networkID, new TransfersFact(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
      * Generate a `transfer-from` operation for transferring points from target account to receiver.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
@@ -6838,6 +7404,25 @@ class Point extends ContractGenerator {
         return new Operation$1(this.networkID, new TransferFromFact(TimeStamp$1.new().UTC(), sender, contract, currency, receiver, target, amount));
     }
     /**
+     * Generate a `transfers-from` operation with multi item to transfer points from targets account to receivers.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string[] | Address[]} [receiver] - The array of receiver's addresses.
+     * @param {string[] | Address[]} [target] - The array of target account's addresses.
+     * @param {string[] | number[] | Big[]} [amount] - The array of amounts to transfer.
+     * @returns `transfer-from` operation.
+     */
+    multiTransferFrom(contract, sender, currency, receiver, target, amount) {
+        ArrayAssert.check(receiver, "receiver")
+            .rangeLength(Config.ITEMS_IN_FACT)
+            .sameLength(amount, "amount")
+            .sameLength(target, "target");
+        const contractsArray = convertToArray(contract, receiver.length);
+        const items = Array.from({ length: receiver.length }).map((_, idx) => new TransfersFromItem(contractsArray[idx], receiver[idx], target[idx], amount[idx], currency));
+        return new Operation$1(this.networkID, new TransfersFromFact(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
      * Generate an `approve` operation for approving certain amount points to approved account.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
@@ -6848,6 +7433,21 @@ class Point extends ContractGenerator {
      */
     approve(contract, sender, currency, approved, amount) {
         return new Operation$1(this.networkID, new ApproveFact(TimeStamp$1.new().UTC(), sender, contract, currency, approved, amount));
+    }
+    /**
+     * Generate an `approves` operation with multi items to approve certain amount points to approved account.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string[] | Address[]} [approved] - The array of addresses to approve.
+     * @param {string[] | number[] | Big[]} [amount] - The array amounts to approve.
+     * @returns `approves` operation with multi item
+     */
+    multiApprove(contract, sender, currency, approved, amount) {
+        ArrayAssert.check(approved, "approved").rangeLength(Config.ITEMS_IN_FACT).sameLength(amount, "amount");
+        const contractsArray = convertToArray(contract, approved.length);
+        const items = Array.from({ length: approved.length }).map((_, idx) => new ApprovesItem(contractsArray[idx], approved[idx], amount[idx], currency));
+        return new Operation$1(this.networkID, new ApprovesFact(TimeStamp$1.new().UTC(), sender, items));
     }
     /**
      * Get information about the specific point model on the contract.
@@ -6897,6 +7497,385 @@ class Point extends ContractGenerator {
         Address.from(contract);
         Address.from(account);
         return await getAPIData(() => contractApi.point.getPointBalance(this.api, contract, account, this.delegateIP));
+    }
+}
+
+class RegisterModelFact extends ContractFact {
+    constructor(token, sender, contract, project, currency) {
+        super(HINT.STORAGE.REGISTER_MODEL.FACT, token, sender, contract, currency);
+        Assert.check(Config.STORAGE.PROJECT.satisfy(project.toString().length), MitumError.detail(ECODE.INVALID_FACT, `project length out of range, should be between ${Config.STORAGE.PROJECT.min} to ${Config.STORAGE.PROJECT.max}`));
+        this.project = LongString.from(project);
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.project.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            project: this.project.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.STORAGE.REGISTER_MODEL.OPERATION;
+    }
+}
+
+class StorageFact extends ContractFact {
+    constructor(hint, token, sender, contract, dataKey, currency) {
+        super(hint, token, sender, contract, currency);
+        this.dataKey = LongString.from(dataKey);
+        // Assert.check(
+        //     this.decimal.compare(0) >= 0,
+        //     MitumError.detail(ECODE.INVALID_FACT, "decimal number under zero"),
+        // )
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.dataKey.toBuffer()
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            dataKey: this.dataKey.toString(),
+        };
+    }
+}
+
+class CreateDataFact extends StorageFact {
+    constructor(token, sender, contract, dataKey, dataValue, currency) {
+        super(HINT.STORAGE.CREATE_DATA.FACT, token, sender, contract, dataKey, currency);
+        this.dataValue = LongString.from(dataValue);
+        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
+        Assert.check(Config.STORAGE.DATA_VALUE.satisfy(dataValue.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataValue out of range, should be between ${Config.STORAGE.DATA_VALUE.min} to ${Config.STORAGE.DATA_VALUE.max}`));
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.dataValue.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            dataValue: this.dataValue.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.STORAGE.CREATE_DATA.OPERATION;
+    }
+}
+
+class CreateDatasItem extends Item {
+    constructor(contract, currency, dataKey, dataValue) {
+        super(HINT.STORAGE.CREATE_DATAS.ITEM);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.dataKey = LongString.from(dataKey);
+        this.dataValue = LongString.from(dataValue);
+        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_ITEM, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
+        Assert.check(Config.STORAGE.DATA_VALUE.satisfy(dataValue.toString().length), MitumError.detail(ECODE.INVALID_ITEM, `dataValue out of range, should be between ${Config.STORAGE.DATA_VALUE.min} to ${Config.STORAGE.DATA_VALUE.max}`));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            this.dataKey.toBuffer(),
+            this.dataValue.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+            dataKey: this.dataKey.toString(),
+            dataValue: this.dataValue.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return this.dataKey.toString() + this.contract.toString();
+    }
+}
+class CreateDatasFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.STORAGE.CREATE_DATAS.FACT, token, sender, items);
+        this.items.forEach(it => {
+            new URIString(it.dataKey.toString(), 'dataKey');
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
+        // duplicated item check has already confirmed that contract-dataKey is unique.
+        // Assert.check(
+        //     new Set(items.map(item => item.dataKey.toString() + item.contract.toString())).size === items.length,
+        //     MitumError.detail(ECODE.INVALID_ITEMS, "duplicate dataKey found in items")
+        // )
+    }
+    get operationHint() {
+        return HINT.STORAGE.CREATE_DATAS.OPERATION;
+    }
+}
+
+class UpdateDataFact extends StorageFact {
+    constructor(token, sender, contract, dataKey, dataValue, currency) {
+        super(HINT.STORAGE.UPDATE_DATA.FACT, token, sender, contract, dataKey, currency);
+        this.dataValue = LongString.from(dataValue);
+        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
+        Assert.check(Config.STORAGE.DATA_VALUE.satisfy(dataValue.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataValue out of range, should be between ${Config.STORAGE.DATA_VALUE.min} to ${Config.STORAGE.DATA_VALUE.max}`));
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.dataValue.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            dataValue: this.dataValue.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.STORAGE.UPDATE_DATA.OPERATION;
+    }
+}
+
+class UpdateDatasItem extends Item {
+    constructor(contract, currency, dataKey, dataValue) {
+        super(HINT.STORAGE.UPDATE_DATAS.ITEM);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.dataKey = LongString.from(dataKey);
+        this.dataValue = LongString.from(dataValue);
+        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_ITEM, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
+        Assert.check(Config.STORAGE.DATA_VALUE.satisfy(dataValue.toString().length), MitumError.detail(ECODE.INVALID_ITEM, `dataValue out of range, should be between ${Config.STORAGE.DATA_VALUE.min} to ${Config.STORAGE.DATA_VALUE.max}`));
+    }
+    toBuffer() {
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            this.dataKey.toBuffer(),
+            this.dataValue.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            contract: this.contract.toString(),
+            dataKey: this.dataKey.toString(),
+            dataValue: this.dataValue.toString(),
+            currency: this.currency.toString(),
+        };
+    }
+    toString() {
+        return this.dataKey.toString() + this.contract.toString();
+    }
+}
+class UpdateDatasFact extends OperationFact {
+    constructor(token, sender, items) {
+        super(HINT.STORAGE.UPDATE_DATAS.FACT, token, sender, items);
+        this.items.forEach(it => {
+            new URIString(it.dataKey.toString(), 'dataKey');
+            Assert.check(this.sender.toString() != it.contract.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
+        });
+    }
+    get operationHint() {
+        return HINT.STORAGE.UPDATE_DATAS.OPERATION;
+    }
+}
+
+class DeleteDataFact extends StorageFact {
+    constructor(token, sender, contract, dataKey, currency) {
+        super(HINT.STORAGE.DELETE_DATA.FACT, token, sender, contract, dataKey, currency);
+        Assert.check(Config.STORAGE.DATA_KEY.satisfy(dataKey.toString().length), MitumError.detail(ECODE.INVALID_FACT, `dataKey length out of range, should be between ${Config.STORAGE.DATA_KEY.min} to ${Config.STORAGE.DATA_KEY.max}`));
+        this._hash = this.hashing();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.currency.toBuffer(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+        };
+    }
+    get operationHint() {
+        return HINT.STORAGE.DELETE_DATA.OPERATION;
+    }
+}
+
+class Storage extends ContractGenerator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    /**
+     * Generate a `register-model` operation to register new storage model on the contract.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | LongString} [project] - The project's name
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `register-model` operation.
+     */
+    registerModel(contract, sender, project, currency) {
+        return new Operation$1(this.networkID, new RegisterModelFact(TimeStamp$1.new().UTC(), sender, contract, project, currency));
+    }
+    /**
+     * Generate `create-data` operation to create data with new data key on the storage model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [dataKey] - The key of data to create.
+     * @param {string | LongString} [dataValue] - Value of the data to record.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-data` operation
+     */
+    createData(contract, sender, dataKey, dataValue, currency) {
+        new URIString(dataKey, 'dataKey');
+        const fact = new CreateDataFact(TimeStamp$1.new().UTC(), sender, contract, dataKey, dataValue, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `create-datas` operation to create multiple data on the storage model.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[]} [dataKeys] - The array with key of multiple data to create.
+     * @param {string[] | LongString[]} [dataValues] - The array with value of the multiple data to record.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-datas` operation
+     */
+    createMultiData(contract, sender, dataKeys, dataValues, currency) {
+        ArrayAssert.check(dataKeys, "dataKeys")
+            .rangeLength(Config.ITEMS_IN_FACT)
+            .sameLength(dataValues, "dataValues");
+        const contractsArray = convertToArray(contract, dataKeys.length);
+        const items = dataKeys.map((_, idx) => new CreateDatasItem(contractsArray[idx], currency, dataKeys[idx], dataValues[idx]));
+        return new Operation$1(this.networkID, new CreateDatasFact(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
+     * Generate `update-data` operation to update data with exist data key on the storage model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [dataKey] - The key of data to update.
+     * @param {string | LongString} [dataValue] - Value of the data to be updated.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `update-data` operation
+     */
+    updateData(contract, sender, dataKey, dataValue, currency) {
+        new URIString(dataKey, 'dataKey');
+        const fact = new UpdateDataFact(TimeStamp$1.new().UTC(), sender, contract, dataKey, dataValue, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Generate `update-datas` operation to update multiple data on the storage model.
+     * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[]} [dataKeys] - The array with key of multiple data to update.
+     * @param {string[] | LongString[]} [dataValues] - The array with value of the multiple data to update.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `update-datas` operation
+     */
+    updateMultiData(contract, sender, dataKeys, dataValues, currency) {
+        ArrayAssert.check(dataKeys, "dataKeys")
+            .rangeLength(Config.ITEMS_IN_FACT)
+            .sameLength(dataValues, "dataValues");
+        const contractsArray = convertToArray(contract, dataKeys.length);
+        const items = dataKeys.map((_, idx) => new UpdateDatasItem(contractsArray[idx], currency, dataKeys[idx], dataValues[idx]));
+        return new Operation$1(this.networkID, new UpdateDatasFact(TimeStamp$1.new().UTC(), sender, items));
+    }
+    /**
+     * Generate `delete-data` operation to delete data on the storage model.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string} [dataKey] - The key of data to delete.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `delete-data` operation
+     */
+    deleteData(contract, sender, dataKey, currency) {
+        new URIString(dataKey, 'dataKey');
+        const fact = new DeleteDataFact(TimeStamp$1.new().UTC(), sender, contract, dataKey, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Get information about a storage model on the contract.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information about the storage service:
+     * - `_hint`: Hint for storage design,
+     * - `project`: Project's name
+     */
+    async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        return await getAPIData(() => contractApi.storage.getModel(this.api, contract, this.delegateIP));
+    }
+    /**
+     * Get detailed information about a specific data on the project.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [dataKey] - The key of the data to search.
+     * @returns `data` of `SuccessResponse` is information about the data with certain dataKey on the project:
+     * - `data`: Object containing below information
+     * - - `dataKey`: The key associated with the data,
+     * - - `dataValue`: The current value of the data,
+     * - - `deleted`: Indicates whether the data has been deleted
+     * - `height`: The block number where the latest related operation is recorded,
+     * - `operation`: The fact hash of the latest related operation,
+     * - `timestamp`: The timestamp of the latest related operation (prposed_at of block manifest)
+     */
+    async getData(contract, dataKey) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        new URIString(dataKey, 'dataKey');
+        return await getAPIData(() => contractApi.storage.getData(this.api, contract, dataKey, this.delegateIP));
+    }
+    /**
+     * Get all history information about a specific data on the project.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [dataKey] - The key of the data to search.
+     * @param {number} [limit] - (Optional) The maximum number of history to retrieve.
+     * @param {number} [offset] - (Optional) The Offset setting value based on block height
+     * @param {boolean} [reverse] - (Optional) Whether to return the history in reverse newest order.
+     * @returns `data` of `SuccessResponse` is an array of the history information about the data:
+     * - `_hint`: Hint for currency,
+     * - `_embedded`:
+     * - - `data`: Object containing below information
+     * - - - `dataKey`: The key associated with the data,
+     * - - - `dataValue`: The current value of the data,
+     * - - - `deleted`: Indicates whether the data has been deleted
+     * - - `height`: The block number where the latest related operation is recorded,
+     * - - `operation`: The fact hash of the latest related operation,
+     * - - `timestamp`: The timestamp of the latest related operation (prposed_at of block manifest),
+     * - `_links`: Links for additional information
+     */
+    async getDataHistory(contract, dataKey, limit, offset, reverse) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        new URIString(dataKey, 'dataKey');
+        return await getAPIData(() => contractApi.storage.getDataHistory(this.api, contract, dataKey, this.delegateIP, limit, offset, reverse));
+    }
+    /**
+     * Get the number of data (not deleted). If `deleted` is true, the number including deleted data.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {boolean} [deleted] - (Optional) Whether to include deleted data.
+     * @returns `data` of `SuccessResponse` is an array of the history information about the data:
+     * - `contract`: The address of contract account,
+     * - `data_count`: The number of created data on the contract
+     */
+    async getDataCount(contract, deleted) {
+        Address.from(contract);
+        return await getAPIData(() => contractApi.storage.getDataCount(this.api, contract, this.delegateIP, deleted));
     }
 }
 
@@ -7036,7 +8015,7 @@ class Operation extends Generator {
      * Get multiple operations by array of fact hashes.
      * Returns excluding operations that have not yet been recorded.
      * @async
-     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 44 length.
+     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 43 or 44 length.
      * @returns The `data` of `SuccessResponse` is array of infomation of the operations:
      * - `_hint`: Hint for the operation,
      * - `hash`: Hash for the fact,
@@ -7053,9 +8032,11 @@ class Operation extends Generator {
      */
     async getMultiOperations(hashes) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Assert.check(Config.FACT_HASHES.satisfy(hashes.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of hash array is out of range"));
+        ArrayAssert.check(hashes, "hashes")
+            .noDuplicates()
+            .rangeLength(Config.FACT_HASHES);
         hashes.forEach((hash) => {
-            Assert.check(isBase58Encoded(hash) && hash.length === 44, MitumError.detail(ECODE.INVALID_FACT_HASH, "fact hash must be base58 encoded string with 44 length."));
+            Assert.check(isBase58Encoded(hash) && (hash.length === 44 || hash.length === 43), MitumError.detail(ECODE.INVALID_FACT_HASH, "fact hash must be base58 encoded string with 44 or 43 length."));
         });
         const response = await getAPIData(() => api$1.getMultiOperations(this.api, hashes, this.delegateIP));
         if (isSuccessResponse(response) && Array.isArray(response.data)) {
@@ -7137,20 +8118,20 @@ class OperationResponse extends Operation {
         const timeoutInterval = interval ?? 1000;
         const validatePositiveInteger = (val, name) => {
             if (!Number.isSafeInteger(val) || val <= 0) {
-                throw new Error(`${name} must be a positive integer`);
+                throw MitumError.detail(ECODE.INVALID_FLOAT, `${name} must be a positive integer`);
             }
         };
         validatePositiveInteger(maxTimeout, "timeout");
         validatePositiveInteger(timeoutInterval, "interval");
         if (maxTimeout <= timeoutInterval) {
             if (interval === undefined) {
-                throw new Error("default interval is 1000, so timeout must be greater than that.");
+                throw MitumError.detail(ECODE.INVALID_FLOAT, "default interval is 1000, so timeout must be greater than that.");
             }
             else if (timeout === undefined) {
-                throw new Error("default timeout is 10000, so interval must be less than that.");
+                throw MitumError.detail(ECODE.INVALID_FLOAT, "default timeout is 10000, so interval must be less than that.");
             }
             else {
-                throw new Error("timeout must be larger than interval.");
+                throw MitumError.detail(ECODE.INVALID_FLOAT, "timeout must be larger than interval.");
             }
         }
         let stop = false;
@@ -7200,6 +8181,7 @@ class Mitum extends Generator {
         this._dao = new DAO(this.networkID, this.api, this.delegateIP);
         this._token = new Token(this.networkID, this.api, this.delegateIP);
         this._point = new Point(this.networkID, this.api, this.delegateIP);
+        this._storage = new Storage(this.networkID, this.api, this.delegateIP);
         this.ECODE = ECODE;
         this.PCODE = PCODE;
         this.DCODE = DCODE;
@@ -7220,6 +8202,7 @@ class Mitum extends Generator {
         this._dao = new DAO(this.networkID, this.api, this.delegateIP);
         this._token = new Token(this.networkID, this.api, this.delegateIP);
         this._point = new Point(this.networkID, this.api, this.delegateIP);
+        this._storage = new Storage(this.networkID, this.api, this.delegateIP);
         this._utils = new Utils();
     }
     get node() {
@@ -7266,6 +8249,9 @@ class Mitum extends Generator {
     }
     get point() {
         return this._point;
+    }
+    get storage() {
+        return this._storage;
     }
     get utils() {
         return this._utils;
