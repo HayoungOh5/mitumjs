@@ -34,3 +34,17 @@ export declare class StringAssert {
     chainOr(...conditions: boolean[]): this;
     excute(): void;
 }
+export declare class ArrayAssert {
+    private array;
+    private arrayName;
+    private validType;
+    constructor(array: any[], arrayName: string);
+    private validateType;
+    notEmpty(): this;
+    exactLength(length: number): this;
+    rangeLength(rangeConfig: RangeConfig): this;
+    maxLength(max: number): this;
+    sameLength(array2: any[], arrayName2: string): this;
+    noDuplicates(): this;
+    static check(array: any[], arrayName: string): ArrayAssert;
+}

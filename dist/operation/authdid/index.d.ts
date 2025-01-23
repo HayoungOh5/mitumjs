@@ -1,7 +1,6 @@
 import { RegisterModelFact } from "./register-model";
 import { CreateFact } from "./create-did";
 import { UpdateDocumentFact } from "./update_did_document";
-import { AsymKeyAuth, SocialLoginAuth, Document } from "./document";
 import { ContractGenerator, Operation } from "../base";
 import { Address, Key } from "../../key";
 import { CurrencyID } from "../../common";
@@ -39,9 +38,37 @@ export declare class AuthDID extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     private validateDocument;
     private isSenderDidOwner;
-    writeAsymkeyAuth(id: string, authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019", controller: string, publicKey: string): AsymKeyAuth;
-    writeSocialLoginAuth(id: string, controller: string, serviceEndpoint: string, verificationMethod: string): SocialLoginAuth;
-    writeDocument(didContext: string, didID: string, authentications: (SocialLoginAuth | AsymKeyAuth)[], serivceID: string, serviceType: string, serviceEndPoint: string): Document;
+    /**
+     * Creates an AsymKeyAuth object with the provided authentication details.
+     * @param {string} id - The unique identifier for the authentication.
+     * @param {"EcdsaSecp256k1VerificationKey2019"} authType - The type of the asymmetric key used for verification.
+     * @param {string} controller - The controller responsible for the authentication.
+     * @param {string} publicKey - The public key associated with the authentication.
+     * @returns {object} An asymkeyAuth object.
+     */
+    writeAsymkeyAuth(id: string, authType: "EcdsaSecp256k1VerificationKey2019", controller: string, publicKey: string): asymkeyAuth;
+    /**
+     * Creates a SocialLoginAuth object with the provided authentication details.
+     * @param {string} id - The unique identifier for the authentication.
+     * @param {string} controller - The controller responsible for the authentication.
+     * @param {string} serviceEndpoint - The endpoint URL for the social login service.
+     * @param {string} verificationMethod - The verification method used for authentication.
+     * @returns {object} A socialLoginAuth object.
+     */
+    writeSocialLoginAuth(id: string, controller: string, serviceEndpoint: string, verificationMethod: string): socialLoginAuth;
+    /**
+     * Creates a DID Document with the provided context, DID ID, authentications, and service details.
+     * Use return value of this method for updateDocument()
+     * @param {string} didContext - The context for the DID document.
+     * @param {string} didID - The unique identifier for the DID.
+     * @param {(asymkeyAuth | socialLoginAuth)[]} authentications - An array of authentication objects.
+     *        Each object must be either an instance of `asymkeyAuth` or `socialLoginAuth`.
+     * @param {string} serviceID - The identifier for the associated service.
+     * @param {string} serviceType - The type of the service (e.g., `LinkedDataProof`, `BlockchainService`).
+     * @param {string} serviceEndPoint - The endpoint URL of the service.
+     * @returns {object} A hinted object representation of the created DID Document. Use it for updateDocument().
+     */
+    writeDocument(didContext: string, didID: string, authentications: (asymkeyAuth | socialLoginAuth)[], serviceID: string, serviceType: string, serviceEndPoint: string): document;
     /**
      * Generate a `register-model` operation to register new did registry model on the contract.
      * @param {string | Address} [contract] - The contract's address.

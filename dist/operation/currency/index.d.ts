@@ -4,7 +4,6 @@ import { TransferFact } from "./transfer";
 import { CreateContractAccountFact } from "./create-contract-account";
 import { WithdrawFact } from "./withdraw";
 import { UpdateHandlerFact } from "./update-handler";
-import { UpdateRecipientFact } from "./update-recipient";
 import { RegisterCurrencyFact } from "./register-currency";
 import { UpdateCurrencyFact } from "./update-currency";
 import { MintFact } from "./mint";
@@ -79,6 +78,16 @@ export declare class Currency extends Generator {
      * @returns `withdraw`operation
      */
     withdraw(sender: string | Address, target: string | Address, currency: string | CurrencyID, amount: string | number | Big): Operation<WithdrawFact>;
+    /**
+     * Generate a `withdraw` operation with multiple items for withdrawing currency from multiple contract accounts.
+     * Only the owner account of the contract can execute the operation.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | Address[]} [targets] - The array of target contract account's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amounts] - The array of withdrawal amount.
+     * @returns `withdraw`operation
+     */
+    multiWithdraw(sender: string | Address, targets: string[] | Address[], currency: string | CurrencyID, amounts: string[] | number[] | Big[]): Operation<WithdrawFact>;
     /**
      * Generate a `mint` operation for minting currency and allocating it to a receiver.
      * **Signature of nodes** is required, not a general account signature.
@@ -208,7 +217,7 @@ export declare class Account extends KeyG {
      * touchOperation();
      */
     touch(privatekey: string | Key, wallet: {
-        wallet: AccountType;
+        wallet: AccountType | AccountType[];
         operation: Operation<TransferFact>;
     }): Promise<import("../").OperationResponse>;
     /**
@@ -279,7 +288,7 @@ export declare class Account extends KeyG {
      */
     balance(address: string | Address): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }
-export declare class Contract extends Generator {
+export declare class Contract extends KeyG {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
      * Generate a key pair and the corresponding `create-contract-account` operation.
@@ -287,11 +296,22 @@ export declare class Contract extends Generator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
      * @param {string} [seed] - (Optional) The seed for deterministic key generation. If not provided, a random key pair will be generated.
-     * @param {string | number | Big} [weight] - (Optional) The weight for the public key. If not provided, the default value is 100.
      * @returns An object containing the wallet(key pair) and the `create-contract-account` operation.
      */
-    createWallet(sender: string | Address, currency: string | CurrencyID, amount: string | number | Big, seed?: string, weight?: string | number | Big): {
+    createWallet(sender: string | Address, currency: string | CurrencyID, amount: string | number | Big, seed?: string): {
         wallet: AccountType;
+        operation: Operation<CreateContractAccountFact>;
+    };
+    /**
+     * Generate `n` number of key pairs and the corresponding `create-contract-account` operation with multiple items.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {number} [n] - The number of account to create.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @returns An object containing the wallet (key pairs) and the `create-contract-account` operation with multiple items.
+     */
+    createBatchWallet(sender: string | Address, n: number, currency: string | CurrencyID, amount: string | number | Big): {
+        wallet: AccountType[];
         operation: Operation<CreateContractAccountFact>;
     };
     /**
@@ -303,27 +323,6 @@ export declare class Contract extends Generator {
      * @returns `create-contract-account` operation.
      */
     createAccount(sender: string | Address, key: string | Key | PubKey, currency: string | CurrencyID, amount: string | number | Big): Operation<CreateContractAccountFact>;
-    /**
-     * Generate a `create-contract-account` operation for the multi-signature account.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {keysType} [keys] - An array of object {`key`: publickey, `weight`: weight for the key}
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
-     * @param {string | number | Big} [threshold] - The threshold for the multi-signature.
-     * @returns `create-contract-account` operation.
-     * @example
-     * // Example of parameter keys
-     * const pubkey01 = {
-     *     key: "02cb1d73c49d638d98092e35603414b575f3f5b5ce01162cdd80ab68ab77e50e14fpu",
-     *     weight: 50
-     * };
-     * const pubkey02 = {
-     *     key: "0377241675aabafca6b1a49f3bc08a581beb0daa330a4ac2008464d63ed7635a22fpu",
-     *     weight: 50
-     * };
-     * const keysArray = [pubkey01, pubkey02];
-     */
-    createMultiSig(sender: string | Address, keys: keysType, currency: string | CurrencyID, amount: string | number | Big, threshold: string | number | Big): Operation<CreateContractAccountFact>;
     /**
      * Get contract account information for the given address.
      * @async
@@ -350,15 +349,6 @@ export declare class Contract extends Generator {
      */
     updateHandler(sender: string | Address, contract: string | Address, currency: string | CurrencyID, handlers: (string | Address)[]): Operation<UpdateHandlerFact>;
     /**
-  * Generate an `update-recipient` operation to update recipients of contract to given accounts.
-  * @param {string | Address} [sender] - The sender's address.
-  * @param {string | Address} [contract] - The contract account address.
-  * @param {string | CurrencyID} [currency] - The currency ID.
-  * @param {(string | Address)[]} [recipients] - The array of addresses to be updated as recipients.
-  * @returns `update-recipient` operation.
-  */
-    updateRecipient(sender: string | Address, contract: string | Address, currency: string | CurrencyID, recipients: (string | Address)[]): Operation<UpdateRecipientFact>;
-    /**
      * Sign and send the `create-contract-account` operation to blockchain network.
      * @async
      * @param {string | Key} [privatekey] - The private key used for signing.
@@ -382,7 +372,7 @@ export declare class Contract extends Generator {
      * touchOperation();
      */
     touch(privatekey: string | Key, wallet: {
-        wallet: AccountType;
+        wallet: AccountType | AccountType[];
         operation: Operation<CreateContractAccountFact>;
     }): Promise<import("../").OperationResponse>;
 }

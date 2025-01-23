@@ -435,6 +435,68 @@ class StringAssert {
         }
     }
 }
+class ArrayAssert {
+    constructor(array, arrayName) {
+        this.validType = false;
+        this.array = array;
+        this.arrayName = arrayName;
+    }
+    validateType() {
+        if (this.validType)
+            return;
+        if (!Array.isArray(this.array)) {
+            throw MitumError.detail(ECODE.INVALID_TYPE, `the ${this.arrayName} must be in array type`);
+        }
+        this.validType = true;
+    }
+    notEmpty() {
+        this.validateType();
+        if (this.array.length === 0) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `${this.arrayName} cannot be an empty array`);
+        }
+        return this;
+    }
+    exactLength(length) {
+        this.validateType();
+        if (this.array.length !== length) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `the length of ${this.arrayName} must be ${length}, but got ${this.array.length}`);
+        }
+        return this;
+    }
+    rangeLength(rangeConfig) {
+        this.validateType();
+        Assert.check(rangeConfig.satisfy(this.array.length), MitumError.detail(ECODE.INVALID_LENGTH, `The length of ${this.arrayName} must be between ${rangeConfig.min} and ${rangeConfig.max}, but got ${this.array.length}`));
+        return this;
+    }
+    maxLength(max) {
+        this.validateType();
+        if (this.array.length > max) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `the length of ${this.arrayName} must not exceed ${max}`);
+        }
+        return this;
+    }
+    sameLength(array2, arrayName2) {
+        this.validateType();
+        if (!Array.isArray(array2)) {
+            throw MitumError.detail(ECODE.INVALID_TYPE, `the ${arrayName2} must be in array type`);
+        }
+        if (this.array.length !== array2.length) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `The lengths of the ${this.arrayName} and ${arrayName2} must be the same.`);
+        }
+        return this;
+    }
+    noDuplicates() {
+        this.validateType();
+        const uniqueItems = new Set(this.array.map((el) => { return el.toString(); }));
+        if (uniqueItems.size !== this.array.length) {
+            throw MitumError.detail(ECODE.INVALID_LENGTH, `${this.arrayName} cannot contain duplicate elements`);
+        }
+        return this;
+    }
+    static check(array, arrayName) {
+        return new ArrayAssert(array, arrayName);
+    }
+}
 
 class LongString {
     constructor(s) {
@@ -753,7 +815,7 @@ const Config = {
     AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
     ITEMS_IN_FACT: getRangeConfig(1, 100),
     OP_SIZE: getRangeConfig(1, 262144),
-    FACT_HASHES: getRangeConfig(1, 44),
+    FACT_HASHES: getRangeConfig(1, 40),
     KEY: {
         MITUM: {
             PRIVATE: getRangeConfig(67),
@@ -953,8 +1015,6 @@ class Amount {
 
 const SortFunc = (a, b) => Buffer.compare(a.toBuffer(), b.toBuffer());
 
-const hasOverlappingAddress = (arr) => (new Set(arr.map(a => a instanceof Address ? a.toString() : a)).size == arr.length);
-
 const sha256 = (msg) => Buffer.from(sha256$1(msg));
 const sha3 = (msg) => Buffer.from(sha3_256.create().update(msg).digest());
 const keccak256 = (msg) => Buffer.from(keccak256$1.create().update(msg).digest());
@@ -976,7 +1036,7 @@ const getChecksum = (hex) => {
 const delegateUri = (delegateIP) => `${delegateIP}?uri=`;
 const validatePositiveInteger = (val, name) => {
     if (!Number.isSafeInteger(val) || val < 0) {
-        throw new Error(`${name} must be a integer >= 0`);
+        throw MitumError.detail(ECODE.INVALID_FLOAT, `${name} must be a integer >= 0`);
     }
 };
 const isNumberTuple = (arr) => {
@@ -996,7 +1056,7 @@ const apiPathWithParams = (apiPath, limit, offset, reverse) => {
     }
     if (reverse !== undefined) {
         if (reverse !== true) {
-            throw new Error("reverse must be true(bool)");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "reverse must be true(bool)");
         }
         query3 = `reverse=1`;
     }
@@ -1013,7 +1073,7 @@ const apiPathWithParamsExt = (apiPath, limit, offset, reverse) => {
     }
     if (offset !== undefined) {
         if (!isNumberTuple(offset)) {
-            throw new Error("offset must be a tuple with number");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "offset must be a tuple with number");
         }
         validatePositiveInteger(offset[0], "offset element");
         validatePositiveInteger(offset[1], "offset element");
@@ -1021,7 +1081,7 @@ const apiPathWithParamsExt = (apiPath, limit, offset, reverse) => {
     }
     if (reverse !== undefined) {
         if (reverse !== true) {
-            throw new Error("reverse must be true(bool)");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "reverse must be true(bool)");
         }
         query3 = `reverse=1`;
     }
@@ -1746,7 +1806,7 @@ const privateKeyToPublicKey = (privateKey) => {
     let privateBuf;
     if (!Buffer.isBuffer(privateKey)) {
         if (typeof privateKey !== "string") {
-            throw new Error("Expected Buffer or string as argument");
+            throw MitumError.detail(ECODE.INVALID_TYPE, "Expected Buffer or string as argument");
         }
         privateKey =
             privateKey.slice(0, 2) === "0x" ? privateKey.slice(2) : privateKey;
@@ -2242,7 +2302,7 @@ async function getAPIData(f, _links) {
             return parsedError;
         }
         else {
-            throw new Error(`Unknown error orccur!\n${error}`);
+            throw MitumError.detail(ECODE.UNKNOWN, `Unknown error orccur!\n${error}`);
         }
     }
 }
@@ -2651,8 +2711,9 @@ class UpdateHandlerFact extends Fact {
         this.currency = CurrencyID.from(currency);
         this.handlers = handlers.map(a => Address.from(a));
         this._hash = this.hashing();
-        Assert.check(Config.CONTRACT_HANDLERS.satisfy(handlers.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of handlers array is out of range"));
-        Assert.check(hasOverlappingAddress(this.handlers), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in handlers"));
+        ArrayAssert.check(handlers, "handlers")
+            .rangeLength(Config.CONTRACT_HANDLERS)
+            .noDuplicates();
     }
     toBuffer() {
         return Buffer.concat([
@@ -2674,40 +2735,6 @@ class UpdateHandlerFact extends Fact {
     }
     get operationHint() {
         return HINT.CURRENCY.UPDATE_HANDLER.OPERATION;
-    }
-}
-
-class UpdateRecipientFact extends Fact {
-    constructor(token, sender, contract, currency, recipients) {
-        super(HINT.CURRENCY.UPDATE_RECIPIENT.FACT, token);
-        this.sender = Address.from(sender);
-        this.contract = Address.from(contract);
-        this.currency = CurrencyID.from(currency);
-        this.recipients = recipients.map(a => Address.from(a));
-        this._hash = this.hashing();
-        Assert.check(Config.CONTRACT_RECIPIENTS.satisfy(recipients.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of recipients array is out of range"));
-        Assert.check(hasOverlappingAddress(this.recipients), MitumError.detail(ECODE.INVALID_FACT, "duplicate address found in recipients"));
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            this.sender.toBuffer(),
-            this.contract.toBuffer(),
-            this.currency.toBuffer(),
-            Buffer.concat(this.recipients.sort(SortFunc).map(a => a.toBuffer())),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            sender: this.sender.toString(),
-            contract: this.contract.toString(),
-            currency: this.currency.toString(),
-            recipients: this.recipients.sort(SortFunc).map((w) => w.toString()),
-        };
-    }
-    get operationHint() {
-        return HINT.CURRENCY.UPDATE_RECIPIENT.OPERATION;
     }
 }
 
@@ -3022,8 +3049,7 @@ class Currency extends Generator {
      * @returns `transfer` operation.
      */
     batchTransfer(sender, receivers, currency, amounts) {
-        Assert.check(receivers.length !== 0 && amounts.length !== 0, MitumError.detail(ECODE.INVALID_LENGTH, "The array must not be empty."));
-        Assert.check(receivers.length === amounts.length, MitumError.detail(ECODE.INVALID_LENGTH, "The lengths of the receivers and amounts must be the same."));
+        ArrayAssert.check(receivers, "receivers").rangeLength(Config.ITEMS_IN_FACT).noDuplicates().sameLength(amounts, "amounts");
         return new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, receivers.map((receiver, idx) => new TransferItem(receiver, [new Amount(currency, amounts[idx])]))));
     }
     /**
@@ -3039,6 +3065,20 @@ class Currency extends Generator {
         return new Operation$1(this.networkID, new WithdrawFact(TimeStamp.new().UTC(), sender, [
             new WithdrawItem(target, [new Amount(currency, amount)])
         ]));
+    }
+    /**
+     * Generate a `withdraw` operation with multiple items for withdrawing currency from multiple contract accounts.
+     * Only the owner account of the contract can execute the operation.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string[] | Address[]} [targets] - The array of target contract account's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amounts] - The array of withdrawal amount.
+     * @returns `withdraw`operation
+     */
+    multiWithdraw(sender, targets, currency, amounts) {
+        ArrayAssert.check(targets, "targets").rangeLength(Config.ITEMS_IN_FACT).sameLength(amounts, "amounts");
+        const items = targets.map((el, idx) => { return new WithdrawItem(el, [new Amount(currency, amounts[idx])]); });
+        return new Operation$1(this.networkID, new WithdrawFact(TimeStamp.new().UTC(), sender, items));
     }
     /**
      * Generate a `mint` operation for minting currency and allocating it to a receiver.
@@ -3318,7 +3358,7 @@ class Account extends KeyG {
         return response;
     }
 }
-class Contract extends Generator {
+class Contract extends KeyG {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
@@ -3328,12 +3368,11 @@ class Contract extends Generator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
      * @param {string} [seed] - (Optional) The seed for deterministic key generation. If not provided, a random key pair will be generated.
-     * @param {string | number | Big} [weight] - (Optional) The weight for the public key. If not provided, the default value is 100.
      * @returns An object containing the wallet(key pair) and the `create-contract-account` operation.
      */
-    createWallet(sender, currency, amount, seed, weight) {
+    createWallet(sender, currency, amount, seed) {
         const kp = seed ? KeyPair.fromSeed(seed, "mitum") : KeyPair.random("mitum");
-        const ks = new Keys([new PubKey(kp.publicKey, weight ?? 100)], weight ?? 100);
+        const ks = new Keys([new PubKey(kp.publicKey, 100)], 100);
         return {
             wallet: {
                 privatekey: kp.privateKey.toString(),
@@ -3343,6 +3382,22 @@ class Contract extends Generator {
             operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, [
                 new CreateContractAccountItem(ks, [new Amount(currency, amount)])
             ])),
+        };
+    }
+    /**
+     * Generate `n` number of key pairs and the corresponding `create-contract-account` operation with multiple items.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {number} [n] - The number of account to create.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
+     * @returns An object containing the wallet (key pairs) and the `create-contract-account` operation with multiple items.
+     */
+    createBatchWallet(sender, n, currency, amount) {
+        const keyArray = this.keys(n);
+        const items = keyArray.map((ks) => new CreateContractAccountItem(new Keys([new PubKey(ks.publickey, 100)], 100), [new Amount(currency, amount)]));
+        return {
+            wallet: keyArray,
+            operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, items)),
         };
     }
     /**
@@ -3356,31 +3411,6 @@ class Contract extends Generator {
     createAccount(sender, key, currency, amount) {
         return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, [
             new CreateContractAccountItem(new Keys([new PubKey(key, 100)], 100), [new Amount(currency, amount)])
-        ]));
-    }
-    /**
-     * Generate a `create-contract-account` operation for the multi-signature account.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {keysType} [keys] - An array of object {`key`: publickey, `weight`: weight for the key}
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
-     * @param {string | number | Big} [threshold] - The threshold for the multi-signature.
-     * @returns `create-contract-account` operation.
-     * @example
-     * // Example of parameter keys
-     * const pubkey01 = {
-     *     key: "02cb1d73c49d638d98092e35603414b575f3f5b5ce01162cdd80ab68ab77e50e14fpu",
-     *     weight: 50
-     * };
-     * const pubkey02 = {
-     *     key: "0377241675aabafca6b1a49f3bc08a581beb0daa330a4ac2008464d63ed7635a22fpu",
-     *     weight: 50
-     * };
-     * const keysArray = [pubkey01, pubkey02];
-     */
-    createMultiSig(sender, keys, currency, amount, threshold) {
-        return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, [
-            new CreateContractAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)])
         ]));
     }
     /**
@@ -3417,17 +3447,6 @@ class Contract extends Generator {
      */
     updateHandler(sender, contract, currency, handlers) {
         return new Operation$1(this.networkID, new UpdateHandlerFact(TimeStamp.new().UTC(), sender, contract, currency, handlers));
-    }
-    /**
-  * Generate an `update-recipient` operation to update recipients of contract to given accounts.
-  * @param {string | Address} [sender] - The sender's address.
-  * @param {string | Address} [contract] - The contract account address.
-  * @param {string | CurrencyID} [currency] - The currency ID.
-  * @param {(string | Address)[]} [recipients] - The array of addresses to be updated as recipients.
-  * @returns `update-recipient` operation.
-  */
-    updateRecipient(sender, contract, currency, recipients) {
-        return new Operation$1(this.networkID, new UpdateRecipientFact(TimeStamp.new().UTC(), sender, contract, currency, recipients));
     }
     /**
      * Sign and send the `create-contract-account` operation to blockchain network.
@@ -3546,10 +3565,6 @@ class AccountAbstraction extends Generator {
 class RegisterModelFact extends ContractFact {
     constructor(token, sender, contract, didMethod, currency) {
         super(HINT.AUTH_DID.REGISTER_MODEL.FACT, token, sender, contract, currency);
-        // Assert.check(
-        //     Config.DMILE.PROJECT.satisfy(project.toString().length),
-        //     MitumError.detail(ECODE.INVALID_FACT, `project length out of range, should be between ${Config.DMILE.PROJECT.min} to ${Config.DMILE.PROJECT.max}`),
-        // )
         this.didMethod = LongString.from(didMethod);
         this._hash = this.hashing();
     }
@@ -3812,16 +3827,50 @@ class AuthDID extends ContractGenerator {
     isSenderDidOwner(sender, did, id) {
         Assert.check(sender.toString() === validateDID(did.toString(), id).toString(), MitumError.detail(ECODE.AUTH_DID.INVALID_DID, `The owner of did must match the sender(${sender.toString()}). check the did (${did.toString()})`));
     }
+    /**
+     * Creates an AsymKeyAuth object with the provided authentication details.
+     * @param {string} id - The unique identifier for the authentication.
+     * @param {"EcdsaSecp256k1VerificationKey2019"} authType - The type of the asymmetric key used for verification.
+     * @param {string} controller - The controller responsible for the authentication.
+     * @param {string} publicKey - The public key associated with the authentication.
+     * @returns {object} An asymkeyAuth object.
+     */
     writeAsymkeyAuth(id, authType, controller, publicKey) {
-        return new AsymKeyAuth(id, authType, controller, publicKey);
+        const auth = new AsymKeyAuth(id, authType, controller, publicKey);
+        return auth.toHintedObject();
     }
     ;
+    /**
+     * Creates a SocialLoginAuth object with the provided authentication details.
+     * @param {string} id - The unique identifier for the authentication.
+     * @param {string} controller - The controller responsible for the authentication.
+     * @param {string} serviceEndpoint - The endpoint URL for the social login service.
+     * @param {string} verificationMethod - The verification method used for authentication.
+     * @returns {object} A socialLoginAuth object.
+     */
     writeSocialLoginAuth(id, controller, serviceEndpoint, verificationMethod) {
-        return new SocialLoginAuth(id, controller, serviceEndpoint, verificationMethod);
+        const auth = new SocialLoginAuth(id, controller, serviceEndpoint, verificationMethod);
+        return auth.toHintedObject();
     }
     ;
-    writeDocument(didContext, didID, authentications, serivceID, serviceType, serviceEndPoint) {
-        return new Document(didContext, didID, authentications, [], serivceID, serviceType, serviceEndPoint);
+    /**
+     * Creates a DID Document with the provided context, DID ID, authentications, and service details.
+     * Use return value of this method for updateDocument()
+     * @param {string} didContext - The context for the DID document.
+     * @param {string} didID - The unique identifier for the DID.
+     * @param {(asymkeyAuth | socialLoginAuth)[]} authentications - An array of authentication objects.
+     *        Each object must be either an instance of `asymkeyAuth` or `socialLoginAuth`.
+     * @param {string} serviceID - The identifier for the associated service.
+     * @param {string} serviceType - The type of the service (e.g., `LinkedDataProof`, `BlockchainService`).
+     * @param {string} serviceEndPoint - The endpoint URL of the service.
+     * @returns {object} A hinted object representation of the created DID Document. Use it for updateDocument().
+     */
+    writeDocument(didContext, didID, authentications, serviceID, serviceType, serviceEndPoint) {
+        const document = new Document(didContext, didID, authentications.map((auth) => "proof" in auth
+            ? (validateDID(auth.proof.verificationMethod.toString(), true),
+                new SocialLoginAuth(auth.id, auth.controller, auth.serviceEndpoint, auth.proof.verificationMethod))
+            : new AsymKeyAuth(auth.id, auth.authType, auth.controller, auth.publicKey)), [], serviceID, serviceType, serviceEndPoint);
+        return document.toHintedObject();
     }
     ;
     /**
@@ -4107,7 +4156,7 @@ class Operation extends Generator {
      * Get multiple operations by array of fact hashes.
      * Returns excluding operations that have not yet been recorded.
      * @async
-     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 44 length.
+     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 43 or 44 length.
      * @returns The `data` of `SuccessResponse` is array of infomation of the operations:
      * - `_hint`: Hint for the operation,
      * - `hash`: Hash for the fact,
@@ -4124,9 +4173,11 @@ class Operation extends Generator {
      */
     async getMultiOperations(hashes) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Assert.check(Config.FACT_HASHES.satisfy(hashes.length), MitumError.detail(ECODE.INVALID_LENGTH, "length of hash array is out of range"));
+        ArrayAssert.check(hashes, "hashes")
+            .noDuplicates()
+            .rangeLength(Config.FACT_HASHES);
         hashes.forEach((hash) => {
-            Assert.check(isBase58Encoded(hash) && hash.length === 44, MitumError.detail(ECODE.INVALID_FACT_HASH, "fact hash must be base58 encoded string with 44 length."));
+            Assert.check(isBase58Encoded(hash) && (hash.length === 44 || hash.length === 43), MitumError.detail(ECODE.INVALID_FACT_HASH, "fact hash must be base58 encoded string with 43 or 44 length."));
         });
         const response = await getAPIData(() => api$1.getMultiOperations(this.api, hashes, this.delegateIP));
         if (isSuccessResponse(response) && Array.isArray(response.data)) {
@@ -4208,20 +4259,20 @@ class OperationResponse extends Operation {
         const timeoutInterval = interval ?? 1000;
         const validatePositiveInteger = (val, name) => {
             if (!Number.isSafeInteger(val) || val <= 0) {
-                throw new Error(`${name} must be a positive integer`);
+                throw MitumError.detail(ECODE.INVALID_FLOAT, `${name} must be a positive integer`);
             }
         };
         validatePositiveInteger(maxTimeout, "timeout");
         validatePositiveInteger(timeoutInterval, "interval");
         if (maxTimeout <= timeoutInterval) {
             if (interval === undefined) {
-                throw new Error("default interval is 1000, so timeout must be greater than that.");
+                throw MitumError.detail(ECODE.INVALID_FLOAT, "default interval is 1000, so timeout must be greater than that.");
             }
             else if (timeout === undefined) {
-                throw new Error("default timeout is 10000, so interval must be less than that.");
+                throw MitumError.detail(ECODE.INVALID_FLOAT, "default timeout is 10000, so interval must be less than that.");
             }
             else {
-                throw new Error("timeout must be larger than interval.");
+                throw MitumError.detail(ECODE.INVALID_FLOAT, "timeout must be larger than interval.");
             }
         }
         let stop = false;

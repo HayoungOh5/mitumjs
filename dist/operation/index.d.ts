@@ -53,7 +53,7 @@ export declare class Operation extends Generator {
      * Get multiple operations by array of fact hashes.
      * Returns excluding operations that have not yet been recorded.
      * @async
-     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 44 length.
+     * @param {string[]} [hashes] - Array of fact hashes, fact hash must be base58 encoded string with 43 or 44 length.
      * @returns The `data` of `SuccessResponse` is array of infomation of the operations:
      * - `_hint`: Hint for the operation,
      * - `hash`: Hash for the fact,
