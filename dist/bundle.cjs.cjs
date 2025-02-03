@@ -258,6 +258,12 @@ const DCODE = {
         description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold",
         subject: ""
     },
+    IV_ALTERSIGN: {
+        code: "D202",
+        keyword: ["Invalid user signing"],
+        description: "Alternative signature for account abstraction operation is not valid",
+        subject: ""
+    },
     // Related to authorization
     NO_AUTH: {
         code: "D301",
@@ -269,6 +275,12 @@ const DCODE = {
         code: "D302",
         keyword: ["Contract account not allowed"],
         description: "A contract account cannot be used as sender, receiver etc.",
+        subject: ""
+    },
+    IV_AUTH_TYPE: {
+        code: "D303",
+        keyword: ["Invalid Auth Type"],
+        description: "Occurs when there is a problem with authentication_id in the account abstraction operation.(If verificationMethod of social_login authentication is another social_login)",
         subject: ""
     },
     // Insufficient balance
@@ -2753,6 +2765,41 @@ class UpdateHandlerFact extends Fact {
     }
 }
 
+class UpdateRecipientFact extends Fact {
+    constructor(token, sender, contract, currency, recipients) {
+        super(HINT.CURRENCY.UPDATE_RECIPIENT.FACT, token);
+        this.sender = Address.from(sender);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.recipients = recipients.map(a => Address.from(a));
+        this._hash = this.hashing();
+        ArrayAssert.check(recipients, "recipients")
+            .rangeLength(Config.CONTRACT_RECIPIENTS)
+            .noDuplicates();
+    }
+    toBuffer() {
+        return Buffer.concat([
+            super.toBuffer(),
+            this.sender.toBuffer(),
+            this.contract.toBuffer(),
+            this.currency.toBuffer(),
+            Buffer.concat(this.recipients.sort(SortFunc).map(a => a.toBuffer())),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            sender: this.sender.toString(),
+            contract: this.contract.toString(),
+            currency: this.currency.toString(),
+            recipients: this.recipients.sort(SortFunc).map((w) => w.toString()),
+        };
+    }
+    get operationHint() {
+        return HINT.CURRENCY.UPDATE_RECIPIENT.OPERATION;
+    }
+}
+
 class RegisterCurrencyFact extends NodeFact {
     constructor(token, design) {
         super(HINT.CURRENCY.REGISTER_CURRENCY.FACT, token);
@@ -3462,6 +3509,17 @@ class Contract extends KeyG {
      */
     updateHandler(sender, contract, currency, handlers) {
         return new Operation$1(this.networkID, new UpdateHandlerFact(TimeStamp.new().UTC(), sender, contract, currency, handlers));
+    }
+    /**
+     * Generate an `update-recipient` operation to update recipients of contract to given accounts.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [contract] - The contract account address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {(string | Address)[]} [recipients] - The array of addresses to be updated as recipients.
+     * @returns `update-recipient` operation.
+     */
+    updateRecipient(sender, contract, currency, recipients) {
+        return new Operation$1(this.networkID, new UpdateRecipientFact(TimeStamp.new().UTC(), sender, contract, currency, recipients));
     }
     /**
      * Sign and send the `create-contract-account` operation to blockchain network.
