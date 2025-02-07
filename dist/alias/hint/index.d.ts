@@ -52,6 +52,11 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
+        EXTENSION: {
+            AUTHENTICATION: string;
+            PROXY_PAYER: string;
+            SETTLEMENT: string;
+        };
     };
     NFT: {
         SIGNER: string;
@@ -338,6 +343,28 @@ declare const _default: {
         };
         UPDATE_DATAS: {
             ITEM: string;
+            FACT: string;
+            OPERATION: string;
+        };
+    };
+    PAYMENT: {
+        REGISTER_MODEL: {
+            FACT: string;
+            OPERATION: string;
+        };
+        DEPOSIT: {
+            FACT: string;
+            OPERATION: string;
+        };
+        UPDATE_ACCOUNT_SETTING: {
+            FACT: string;
+            OPERATION: string;
+        };
+        WITHDRAW: {
+            FACT: string;
+            OPERATION: string;
+        };
+        TRANSFER: {
             FACT: string;
             OPERATION: string;
         };

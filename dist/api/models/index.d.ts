@@ -52,6 +52,10 @@ declare const _default: {
             getDataHistory: (api: string | undefined, contract: string | import("../../key").Address, dataKey: string, delegateIP: string | undefined, limit?: number | undefined, offset?: number | undefined, reverse?: true | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
             getDataCount: (api: string | undefined, contract: string | import("../../key").Address, delegateIP: string | undefined, deleted?: true | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
         };
+        payment: {
+            getAccountInfo: (api: string | undefined, contract: string | import("../../key").Address, address: string | import("../../key").Address, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
+            getModel: (api: string | undefined, contract: string | import("../../key").Address, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
+        };
     };
 };
 export default _default;

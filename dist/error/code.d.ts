@@ -39,6 +39,7 @@ export declare const ECODE: {
     readonly INVALID_FACT_HASH: "EC_INVALID_FACT_HASH";
     readonly INVALID_OPERATION: "EC_INVALID_OPERATION";
     readonly INVALID_OPERATIONS: "EC_INVALID_OPERATIONS";
+    readonly INVALID_USER_OPERATION: "EC_INVALID_USER_OPERATION";
     readonly INVALID_SEAL: "EC_INVALID_SEAL";
     readonly INVALID_AMOUNT: "EC_INVALID_AMOUNT";
     readonly INVALID_AMOUNTS: "EC_INVALID_AMOUNTS";
@@ -58,6 +59,11 @@ export declare const ECODE: {
         readonly INVALID_CURRENCY_FEEER: "EC_INVALID_CURRENCY_FEEER";
         readonly INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY";
         readonly INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN";
+    };
+    readonly AUTH_DID: {
+        readonly INVALID_DID: "EC_INVALID_DID";
+        readonly INVALID_DOCUMENT: "EC_INVALID_DOCUMENT";
+        readonly INVALID_AUTHENTICATION: "EC_INVALID_AUTHENTICATION";
     };
     readonly NFT: {
         readonly INVALID_NFT_SIGNER: "EC_INVALID_NFT_SIGNER";
@@ -209,6 +215,12 @@ export declare const DCODE: {
         readonly description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold";
         readonly subject: "";
     };
+    readonly IV_ALTERSIGN: {
+        readonly code: "D202";
+        readonly keyword: readonly ["Invalid user signing"];
+        readonly description: "Alternative signature for account abstraction operation is not valid";
+        readonly subject: "";
+    };
     readonly NO_AUTH: {
         readonly code: "D301";
         readonly keyword: readonly ["Account not authorized"];
@@ -219,6 +231,12 @@ export declare const DCODE: {
         readonly code: "D302";
         readonly keyword: readonly ["Contract account not allowed"];
         readonly description: "A contract account cannot be used as sender, receiver etc.";
+        readonly subject: "";
+    };
+    readonly IV_AUTH_TYPE: {
+        readonly code: "D303";
+        readonly keyword: readonly ["Invalid Auth Type"];
+        readonly description: "Occurs when there is a problem with authentication_id in the account abstraction operation.(If verificationMethod of social_login authentication is another social_login)";
         readonly subject: "";
     };
     readonly INSUFF_BAL: {

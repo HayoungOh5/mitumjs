@@ -9,6 +9,7 @@ import { TimeStamp } from "./timestamp";
 import { Token } from "./token";
 import { Point } from "./point";
 import { Storage } from "./storage";
+import { Payment } from "./payment";
 import { Signer } from "./signer";
 import { Key, KeyPair } from "../key";
 import { Generator, HintedObject, IP, SuccessResponse, ErrorResponse } from "../types";
@@ -133,4 +134,4 @@ export declare class OperationResponse extends Operation {
      */
     wait(timeout?: number, interval?: number): Promise<any>;
 }
-export { Currency, Account, Contract, NFT, Credential, DAO, STO, KYC, TimeStamp, Token, Point, Storage, Signer, Base, };
+export { Currency, Account, Contract, NFT, Credential, DAO, STO, KYC, TimeStamp, Token, Point, Storage, Payment, Signer, Base, };
