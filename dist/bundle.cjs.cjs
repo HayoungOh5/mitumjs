@@ -279,7 +279,7 @@ const DCODE = {
         description: "Alternative signature for account abstraction operation is not valid",
         subject: ""
     },
-    // Related to authorization
+    // Related to permission
     NO_AUTH: {
         code: "D301",
         keyword: ["Account not authorized"],
@@ -296,6 +296,12 @@ const DCODE = {
         code: "D303",
         keyword: ["Invalid Auth Type"],
         description: "Occurs when there is a problem with authentication_id in the account abstraction operation.(If verificationMethod of social_login authentication is another social_login)",
+        subject: ""
+    },
+    CA_RESTRICTED: {
+        code: "D304",
+        keyword: ["Contract account restricted"],
+        description: "Contract account with contract_account_status.balance_status is 1, the owner cannot withdraw.",
         subject: ""
     },
     // Insufficient balance
@@ -2276,7 +2282,7 @@ class Keys {
 }
 Keys.hint = new Hint(HINT.CURRENCY.KEYS);
 
-const defaultPath = "m/44'/1'/0'/0/0";
+const defaultPath = "m/44'/815'/0'/0/0";
 
 const privateKeyToPublicKey = (privateKey) => {
     let privateBuf;
@@ -2526,7 +2532,7 @@ class KeyG extends Generator {
      * - `publickey`: public key,
      * - `address`: address,
      * - `phrase`: phrases made up of 12 mnemonic words,
-     * - `path`: derivation path for HD wallet. Default set to "m/44'/1'/0'/0/0"
+     * - `path`: derivation path for HD wallet. Default set to "m/44'/815'/0'/0/0". 815 is a coin type for imFact.
      */
     hdKey() {
         const hdwallet = KeyPair.hdRandom("mitum");
@@ -2557,7 +2563,7 @@ class KeyG extends Generator {
      * - `publickey`: public key,
      * - `address`: address
      * - `phrase`: phrases made up of 12 mnemonic words,
-     * - `path`: derivation path for HD wallet, default set to "m/44'/1'/0'/0/0"
+     * - `path`: derivation path for HD wallet, default set to "m/44'/815'/0'/0/0". 815 is a coin type for imFact.
      */
     fromPhrase(phrase, path) {
         const hdwallet = KeyPair.fromPhrase(phrase, path);

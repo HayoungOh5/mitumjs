@@ -239,6 +239,12 @@ export declare const DCODE: {
         readonly description: "Occurs when there is a problem with authentication_id in the account abstraction operation.(If verificationMethod of social_login authentication is another social_login)";
         readonly subject: "";
     };
+    readonly CA_RESTRICTED: {
+        readonly code: "D304";
+        readonly keyword: readonly ["Contract account restricted"];
+        readonly description: "Contract account with contract_account_status.balance_status is 1, the owner cannot withdraw.";
+        readonly subject: "";
+    };
     readonly INSUFF_BAL: {
         readonly code: "D401";
         readonly keyword: readonly [""];
