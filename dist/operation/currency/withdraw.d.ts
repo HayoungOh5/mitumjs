@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { CurrencyItem } from "./item";
 import { OperationFact } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { Amount } from "../../common";
 import { HintedObject } from "../../types";
 export declare class WithdrawItem extends CurrencyItem {

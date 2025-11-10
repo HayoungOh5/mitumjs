@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { DAOFact } from "./fact";
 import { FactJson } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { BizProposal, CryptoProposal } from "./proposal";
 export declare class ProposeFact extends DAOFact {

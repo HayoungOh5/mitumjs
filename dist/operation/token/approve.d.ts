@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { TokenFact } from "./fact";
 import { Big } from "../../types";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { FactJson } from "../base";
 export declare class ApproveFact extends TokenFact {

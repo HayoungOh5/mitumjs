@@ -1,6 +1,7 @@
-import { Operation as OP, Fact } from "../operation/base";
+import type { BaseOperation } from "../operation/base/operation";
+import type { Fact } from "../operation/base/fact";
 import { ErrorResponse, SuccessResponse, HintedObject } from "../types";
-export declare const isOpFact: (operation: any) => operation is OP<Fact>;
+export declare const isOpFact: (operation: any) => operation is BaseOperation<Fact>;
 export declare const isHintedObject: (object: any) => object is HintedObject;
 export declare const isHintedObjectFromUserOp: (object: any) => object is HintedObject;
 export declare const isErrorResponse: (response: ErrorResponse | SuccessResponse) => response is ErrorResponse;

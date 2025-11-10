@@ -1,5 +1,5 @@
-import { OperationJson, SignOption, Operation as OP, Fact } from "./base";
-import { Key } from "../key";
+import type { BaseOperation, Fact, OperationJson, SignOption } from "./base";
+import { Key } from "../key/pub";
 import { Generator, HintedObject, IP } from "../types";
 export declare class Signer extends Generator {
     constructor(networkID: string, api?: string | IP);
@@ -10,7 +10,7 @@ export declare class Signer extends Generator {
      * @param {SignOption} [option] - (Optional) Option for node sign.
      * @returns The signed operation in JSON object (HintedObject).
      */
-    sign(privatekey: string | Key, operation: OP<Fact> | HintedObject, option?: SignOption): OperationJson;
+    sign(privatekey: string | Key, operation: BaseOperation<Fact> | HintedObject | string, option?: SignOption): OperationJson;
     private accSign;
     private nodeSign;
     private FillUserOpHash;

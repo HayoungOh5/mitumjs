@@ -8,8 +8,8 @@ import { VoteFact } from "./vote";
 import { ExecuteFact } from "./execute";
 import { CryptoProposal, BizProposal } from "./proposal";
 import { TransferCalldata, GovernanceCalldata } from "./proposal";
-import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
+import { ContractGenerator, BaseOperation } from "../base";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, IP, LongString } from "../../types";
 import { UpdateModelConfigFact } from "./update-model-config";
@@ -53,7 +53,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `register-model` operation.
      */
-    registerModel(contract: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): Operation<RegisterModelFact>;
+    registerModel(contract: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): BaseOperation<RegisterModelFact>;
     /**
      * Generate `update-model-config` operation for updating the DAO policy on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -75,7 +75,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `update-model-config` operation
      */
-    updateModelConfig(contract: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): Operation<UpdateModelConfigFact>;
+    updateModelConfig(contract: string | Address, sender: string | Address, data: daoData, currency: string | CurrencyID): BaseOperation<UpdateModelConfigFact>;
     /**
      * Create transfer calldata for the crypto proposal to transfer crypto currency.
      * @param {string | Address} [sender] - The sender's address.
@@ -131,7 +131,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `propose` operation.
      */
-    propose(contract: string | Address, sender: string | Address, proposalID: string, proposal: CryptoProposal | BizProposal, currency: string | CurrencyID): Operation<ProposeFact>;
+    propose(contract: string | Address, sender: string | Address, proposalID: string, proposal: CryptoProposal | BizProposal, currency: string | CurrencyID): BaseOperation<ProposeFact>;
     /**
      * Generate `register` operation to register to get voting right to the proposal. If approved is given, delegate voting rights to the account.
      * @param {string | Address} [contract] - The contract's address.
@@ -141,7 +141,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | Address} [approved] - (Optional) The address of the account to which voting rights will be delegated..
      * @returns `register` operation
      */
-    register(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID, approved?: string | Address): Operation<RegisterFact>;
+    register(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID, approved?: string | Address): BaseOperation<RegisterFact>;
     /**
      * Generate `cancel-proposal` operation to cancel a DAO proposal.
      * @param {string | Address} [contract] - The contract's address.
@@ -150,7 +150,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `cancel-proposal` operation
      */
-    cancelProposal(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<CancelProposalFact>;
+    cancelProposal(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): BaseOperation<CancelProposalFact>;
     /**
      * Generate `pre-snap` operation to take a snapshot before the voting period.
      * @param {string | Address} [contract] - The contract's address.
@@ -159,7 +159,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `pre-snap` operation.
      */
-    preSnap(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<PreSnapFact>;
+    preSnap(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): BaseOperation<PreSnapFact>;
     /**
      * Generate `vote` operation to cast a vote for the proposal.
      * @param {string | Address} [contract] - The contract's address.
@@ -169,7 +169,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `vote` operation.
      */
-    vote(contract: string | Address, sender: string | Address, proposalID: string, voteOption: number, currency: string | CurrencyID): Operation<VoteFact>;
+    vote(contract: string | Address, sender: string | Address, proposalID: string, voteOption: number, currency: string | CurrencyID): BaseOperation<VoteFact>;
     /**
      * Generate `post-snap` operation to take a snapshot after the voting period.
      * @param {string | Address} [contract] - The contract's address.
@@ -178,7 +178,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `post-snap` operation
      */
-    postSnap(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<PostSnapFact>;
+    postSnap(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): BaseOperation<PostSnapFact>;
     /**
      * Generate `execute` operation to reflect voting results.
      * @param {string | Address} [contract] - The contract's address.
@@ -187,7 +187,7 @@ export declare class DAO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `execute` operation
      */
-    execute(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): Operation<ExecuteFact>;
+    execute(contract: string | Address, sender: string | Address, proposalID: string, currency: string | CurrencyID): BaseOperation<ExecuteFact>;
     /**
      * Get DAO model information for a specific contract address.
      * @async

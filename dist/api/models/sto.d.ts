@@ -1,4 +1,4 @@
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 declare function getService(api: string | undefined, contract: string | Address, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
 declare function getPartitions(api: string | undefined, contract: string | Address, holder: string | Address, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
 declare function getBalanceByHolder(api: string | undefined, contract: string | Address, holder: string | Address, partition: string, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;

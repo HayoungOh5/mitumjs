@@ -1,4 +1,4 @@
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { HintedObject, IHintedObject } from "../../types";
 export declare class Authentication implements IHintedObject {
     readonly contract: Address;

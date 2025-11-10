@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { DAOPolicy } from "./policy";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { Amount } from "../../common";
 import { Big, HintedObject, IBuffer, IHintedObject, LongString } from "../../types";
 declare abstract class Calldata implements IBuffer, IHintedObject {

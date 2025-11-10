@@ -5,10 +5,10 @@ import { ApproveFact } from "./approve";
 import { ApproveAllFact } from "./approve-all";
 import { TransferFact } from "./transfer";
 import { AddSignatureFact } from "./add-signature";
-import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
-import { CurrencyID } from "../../common";
-import { Big, IP, LongString } from "../../types";
+import { ContractGenerator, BaseOperation } from "../base";
+import { Address } from "../../key/address";
+import type { CurrencyID } from "../../common";
+import type { Big, IP, LongString } from "../../types";
 type collectionData = {
     name: string | LongString;
     uri: string | LongString;
@@ -33,7 +33,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `register-model` operation
      */
-    registerModel(contract: string | Address, sender: string | Address, data: collectionData, currency: string | CurrencyID): Operation<RegisterModelFact>;
+    registerModel(contract: string | Address, sender: string | Address, data: collectionData, currency: string | CurrencyID): BaseOperation<RegisterModelFact>;
     /**
      * Generate `update-model-config` operation to update the policy of the nft collection on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -46,7 +46,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `update-model-config` operation.
      */
-    updateModelConfig(contract: string | Address, sender: string | Address, data: collectionData, currency: string | CurrencyID): Operation<UpdateModelConfigFact>;
+    updateModelConfig(contract: string | Address, sender: string | Address, data: collectionData, currency: string | CurrencyID): BaseOperation<UpdateModelConfigFact>;
     /**
      * Generate `mint` operation for minting a new NFT and assigns it to a receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -58,7 +58,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
      * @returns `mint` operation.
      */
-    mint(contract: string | Address, sender: string | Address, receiver: string | Address, uri: string | LongString, hash: string | LongString, currency: string | CurrencyID, creator: string | Address): Operation<MintFact>;
+    mint(contract: string | Address, sender: string | Address, receiver: string | Address, uri: string | LongString, hash: string | LongString, currency: string | CurrencyID, creator: string | Address): BaseOperation<MintFact>;
     /**
      * Generate `mint` operation with multiple item for minting multiple NFT and assigns it to a receiver.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -70,7 +70,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | Address} [creator] - The address of the creator of the artwork for NFT.
      * @returns `mint` operation.
      */
-    multiMint(contract: string | Address | string[] | Address[], sender: string | Address, receivers: string[] | Address[], uri: string[] | LongString[], hash: string[] | LongString[], currency: string | CurrencyID, creator: string | Address): Operation<MintFact>;
+    multiMint(contract: string | Address | string[] | Address[], sender: string | Address, receivers: string[] | Address[], uri: string[] | LongString[], hash: string[] | LongString[], currency: string | CurrencyID, creator: string | Address): BaseOperation<MintFact>;
     /**
      * Generate `mint` operation in case of multiple creators.
      * @param {string | Address} [contract] - The contract's address.
@@ -84,7 +84,7 @@ export declare class NFT extends ContractGenerator {
      * - {string | number | Big} `share` - The share for the artworks. The total share can not over 100.
      * @returns `mint` operation.
      */
-    mintForMultiCreators(contract: string | Address, sender: string | Address, receiver: string | Address, uri: string | LongString, hash: string | LongString, currency: string | CurrencyID, creators: Creator[]): Operation<MintFact>;
+    mintForMultiCreators(contract: string | Address, sender: string | Address, receiver: string | Address, uri: string | LongString, hash: string | LongString, currency: string | CurrencyID, creators: Creator[]): BaseOperation<MintFact>;
     /**
      * Generate `transfer` operation for transferring an NFT from one address to another.
      * @param {string | Address} [contract] - The contract's address.
@@ -94,7 +94,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `transfer` operation.
      */
-    transfer(contract: string | Address, sender: string | Address, receiver: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<TransferFact>;
+    transfer(contract: string | Address, sender: string | Address, receiver: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): BaseOperation<TransferFact>;
     /**
      * Generate `transfer` operation with multiple itmes to transfer NFTs from one address to another.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -104,7 +104,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `transfer` operation with multiple items.
      */
-    multiTransfer(contract: string | Address | string[] | Address[], sender: string | Address, receiver: string[] | Address[], nftIdx: string[] | number[] | Big[], currency: string | CurrencyID): Operation<TransferFact>;
+    multiTransfer(contract: string | Address | string[] | Address[], sender: string | Address, receiver: string[] | Address[], nftIdx: string[] | number[] | Big[], currency: string | CurrencyID): BaseOperation<TransferFact>;
     /**
      * Generate `approve` operation to approve NFT to another account (approved).
      * @param {string | Address} [contract] - The contract's address.
@@ -114,7 +114,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `approve` operation.
      */
-    approve(contract: string | Address, sender: string | Address, approved: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<ApproveFact>;
+    approve(contract: string | Address, sender: string | Address, approved: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): BaseOperation<ApproveFact>;
     /**
      * Generate `approve` operation with multiple items to approve NFT to another account (approved).
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -124,7 +124,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `approve` operation with multiple items.
      */
-    multiApprove(contract: string | Address | string[] | Address[], sender: string | Address, approved: string[] | Address[], nftIdx: string[] | number[] | Big[], currency: string | CurrencyID): Operation<ApproveFact>;
+    multiApprove(contract: string | Address | string[] | Address[], sender: string | Address, approved: string[] | Address[], nftIdx: string[] | number[] | Big[], currency: string | CurrencyID): BaseOperation<ApproveFact>;
     /**
      * Generate `approve-all` operation to grant or revoke approval for an account to manage all NFTs of the sender.
      * @param {string | Address} [contract] - The contract's address.
@@ -134,7 +134,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `approve-all` operation.
      */
-    approveAll(contract: string | Address, sender: string | Address, approved: string | Address, mode: "allow" | "cancel", currency: string | CurrencyID): Operation<ApproveAllFact>;
+    approveAll(contract: string | Address, sender: string | Address, approved: string | Address, mode: "allow" | "cancel", currency: string | CurrencyID): BaseOperation<ApproveAllFact>;
     /**
      * Generate `approve-all` operation with multiple items to grant or revoke approval for an account to manage all NFTs of the sender.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -144,7 +144,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `approve-all` operation with multiple items.
      */
-    multiApproveAll(contract: string | Address | string[] | Address[], sender: string | Address, approved: string[] | Address[], mode: "allow" | "cancel", currency: string | CurrencyID): Operation<ApproveAllFact>;
+    multiApproveAll(contract: string | Address | string[] | Address[], sender: string | Address, approved: string[] | Address[], mode: "allow" | "cancel", currency: string | CurrencyID): BaseOperation<ApproveAllFact>;
     /**
      * Generate `add-signature` operation to signs an NFT as creator of the artwork.
      * @param {string | Address} [contract] - The contract's address.
@@ -153,7 +153,7 @@ export declare class NFT extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `sign` operation.
      */
-    addSignature(contract: string | Address, sender: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): Operation<AddSignatureFact>;
+    addSignature(contract: string | Address, sender: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID): BaseOperation<AddSignatureFact>;
     /**
      * Get information about an NFT collection on the contract.
      * @async

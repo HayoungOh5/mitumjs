@@ -1,6 +1,7 @@
 /// <reference types="node" />
-import { Address } from "../../key";
-import { Bool, HintedObject, IBuffer, IHintedObject } from "../../types";
+import { Address } from "../../key/address";
+import { Bool } from "../../types";
+import type { HintedObject, IBuffer, IHintedObject } from "../../types";
 export declare class Whitelist implements IBuffer, IHintedObject {
     private hint;
     readonly active: Bool;

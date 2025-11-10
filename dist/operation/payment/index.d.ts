@@ -3,8 +3,8 @@ import { DepositFact } from "./deposit";
 import { TransferFact } from "./transfer";
 import { WithdrawFact } from "./withdraw";
 import { UpdateFact } from "./update-account-setting";
-import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
+import { ContractGenerator, BaseOperation } from "../base";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { IP } from "../../types";
 export declare class Payment extends ContractGenerator {
@@ -16,7 +16,7 @@ export declare class Payment extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `register-model` operation.
      */
-    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<RegisterModelFact>;
+    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID): BaseOperation<RegisterModelFact>;
     /**
      * Generate `deposit` operation to deposit currency to a payment model with configurable transfer settings.
      *
@@ -31,7 +31,7 @@ export declare class Payment extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `deposit` operation
      */
-    deposit(contract: string | Address, sender: string | Address, amount: string | number, transfer_limit: string | number, start_time: string | number, end_time: string | number, duration: string | number, currency: string | CurrencyID): Operation<DepositFact>;
+    deposit(contract: string | Address, sender: string | Address, amount: string | number, transfer_limit: string | number, start_time: string | number, end_time: string | number, duration: string | number, currency: string | CurrencyID): BaseOperation<DepositFact>;
     /**
      * Generate `update-account-setting` operation to update transfer setting.
      *
@@ -45,7 +45,7 @@ export declare class Payment extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `update-account-setting` operation
      */
-    updateSetting(contract: string | Address, sender: string | Address, transfer_limit: string | number, start_time: string | number, end_time: string | number, duration: string | number, currency: string | CurrencyID): Operation<UpdateFact>;
+    updateSetting(contract: string | Address, sender: string | Address, transfer_limit: string | number, start_time: string | number, end_time: string | number, duration: string | number, currency: string | CurrencyID): BaseOperation<UpdateFact>;
     /**
      * Generate an `transfer` operation for transferring certain currency from the deposit to a receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -55,7 +55,7 @@ export declare class Payment extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `transfer` operation.
      */
-    transfer(contract: string | Address, sender: string | Address, receiver: string | Address, amount: string | number, currency: string | CurrencyID): Operation<TransferFact>;
+    transfer(contract: string | Address, sender: string | Address, receiver: string | Address, amount: string | number, currency: string | CurrencyID): BaseOperation<TransferFact>;
     /**
      * Generate an `withdraw` operation to withdraw all deposits with certain currency at once and delete account information.
      * @param {string | Address} [contract] - The contract's address.
@@ -63,7 +63,7 @@ export declare class Payment extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `withdraw` operation.
      */
-    withdraw(contract: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<WithdrawFact>;
+    withdraw(contract: string | Address, sender: string | Address, currency: string | CurrencyID): BaseOperation<WithdrawFact>;
     /**
      * Get information about a payment service on the contract.
      * @async

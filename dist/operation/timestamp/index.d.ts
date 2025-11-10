@@ -1,7 +1,7 @@
 import { RegisterModelFact } from "./resgister-model";
 import { IssueFact } from "./issue";
-import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
+import { ContractGenerator, BaseOperation } from "../base";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, IP } from "../../types";
 export declare class TimeStamp extends ContractGenerator {
@@ -13,7 +13,7 @@ export declare class TimeStamp extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `register-model` operation.
      */
-    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<RegisterModelFact>;
+    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID): BaseOperation<RegisterModelFact>;
     /**
      * Generate `issue` operation to issue new timestamp to the project on the timestamp model.
      * @param {string | Address} [contract] - The contract's address.
@@ -24,7 +24,7 @@ export declare class TimeStamp extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `issue` operation
      */
-    issue(contract: string | Address, sender: string | Address, projectID: string, requestTimeStamp: string | number | Big, data: string, currency: string | CurrencyID): Operation<IssueFact>;
+    issue(contract: string | Address, sender: string | Address, projectID: string, requestTimeStamp: string | number | Big, data: string, currency: string | CurrencyID): BaseOperation<IssueFact>;
     /**
      * Get information about a timestamp service on the contract.
      * @async

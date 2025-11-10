@@ -6,8 +6,8 @@ import { RedeemFact } from "./redeem";
 import { SetDocumentFact } from "./set-document";
 import { TransferByPartitionFact } from "./transfer-by-partition";
 import { Partition } from "./partition";
-import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
+import { ContractGenerator, BaseOperation } from "../base";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, IP } from "../../types";
 type createServiceData = {
@@ -25,7 +25,7 @@ export declare class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `authorize-operator` operation.
      */
-    authorizeOperator(contract: string | Address, sender: string | Address, operator: string | Address, partition: string | Partition, currency: string | CurrencyID): Operation<AuthorizeOperatorFact>;
+    authorizeOperator(contract: string | Address, sender: string | Address, operator: string | Address, partition: string | Partition, currency: string | CurrencyID): BaseOperation<AuthorizeOperatorFact>;
     /**
      * Generate `create-security-token` operation to create new security token.
      * @param {string | Address} [contract] - The contract's address.
@@ -36,7 +36,7 @@ export declare class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-security-token` operation
      */
-    createService(contract: string | Address, sender: string | Address, data: createServiceData, currency: string | CurrencyID): Operation<CreateSecurityTokenFact>;
+    createService(contract: string | Address, sender: string | Address, data: createServiceData, currency: string | CurrencyID): BaseOperation<CreateSecurityTokenFact>;
     /**
      * Generate `issue` operation to issue new security token in specific partition to a specified receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -47,7 +47,7 @@ export declare class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `issue` operation.
      */
-    issue(contract: string | Address, sender: string | Address, receiver: string | Address, partition: string | Partition, amount: string | number | Big, currency: string | CurrencyID): Operation<IssueFact>;
+    issue(contract: string | Address, sender: string | Address, receiver: string | Address, partition: string | Partition, amount: string | number | Big, currency: string | CurrencyID): BaseOperation<IssueFact>;
     /**
      * Generate `redeem` operation to redeem(burn) a specified amount of security token in a specific partition.
      * @param {string | Address} [contract] - The contract's address.
@@ -58,7 +58,7 @@ export declare class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `redeem` operation.
      */
-    redeem(contract: string | Address, sender: string | Address, tokenHolder: string | Address, partition: string | Partition, amount: string | number | Big, currency: string | CurrencyID): Operation<RedeemFact>;
+    redeem(contract: string | Address, sender: string | Address, tokenHolder: string | Address, partition: string | Partition, amount: string | number | Big, currency: string | CurrencyID): BaseOperation<RedeemFact>;
     /**
      * Generate `revoke` operation to revoke operator's authorization for the security token in specific partition.
      * @param {string | Address} [contract] - The contract's address.
@@ -68,7 +68,7 @@ export declare class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `revoke` operation.
      */
-    revokeOperator(contract: string | Address, sender: string | Address, operator: string | Address, partition: string | Partition, currency: string | CurrencyID): Operation<RevokeOperatorFact>;
+    revokeOperator(contract: string | Address, sender: string | Address, operator: string | Address, partition: string | Partition, currency: string | CurrencyID): BaseOperation<RevokeOperatorFact>;
     /**
      * Generate `setDocumnet` operation to set document for the security token on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -79,7 +79,7 @@ export declare class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `setDocumnet` operation.
      */
-    setDocument(contract: string | Address, sender: string | Address, title: string, uri: string, documentHash: string, currency: string | CurrencyID): Operation<SetDocumentFact>;
+    setDocument(contract: string | Address, sender: string | Address, title: string, uri: string, documentHash: string, currency: string | CurrencyID): BaseOperation<SetDocumentFact>;
     /**
      * Generate `transfer-by-partition` operation to transfer security token in specific partitions.
      * @param {string | Address} [contract] - The contract's address.
@@ -91,7 +91,7 @@ export declare class STO extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `transfer-by-partition` operation
      */
-    transferByPartition(contract: string | Address, sender: string | Address, holder: string | Address, receiver: string | Address, partition: string | Partition, amount: string | number | Big, currency: string | CurrencyID): Operation<TransferByPartitionFact>;
+    transferByPartition(contract: string | Address, sender: string | Address, holder: string | Address, receiver: string | Address, partition: string | Partition, amount: string | number | Big, currency: string | CurrencyID): BaseOperation<TransferByPartitionFact>;
     /**
      * Get information about the security token on the contract.
      * @async

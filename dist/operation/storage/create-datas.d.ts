@@ -1,6 +1,7 @@
 /// <reference types="node" />
-import { Address } from "../../key";
-import { HintedObject, LongString } from "../../types";
+import { Address } from "../../key/address";
+import type { HintedObject } from "../../types";
+import { LongString } from "../../types";
 import { CurrencyID } from "../../common";
 import { Item, OperationFact } from "../base";
 export declare class CreateDatasItem extends Item {

@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { PointFact } from "./fact";
 import { FactJson } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, LongString } from "../../types";
 export declare class RegisterModelFact extends PointFact {

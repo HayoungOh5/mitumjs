@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { PaymentFact } from "./fact";
 import { FactJson } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big } from "../../types";
 export declare class TransferFact extends PaymentFact {

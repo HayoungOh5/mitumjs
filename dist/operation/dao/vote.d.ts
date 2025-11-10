@@ -2,7 +2,7 @@
 import { DAOFact } from "./fact";
 import { FactJson } from "../base";
 import { Big } from "../../types";
-import { Address } from "../../key";
+import type { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 export declare class VoteFact extends DAOFact {
     readonly vote: Big;

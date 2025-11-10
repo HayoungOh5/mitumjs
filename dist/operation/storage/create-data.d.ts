@@ -1,9 +1,9 @@
 /// <reference types="node" />
-import { FactJson } from "../base";
+import type { FactJson } from "../base";
 import { StorageFact } from "./fact";
 import { LongString } from "../../types";
-import { Address } from "../../key";
-import { CurrencyID } from "../../common";
+import type { Address } from "../../key/address";
+import type { CurrencyID } from "../../common";
 export declare class CreateDataFact extends StorageFact {
     readonly dataValue: LongString;
     constructor(token: string, sender: string | Address, contract: string | Address, dataKey: string | LongString, dataValue: string | LongString, currency: string | CurrencyID);

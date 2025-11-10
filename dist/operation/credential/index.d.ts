@@ -2,8 +2,8 @@ import { RegisterModelFact } from "./register-model";
 import { AddTemplateFact } from "./add-template";
 import { IssueFact } from "./issue";
 import { RevokeFact } from "./revoke";
-import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
+import { ContractGenerator, BaseOperation } from "../base";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, Bool, IP, ShortDate } from "../../types";
 type templateData = {
@@ -36,7 +36,7 @@ export declare class Credential extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `register-model` operation.
      */
-    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<RegisterModelFact>;
+    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID): BaseOperation<RegisterModelFact>;
     /**
      * Generate an `add-template` operation for adding a new credential template to the credential service.
      * @param {string | Address} [contract] - The contract's address.
@@ -55,7 +55,7 @@ export declare class Credential extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns An `add-template` operation.
      */
-    addTemplate(contract: string | Address, sender: string | Address, data: templateData, currency: string | CurrencyID): Operation<AddTemplateFact>;
+    addTemplate(contract: string | Address, sender: string | Address, data: templateData, currency: string | CurrencyID): BaseOperation<AddTemplateFact>;
     /**
      * Generate an `issue` operation for issue credential to holder.
      * @param {string | Address} [contract] - The contract's address.
@@ -71,7 +71,7 @@ export declare class Credential extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `issue` operation.
      */
-    issue(contract: string | Address, sender: string | Address, data: issueData, currency: string | CurrencyID): Operation<IssueFact>;
+    issue(contract: string | Address, sender: string | Address, data: issueData, currency: string | CurrencyID): BaseOperation<IssueFact>;
     /**
      * Generate an `revoke` operation to revoke already issued credential.
      * @param {string | Address} contract - The contract's address.
@@ -82,7 +82,7 @@ export declare class Credential extends ContractGenerator {
      * @param {string | CurrencyID} currency - The currency ID.
      * @returns `revoke` operation.
      */
-    revoke(contract: string | Address, sender: string | Address, holder: string | Address, templateID: string, credentialID: string, currency: string | CurrencyID): Operation<RevokeFact>;
+    revoke(contract: string | Address, sender: string | Address, holder: string | Address, templateID: string, credentialID: string, currency: string | CurrencyID): BaseOperation<RevokeFact>;
     /**
      * Get information about a credential model on the contract.
      * @async

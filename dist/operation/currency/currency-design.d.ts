@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, Float, HintedObject, IBuffer, IHintedObject } from "../../types";
 export declare class CurrencyDesign implements IBuffer, IHintedObject {

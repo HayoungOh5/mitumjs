@@ -1,4 +1,4 @@
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 declare function getModel(api: string | undefined, contract: string | Address, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
 declare function getProposal(api: string | undefined, contract: string | Address, proposalID: string, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
 declare function getApproved(api: string | undefined, contract: string | Address, proposalID: string, registrant: string | Address, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;

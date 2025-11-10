@@ -1,7 +1,8 @@
 /// <reference types="node" />
 import { FS, GeneralFS, NodeFS } from "./types";
 import { IBuffer, FullTimeStamp } from "../../types";
-import { Key, Address, NodeAddress } from "../../key";
+import { Address, NodeAddress } from "../../key/address";
+import { Key } from "../../key/pub";
 export declare abstract class FactSign implements IBuffer {
     readonly signer: Key;
     readonly signature: Buffer;

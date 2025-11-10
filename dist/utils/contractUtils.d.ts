@@ -1,4 +1,4 @@
-import { Address } from "../key";
+import type { Address } from "../key/address";
 import { SuccessResponse } from "../types";
 export declare const calculateAllowance: (response: SuccessResponse, owner: string | Address, approved: string | Address) => {
     amount: string;

@@ -1,8 +1,8 @@
 /// <reference types="node" />
 import { Item, NodeFact, FactJson } from "../base";
-import { Address } from "../../key";
-import { Amount } from "../../common";
-import { HintedObject } from "../../types";
+import { Address } from "../../key/address";
+import type { Amount } from "../../common";
+import type { HintedObject } from "../../types";
 export declare class MintItem extends Item {
     readonly amount: Amount;
     readonly receiver: Address;

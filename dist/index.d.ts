@@ -1,7 +1,9 @@
 import { Generator, IP } from "./types";
 import { Block, Node } from "./node";
 import { Utils } from "./utils/transformUnit";
-import { Account, Currency, Contract, NFT, DAO, KYC, STO, TimeStamp, Credential, Token, Point, Storage, Payment, Operation, Signer } from "./operation";
+import { Account, Currency, Contract, NFT, DAO, KYC, STO, TimeStamp, Credential, Token, Point, Storage, Payment, Signer } from "./operation";
+import { Operation } from "./operation/api";
+import { BrowserProvider } from "./providers";
 export declare class Mitum extends Generator {
     private _node;
     private _account;
@@ -74,3 +76,7 @@ export declare class Mitum extends Generator {
     getNetworkID(): string;
 }
 export default Mitum;
+export { BrowserProvider };
+export type { Item, Fact, BaseOperation, Authentication, ProxyPayer, Settlement } from "./operation/base";
+export type { Account, HDAccount, defaultPath } from "./key/types";
+export { isOpFact, isHintedObject, isHintedObjectFromUserOp } from "./utils/typeGuard";

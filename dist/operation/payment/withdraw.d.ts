@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { PaymentFact } from "./fact";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 export declare class WithdrawFact extends PaymentFact {
     constructor(token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID);

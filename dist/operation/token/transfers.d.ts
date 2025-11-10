@@ -2,7 +2,7 @@
 import { TokenItem } from "./item";
 import { OperationFact } from "../base";
 import { Big, HintedObject } from "../../types";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 export declare class TransfersItem extends TokenItem {
     readonly receiver: Address;

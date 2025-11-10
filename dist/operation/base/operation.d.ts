@@ -3,11 +3,11 @@ import { Fact } from "./fact";
 import { SignOption } from "./types";
 import { GeneralFactSign, NodeFactSign } from "./factsign";
 import { Hint } from "../../common";
-import { Key } from "../../key";
+import { Key } from "../../key/pub";
 import { HintedObject, IBuffer, IHintedObject } from "../../types";
 type FactSign = GeneralFactSign | NodeFactSign;
 type SigType = "FactSign" | "NodeFactSign" | null;
-export declare class Operation<T extends Fact> implements IBuffer, IHintedObject {
+export declare class BaseOperation<T extends Fact> implements IBuffer, IHintedObject {
     readonly id: string;
     readonly hint: Hint;
     readonly fact: T;

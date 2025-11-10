@@ -87,10 +87,10 @@ export declare const PCODE: {
         readonly description: "Ambiguous error";
         readonly subject: "";
     };
-    readonly MITUM_CORE: {
-        readonly code: "P0M";
-        readonly keyword: readonly [""];
-        readonly description: "Error from Mitum core";
+    readonly MITUM_NETWORK: {
+        readonly code: "P0N";
+        readonly keyword: readonly ["handle new operation", "Too Many Requests"];
+        readonly description: "Error from network";
         readonly subject: "";
     };
     readonly UNDEFINED: {
@@ -297,6 +297,12 @@ export declare const DCODE: {
         readonly code: "D508";
         readonly keyword: readonly ["State exist"];
         readonly description: "The state already exists on the blockchain.";
+        readonly subject: "";
+    };
+    readonly EXIST_FACT_HASH: {
+        readonly code: "D509";
+        readonly keyword: readonly ["already in state"];
+        readonly description: "The operation exists on the blockchain. Check it using fact hash";
         readonly subject: "";
     };
 };

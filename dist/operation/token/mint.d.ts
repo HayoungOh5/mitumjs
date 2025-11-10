@@ -1,8 +1,8 @@
 /// <reference types="node" />
 import { TokenFact } from "./fact";
-import { FactJson } from "../base";
+import type { FactJson } from "../base";
 import { Big } from "../../types";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 export declare class MintFact extends TokenFact {
     readonly receiver: Address;

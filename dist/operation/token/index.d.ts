@@ -7,9 +7,9 @@ import { ApproveFact } from "./approve";
 import { ApprovesFact } from "./approves";
 import { TransferFromFact } from "./transfer-from";
 import { TransfersFromFact } from "./transfers-from";
-import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
-import { CurrencyID } from "../../common";
+import { ContractGenerator, BaseOperation } from "../base";
+import { Address } from "../../key/address";
+import type { CurrencyID } from "../../common";
 import { Big, IP, LongString } from "../../types";
 export declare class Token extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
@@ -24,7 +24,7 @@ export declare class Token extends ContractGenerator {
      * @param {string | number | Big} [initialSupply] - (Optional) The initial supply of the token to register. If not provided, the default value is 0.
      * @returns `register-model` operation.
      */
-    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID, name: string | LongString, symbol: string | CurrencyID, decimal?: string | number | Big, initialSupply?: string | number | Big): Operation<RegisterModelFact>;
+    registerModel(contract: string | Address, sender: string | Address, currency: string | CurrencyID, name: string | LongString, symbol: string | CurrencyID, decimal?: string | number | Big, initialSupply?: string | number | Big): BaseOperation<RegisterModelFact>;
     /**
      * Generate a `mint` operation for minting tokens and allocating them to a receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -34,7 +34,7 @@ export declare class Token extends ContractGenerator {
      * @param {string | number | Big} [amount] - The amount to mint.
      * @returns `mint` operation.
      */
-    mint(contract: string | Address, sender: string | Address, currency: string | CurrencyID, receiver: string | Address, amount: string | number | Big): Operation<MintFact>;
+    mint(contract: string | Address, sender: string | Address, currency: string | CurrencyID, receiver: string | Address, amount: string | number | Big): BaseOperation<MintFact>;
     /**
      * Generate a `burn` operation for burning tokens from sender account.
      * @param {string | Address} [contract] - The contract's address.
@@ -43,7 +43,7 @@ export declare class Token extends ContractGenerator {
      * @param {string | number | Big} [amount] - The amount to burn.
      * @returns `burn` operation
      */
-    burn(contract: string | Address, sender: string | Address, currency: string | CurrencyID, amount: string | number | Big): Operation<BurnFact>;
+    burn(contract: string | Address, sender: string | Address, currency: string | CurrencyID, amount: string | number | Big): BaseOperation<BurnFact>;
     /**
      * Generate an `transfer` operation for transferring tokens from the sender to a receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -53,7 +53,7 @@ export declare class Token extends ContractGenerator {
      * @param {string | number | Big} [amount] - The amount to transfer.
      * @returns `transfer` operation.
      */
-    transfer(contract: string | Address, sender: string | Address, currency: string | CurrencyID, receiver: string | Address, amount: string | number | Big): Operation<TransferFact>;
+    transfer(contract: string | Address, sender: string | Address, currency: string | CurrencyID, receiver: string | Address, amount: string | number | Big): BaseOperation<TransferFact>;
     /**
      * Generate an `transfers` operation with multi items to transfer tokens from the sender to a receiver.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -63,7 +63,7 @@ export declare class Token extends ContractGenerator {
      * @param {string[] | number[] | Big[]} [amount] - The array of amounts to transfer.
      * @returns `transfers` operation with multi items.
      */
-    multiTransfer(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, receiver: string[] | Address[], amount: string[] | number[] | Big[]): Operation<TransfersFact>;
+    multiTransfer(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, receiver: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<TransfersFact>;
     /**
      * Generate a `transfer-from` operation for transferring tokens from target account to receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -74,7 +74,7 @@ export declare class Token extends ContractGenerator {
      * @param {string | number | Big} [amount] - The amount to transfer.
      * @returns `transfer-from` operation.
      */
-    transferFrom(contract: string | Address, sender: string | Address, currency: string | CurrencyID, receiver: string | Address, target: string | Address, amount: string | number | Big): Operation<TransferFromFact>;
+    transferFrom(contract: string | Address, sender: string | Address, currency: string | CurrencyID, receiver: string | Address, target: string | Address, amount: string | number | Big): BaseOperation<TransferFromFact>;
     /**
      * Generate a `transfers-from` operation with multi item to transfer tokens from targets account to receivers.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -85,7 +85,7 @@ export declare class Token extends ContractGenerator {
      * @param {string[] | number[] | Big[]} [amount] - The array of amounts to transfer.
      * @returns `transfer-from` operation.
      */
-    multiTransferFrom(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, receiver: string[] | Address[], target: string[] | Address[], amount: string[] | number[] | Big[]): Operation<TransfersFromFact>;
+    multiTransferFrom(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, receiver: string[] | Address[], target: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<TransfersFromFact>;
     /**
      * Generate an `approve` operation for approving certain amount tokens to approved account.
      * @param {string | Address} [contract] - The contract's address.
@@ -95,7 +95,7 @@ export declare class Token extends ContractGenerator {
      * @param {string | number | Big} [amount] - The amount to approve.
      * @returns `approve` operation
      */
-    approve(contract: string | Address, sender: string | Address, currency: string | CurrencyID, approved: string | Address, amount: string | number | Big): Operation<ApproveFact>;
+    approve(contract: string | Address, sender: string | Address, currency: string | CurrencyID, approved: string | Address, amount: string | number | Big): BaseOperation<ApproveFact>;
     /**
      * Generate an `approves` operation with multi items to approve certain amount tokens to approved account.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -105,7 +105,7 @@ export declare class Token extends ContractGenerator {
      * @param {string[] | number[] | Big[]} [amount] - The array amounts to approve.
      * @returns `approves` operation with multi item
      */
-    multiApprove(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, approved: string[] | Address[], amount: string[] | number[] | Big[]): Operation<ApprovesFact>;
+    multiApprove(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, approved: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<ApprovesFact>;
     /**
      * Get information about the specific token model on the contract.
      * @async

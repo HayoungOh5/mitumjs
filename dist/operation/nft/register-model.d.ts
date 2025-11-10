@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { ContractFact, FactJson } from "../base";
-import { Address } from "../../key";
-import { CurrencyID } from "../../common";
+import { Address } from "../../key/address";
+import type { CurrencyID } from "../../common";
 import { Big, LongString } from "../../types";
 export declare class RegisterModelFact extends ContractFact {
     readonly name: LongString;

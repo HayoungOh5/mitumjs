@@ -7,10 +7,13 @@ import { UpdateHandlerFact } from "./update-handler";
 import { RegisterCurrencyFact } from "./register-currency";
 import { UpdateCurrencyFact } from "./update-currency";
 import { MintFact } from "./mint";
-import { Operation } from "../base";
+import { BaseOperation } from "../base";
 import { CurrencyID } from "../../common";
 import { Big, Generator, IP } from "../../types";
-import { Address, Key, PubKey, Account as AccountType, KeyG } from "../../key";
+import { KeyG } from "../../key";
+import { Address } from "../../key/address";
+import type { Account as AccountType } from "../../key/types";
+import { Key, PubKey } from "../../key/pub";
 type currencyPolicyData = {
     minBalance: string | number | Big;
     feeType: "nil" | "fixed" | "ratio";
@@ -39,7 +42,7 @@ export declare class Currency extends Generator {
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `register-currency` operation.
      */
-    registerCurrency(genesisAddress: string | Address, initialSupply: string | number | Big, currencyID: string | CurrencyID, decimal: string | number | Big, data: currencyPolicyData): Operation<RegisterCurrencyFact>;
+    registerCurrency(genesisAddress: string | Address, initialSupply: string | number | Big, currencyID: string | CurrencyID, decimal: string | number | Big, data: currencyPolicyData): BaseOperation<RegisterCurrencyFact>;
     /**
      * Generate an `update-currency` operation for updating an existing Mitum currency.
      * **Signature of nodes** is required, not a general account signature.
@@ -47,7 +50,7 @@ export declare class Currency extends Generator {
      * @param {currencyPolicyData} [data] - The currency policy data.
      * @returns `update-currency` operation.
      */
-    updateCurrency(currency: string | CurrencyID, data: currencyPolicyData): Operation<UpdateCurrencyFact>;
+    updateCurrency(currency: string | CurrencyID, data: currencyPolicyData): BaseOperation<UpdateCurrencyFact>;
     private buildPolicy;
     /**
      * Generate a `transfer` operation for transferring currency between accounts.
@@ -57,7 +60,7 @@ export declare class Currency extends Generator {
      * @param {string | number | Big} [amount] - The amount to transfer.
      * @returns `transfer` operation.
      */
-    transfer(sender: string | Address, receiver: string | Address, currency: string | CurrencyID, amount: string | number | Big): Operation<TransferFact>;
+    transfer(sender: string | Address, receiver: string | Address, currency: string | CurrencyID, amount: string | number | Big): BaseOperation<TransferFact>;
     /**
      * Generate a `transfer` operation for transferring currency to multiple accounts at once.
      * The length of receivers and amounts must be the same.
@@ -67,7 +70,7 @@ export declare class Currency extends Generator {
      * @param {string[] | number[] | Big[]} [amounts] - An array of amounts to transfer.
      * @returns `transfer` operation.
      */
-    batchTransfer(sender: string | Address, receivers: string[] | Address[], currency: string | CurrencyID, amounts: string[] | number[] | Big[]): Operation<TransferFact>;
+    batchTransfer(sender: string | Address, receivers: string[] | Address[], currency: string | CurrencyID, amounts: string[] | number[] | Big[]): BaseOperation<TransferFact>;
     /**
      * Generate a `withdraw`operation for withdrawing currency from an contract account.
      * Only the owner account of the contract can execute the operation.
@@ -77,7 +80,7 @@ export declare class Currency extends Generator {
      * @param {string | number | Big} [amount] - The withdrawal amount.
      * @returns `withdraw`operation
      */
-    withdraw(sender: string | Address, target: string | Address, currency: string | CurrencyID, amount: string | number | Big): Operation<WithdrawFact>;
+    withdraw(sender: string | Address, target: string | Address, currency: string | CurrencyID, amount: string | number | Big): BaseOperation<WithdrawFact>;
     /**
      * Generate a `withdraw` operation with multiple items for withdrawing currency from multiple contract accounts.
      * Only the owner account of the contract can execute the operation.
@@ -87,7 +90,7 @@ export declare class Currency extends Generator {
      * @param {string | number | Big} [amounts] - The array of withdrawal amount.
      * @returns `withdraw`operation
      */
-    multiWithdraw(sender: string | Address, targets: string[] | Address[], currency: string | CurrencyID, amounts: string[] | number[] | Big[]): Operation<WithdrawFact>;
+    multiWithdraw(sender: string | Address, targets: string[] | Address[], currency: string | CurrencyID, amounts: string[] | number[] | Big[]): BaseOperation<WithdrawFact>;
     /**
      * Generate a `mint` operation for minting currency and allocating it to a receiver.
      * **Signature of nodes** is required, not a general account signature.
@@ -96,7 +99,7 @@ export declare class Currency extends Generator {
      * @param {number} [amount] - The amount to mint.
      * @returns `mint` operation.
      */
-    mint(receiver: string | Address, currency: string | CurrencyID, amount: number): Operation<MintFact>;
+    mint(receiver: string | Address, currency: string | CurrencyID, amount: number): BaseOperation<MintFact>;
     /**
      * Get a list of all currency in the blockchain network.
      * @async
@@ -129,7 +132,7 @@ export declare class Account extends KeyG {
      */
     createWallet(sender: string | Address, currency: string | CurrencyID, amount: string | number | Big, seed?: string, weight?: string | number | Big): {
         wallet: AccountType;
-        operation: Operation<TransferFact>;
+        operation: BaseOperation<TransferFact>;
     };
     /**
      * Generate `n` number of key pairs and the corresponding `transfer` operation to create single-sig accounts.
@@ -141,7 +144,7 @@ export declare class Account extends KeyG {
      */
     createBatchWallet(sender: string | Address, n: number, currency: string | CurrencyID, amount: string | number | Big): {
         wallet: AccountType[];
-        operation: Operation<TransferFact>;
+        operation: BaseOperation<TransferFact>;
     };
     /**
      * Generate a `transfer` operation for the given public key.
@@ -151,7 +154,7 @@ export declare class Account extends KeyG {
      * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
      * @returns `transfer` operation.
      */
-    createAccount(sender: string | Address, key: string | Key | PubKey, currency: string | CurrencyID, amount: string | number | Big): Operation<TransferFact>;
+    createAccount(sender: string | Address, key: string | Key | PubKey, currency: string | CurrencyID, amount: string | number | Big): BaseOperation<TransferFact>;
     /**
      * Generate a `create-account` operation for the multi-signature account.
      * @param {string | Address} [sender] - The sender's address.
@@ -172,7 +175,7 @@ export declare class Account extends KeyG {
      * };
      * const keysArray = [pubkey01, pubkey02];
      */
-    createMultiSig(sender: string | Address, keys: keysType, currency: string | CurrencyID, amount: string | number | Big, threshold: string | number | Big): Operation<CreateAccountFact>;
+    createMultiSig(sender: string | Address, keys: keysType, currency: string | CurrencyID, amount: string | number | Big, threshold: string | number | Big): BaseOperation<CreateAccountFact>;
     /**
      * Generate an `update-key` operation for replace the public keys involved in given address.
      *
@@ -193,7 +196,7 @@ export declare class Account extends KeyG {
      * };
      * const keysArray = [pubkey01, pubkey02];
      */
-    updateKey(sender: string | Address, newKeys: keysType, currency: string | CurrencyID, threshold: string | number | Big): Operation<UpdateKeyFact>;
+    updateKey(sender: string | Address, newKeys: keysType, currency: string | CurrencyID, threshold: string | number | Big): BaseOperation<UpdateKeyFact>;
     /**
      * Sign and send the `transfer` operation to blockchain network to create single-sig account.
      * @async
@@ -218,8 +221,8 @@ export declare class Account extends KeyG {
      */
     touch(privatekey: string | Key, wallet: {
         wallet: AccountType | AccountType[];
-        operation: Operation<TransferFact>;
-    }): Promise<import("../").OperationResponse>;
+        operation: BaseOperation<TransferFact>;
+    }): Promise<import("../api").OperationResponse>;
     /**
      * Get account information for the given address.
      * @async
@@ -300,7 +303,7 @@ export declare class Contract extends KeyG {
      */
     createWallet(sender: string | Address, currency: string | CurrencyID, amount: string | number | Big, seed?: string): {
         wallet: AccountType;
-        operation: Operation<CreateContractAccountFact>;
+        operation: BaseOperation<CreateContractAccountFact>;
     };
     /**
      * Generate `n` number of key pairs and the corresponding `create-contract-account` operation with multiple items.
@@ -312,7 +315,7 @@ export declare class Contract extends KeyG {
      */
     createBatchWallet(sender: string | Address, n: number, currency: string | CurrencyID, amount: string | number | Big): {
         wallet: AccountType[];
-        operation: Operation<CreateContractAccountFact>;
+        operation: BaseOperation<CreateContractAccountFact>;
     };
     /**
      * Generate a `create-contract-account` operation for the given public key.
@@ -322,7 +325,7 @@ export declare class Contract extends KeyG {
      * @param {string | number | Big} [amount] - The initial amount. (to be paid by the sender)
      * @returns `create-contract-account` operation.
      */
-    createAccount(sender: string | Address, key: string | Key | PubKey, currency: string | CurrencyID, amount: string | number | Big): Operation<CreateContractAccountFact>;
+    createAccount(sender: string | Address, key: string | Key | PubKey, currency: string | CurrencyID, amount: string | number | Big): BaseOperation<CreateContractAccountFact>;
     /**
      * Get contract account information for the given address.
      * @async
@@ -347,7 +350,7 @@ export declare class Contract extends KeyG {
      * @param {(string | Address)[]} [handlers] - The array of addresses to be updated as handlers.
      * @returns `update-handler` operation.
      */
-    updateHandler(sender: string | Address, contract: string | Address, currency: string | CurrencyID, handlers: (string | Address)[]): Operation<UpdateHandlerFact>;
+    updateHandler(sender: string | Address, contract: string | Address, currency: string | CurrencyID, handlers: (string | Address)[]): BaseOperation<UpdateHandlerFact>;
     /**
      * Sign and send the `create-contract-account` operation to blockchain network.
      * @async
@@ -373,7 +376,7 @@ export declare class Contract extends KeyG {
      */
     touch(privatekey: string | Key, wallet: {
         wallet: AccountType | AccountType[];
-        operation: Operation<CreateContractAccountFact>;
-    }): Promise<import("../").OperationResponse>;
+        operation: BaseOperation<CreateContractAccountFact>;
+    }): Promise<import("../api").OperationResponse>;
 }
 export {};

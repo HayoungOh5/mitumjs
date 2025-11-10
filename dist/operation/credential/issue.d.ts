@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { OperationFact } from "../base";
 import { CredentialItem } from "./item";
-import { Address } from "../../key";
+import type { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, HintedObject } from "../../types";
 export declare class IssueItem extends CredentialItem {

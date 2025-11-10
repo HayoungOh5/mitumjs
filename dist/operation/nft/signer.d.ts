@@ -1,7 +1,8 @@
 /// <reference types="node" />
 import { Hint } from "../../common";
-import { Address } from "../../key";
-import { Big, Bool, HintedObject, IBuffer, IHintedObject } from "../../types";
+import { Address } from "../../key/address";
+import { Big, Bool } from "../../types";
+import type { HintedObject, IBuffer, IHintedObject } from "../../types";
 export declare class Signer implements IBuffer, IHintedObject {
     readonly hint: Hint;
     readonly account: Address;

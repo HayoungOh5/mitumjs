@@ -1,4 +1,4 @@
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 declare function getModel(api: string | undefined, contract: string | Address, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
 declare function getPointBalance(api: string | undefined, contract: string | Address, account: string | Address, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
 declare const _default: {

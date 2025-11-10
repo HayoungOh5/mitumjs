@@ -1,4 +1,4 @@
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { Big } from "../../types";
 declare function getNFT(api: string | undefined, contract: string | Address, nftIdx: string | number | Big, delegateIP: string | undefined): Promise<import("axios").AxiosResponse<any, any>>;
 declare function getNFTs(api: string | undefined, contract: string | Address, delegateIP: string | undefined, factHash?: string, limit?: number, offset?: number, reverse?: true): Promise<import("axios").AxiosResponse<any, any>>;

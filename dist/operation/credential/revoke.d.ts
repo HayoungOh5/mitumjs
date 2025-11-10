@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { OperationFact } from "../base";
 import { CredentialItem } from "./item";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 export declare class RevokeItem extends CredentialItem {
     constructor(contract: string | Address, holder: string | Address, templateID: string, credentialID: string, currency: string | CurrencyID);

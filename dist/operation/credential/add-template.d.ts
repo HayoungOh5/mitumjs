@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { ContractFact, FactJson } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Bool, ShortDate } from "../../types";
 export declare class AddTemplateFact extends ContractFact {

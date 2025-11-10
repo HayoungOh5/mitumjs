@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { KYCItem } from "./item";
 import { OperationFact } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Bool, HintedObject } from "../../types";
 export declare class AddCustomerItem extends KYCItem {

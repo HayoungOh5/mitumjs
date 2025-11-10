@@ -4,10 +4,10 @@ import { CreateDatasFact } from "./create-datas";
 import { UpdateDataFact } from "./update-data";
 import { UpdateDatasFact } from "./update-datas";
 import { DeleteDataFact } from "./delete-data";
-import { ContractGenerator, Operation } from "../base";
-import { Address } from "../../key";
-import { CurrencyID } from "../../common";
-import { IP, LongString } from "../../types";
+import { ContractGenerator, BaseOperation } from "../base";
+import { Address } from "../../key/address";
+import type { CurrencyID } from "../../common";
+import type { IP, LongString } from "../../types";
 export declare class Storage extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     /**
@@ -18,7 +18,7 @@ export declare class Storage extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `register-model` operation.
      */
-    registerModel(contract: string | Address, sender: string | Address, project: string | LongString, currency: string | CurrencyID): Operation<RegisterModelFact>;
+    registerModel(contract: string | Address, sender: string | Address, project: string | LongString, currency: string | CurrencyID): BaseOperation<RegisterModelFact>;
     /**
      * Generate `create-data` operation to create data with new data key on the storage model.
      * @param {string | Address} [contract] - The contract's address.
@@ -28,7 +28,7 @@ export declare class Storage extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-data` operation
      */
-    createData(contract: string | Address, sender: string | Address, dataKey: string, dataValue: string | LongString, currency: string | CurrencyID): Operation<CreateDataFact>;
+    createData(contract: string | Address, sender: string | Address, dataKey: string, dataValue: string | LongString, currency: string | CurrencyID): BaseOperation<CreateDataFact>;
     /**
      * Generate `create-datas` operation to create multiple data on the storage model.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -38,7 +38,7 @@ export declare class Storage extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-datas` operation
      */
-    createMultiData(contract: string | Address | string[] | Address[], sender: string | Address, dataKeys: string[], dataValues: string[] | LongString[], currency: string | CurrencyID): Operation<CreateDatasFact>;
+    createMultiData(contract: string | Address | string[] | Address[], sender: string | Address, dataKeys: string[], dataValues: string[] | LongString[], currency: string | CurrencyID): BaseOperation<CreateDatasFact>;
     /**
      * Generate `update-data` operation to update data with exist data key on the storage model.
      * @param {string | Address} [contract] - The contract's address.
@@ -48,7 +48,7 @@ export declare class Storage extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `update-data` operation
      */
-    updateData(contract: string | Address, sender: string | Address, dataKey: string, dataValue: string | LongString, currency: string | CurrencyID): Operation<UpdateDataFact>;
+    updateData(contract: string | Address, sender: string | Address, dataKey: string, dataValue: string | LongString, currency: string | CurrencyID): BaseOperation<UpdateDataFact>;
     /**
      * Generate `update-datas` operation to update multiple data on the storage model.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
@@ -58,7 +58,7 @@ export declare class Storage extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `update-datas` operation
      */
-    updateMultiData(contract: string | Address | string[] | Address[], sender: string | Address, dataKeys: string[], dataValues: string[] | LongString[], currency: string | CurrencyID): Operation<UpdateDatasFact>;
+    updateMultiData(contract: string | Address | string[] | Address[], sender: string | Address, dataKeys: string[], dataValues: string[] | LongString[], currency: string | CurrencyID): BaseOperation<UpdateDatasFact>;
     /**
      * Generate `delete-data` operation to delete data on the storage model.
      * @param {string | Address} [contract] - The contract's address.
@@ -67,7 +67,7 @@ export declare class Storage extends ContractGenerator {
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `delete-data` operation
      */
-    deleteData(contract: string | Address, sender: string | Address, dataKey: string, currency: string | CurrencyID): Operation<DeleteDataFact>;
+    deleteData(contract: string | Address, sender: string | Address, dataKey: string, currency: string | CurrencyID): BaseOperation<DeleteDataFact>;
     /**
      * Get information about a storage model on the contract.
      * @async

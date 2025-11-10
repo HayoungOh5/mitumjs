@@ -2,7 +2,7 @@
 import { STOItem } from "./item";
 import { Partition } from "./partition";
 import { OperationFact } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { HintedObject } from "../../types";
 export declare class RevokeOperatorItem extends STOItem {

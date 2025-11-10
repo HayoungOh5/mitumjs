@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { ContractFact, FactJson } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { DAOPolicy } from "./policy";
 export declare class RegisterModelFact extends ContractFact {

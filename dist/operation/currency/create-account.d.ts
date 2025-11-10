@@ -3,7 +3,8 @@ import { CurrencyItem } from "./item";
 import { OperationFact } from "../base";
 import { Amount } from "../../common";
 import { HintedObject } from "../../types";
-import { Keys, Address } from "../../key";
+import { Keys } from "../../key/pub";
+import { Address } from "../../key/address";
 export declare class CreateAccountItem extends CurrencyItem {
     readonly keys: Keys;
     constructor(keys: Keys, amounts: Amount[]);

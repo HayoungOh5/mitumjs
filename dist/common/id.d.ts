@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { IBuffer, IString } from "../types";
+import type { IBuffer, IString } from "../types";
 declare abstract class ID implements IBuffer, IString {
     private s;
     constructor(s: string);

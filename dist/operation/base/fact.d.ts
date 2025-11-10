@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { Item } from "./item";
 import { FactJson } from "./types";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { IBuffer, IHintedObject } from "../../types";
 import { CurrencyID, Token } from "../../common";
 export declare abstract class Fact implements IBuffer, IHintedObject {

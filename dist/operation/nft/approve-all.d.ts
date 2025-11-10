@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { NFTItem } from "./item";
 import { OperationFact } from "../base";
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { HintedObject } from "../../types";
 export declare class ApproveAllItem extends NFTItem {
