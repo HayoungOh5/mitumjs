@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { Address } from "./address";
 import { KeyPairType } from "./types";
 import { Big, HintedObject, IBuffer, IHintedObject, IString } from "../types";

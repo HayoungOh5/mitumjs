@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { NFTItem } from "./item";
 import { OperationFact } from "../base";
 import { Address } from "../../key/address";

@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { CurrencyItem } from "./item";
 import { OperationFact } from "../base";
 import { Amount } from "../../common";

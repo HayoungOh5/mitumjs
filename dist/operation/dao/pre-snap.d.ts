@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { DAOFact } from "./fact";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";

@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import type { FactJson } from "../base";
 import { StorageFact } from "./fact";
 import { LongString } from "../../types";

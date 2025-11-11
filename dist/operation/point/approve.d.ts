@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { PointFact } from "./fact";
 import { Big } from "../../types";
 import { Address } from "../../key/address";

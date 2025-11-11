@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { CurrencyID } from "./id";
+import { Buffer } from "buffer";
 import { Big, HintedObject, IBuffer, IHintedObject } from "../types";
 export declare class Amount implements IBuffer, IHintedObject {
     private hint;

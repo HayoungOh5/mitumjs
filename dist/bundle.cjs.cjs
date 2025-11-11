@@ -119,7 +119,7 @@ const PCODE = {
     },
     MITUM_NETWORK: {
         code: "P0N",
-        keyword: ["handle new operation", "Too Many Requests"],
+        keyword: ["found -", "Too Many Requests"],
         description: "Error from network",
         subject: "",
     },

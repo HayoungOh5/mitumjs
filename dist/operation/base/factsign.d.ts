@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { FS, GeneralFS, NodeFS } from "./types";
 import { IBuffer, FullTimeStamp } from "../../types";
 import { Address, NodeAddress } from "../../key/address";

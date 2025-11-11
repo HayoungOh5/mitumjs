@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import type { Buffer } from "buffer";
 import { HintedObject, IBuffer, IHintedObject, IString } from "../../types";
 export declare abstract class Item implements IBuffer, IString, IHintedObject {
     private hint;

@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { Address } from "../../key/address";
 import type { HintedObject } from "../../types";
 import { LongString } from "../../types";

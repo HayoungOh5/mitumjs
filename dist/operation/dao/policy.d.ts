@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { Whitelist } from "./whitelist";
 import { CurrencyID, Fee } from "../../common";
 import { Big, HintedObject, IBuffer, IHintedObject } from "../../types";

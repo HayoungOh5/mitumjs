@@ -89,7 +89,7 @@ export declare const PCODE: {
     };
     readonly MITUM_NETWORK: {
         readonly code: "P0N";
-        readonly keyword: readonly ["handle new operation", "Too Many Requests"];
+        readonly keyword: readonly ["found -", "Too Many Requests"];
         readonly description: "Error from network";
         readonly subject: "";
     };

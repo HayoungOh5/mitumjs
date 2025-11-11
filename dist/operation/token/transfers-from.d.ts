@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { TokenItem } from "./item";
 import { OperationFact } from "../base";
 import { Big, HintedObject } from "../../types";

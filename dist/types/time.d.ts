@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { IBuffer, IString } from "./interface";
+import { Buffer } from "buffer";
 export declare class TimeStamp implements IBuffer, IString {
     private t;
     constructor(t?: string | number | Date);

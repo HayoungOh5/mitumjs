@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { IBuffer, IString } from "../types";
 export declare class Big implements IBuffer, IString {
     readonly big: bigint;

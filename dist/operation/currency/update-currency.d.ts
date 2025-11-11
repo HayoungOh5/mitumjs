@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { CurrencyPolicy } from "./currency-design";
 import { FactJson, NodeFact } from "../base";
 import { CurrencyID } from "../../common";

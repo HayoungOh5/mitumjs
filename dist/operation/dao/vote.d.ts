@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { DAOFact } from "./fact";
 import { FactJson } from "../base";
 import { Big } from "../../types";

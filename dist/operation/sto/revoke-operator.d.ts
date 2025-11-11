@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { STOItem } from "./item";
 import { Partition } from "./partition";
 import { OperationFact } from "../base";

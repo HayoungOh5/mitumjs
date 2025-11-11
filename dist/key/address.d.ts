@@ -2,6 +2,7 @@
 import { AddressType } from "./types";
 import { CurrencyID } from "../common";
 import { IBuffer, IString } from "../types";
+import { Buffer } from "buffer";
 declare abstract class BaseAddress implements IBuffer, IString {
     private s;
     readonly type: AddressType;

@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { Fact } from "./fact";
 import { SignOption } from "./types";
 import { GeneralFactSign, NodeFactSign } from "./factsign";

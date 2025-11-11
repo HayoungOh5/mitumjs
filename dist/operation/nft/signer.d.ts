@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { Hint } from "../../common";
 import { Address } from "../../key/address";
 import { Big, Bool } from "../../types";

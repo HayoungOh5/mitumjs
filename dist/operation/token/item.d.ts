@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import type { Buffer } from "buffer";
 import { Item } from "../base";
 import { Big } from "../../types";
 import { Address } from "../../key/address";

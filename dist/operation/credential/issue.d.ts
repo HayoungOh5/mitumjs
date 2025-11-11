@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import { OperationFact } from "../base";
 import { CredentialItem } from "./item";
 import type { Address } from "../../key/address";

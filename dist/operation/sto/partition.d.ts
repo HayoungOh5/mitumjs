@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import type { IBuffer, IString } from "../../types";
 export declare class Partition implements IBuffer, IString {
     private s;

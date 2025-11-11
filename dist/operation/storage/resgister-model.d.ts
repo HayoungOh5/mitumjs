@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { Buffer } from "buffer";
 import type { Address } from "../../key/address";
 import { LongString } from "../../types";
 import type { CurrencyID } from "../../common";

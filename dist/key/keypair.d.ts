@@ -2,6 +2,7 @@
 import { HDNodeWallet } from "ethers";
 import { Key } from "./pub";
 import { HDAccount, KeyPairType } from "./types";
+import { Buffer } from "buffer";
 interface IKeyGenerator {
     random(option?: KeyPairType): BaseKeyPair;
     fromPrivateKey(key: string | Key): BaseKeyPair;

@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { IBuffer, IString } from "../types";
+import { Buffer } from "buffer";
 export declare class LongString implements IBuffer, IString {
     private s;
     constructor(s: string);
