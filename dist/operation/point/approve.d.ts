@@ -1,15 +1,18 @@
 /// <reference types="node" />
 import { Buffer } from "buffer";
-import { PointFact } from "./fact";
-import { Big } from "../../types";
+import { PointItem } from "./item";
+import { OperationFact } from "../base";
+import { Big, HintedObject } from "../../types";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
-import { FactJson } from "../base";
-export declare class ApproveFact extends PointFact {
+export declare class ApproveItem extends PointItem {
     readonly approved: Address;
-    readonly amount: Big;
-    constructor(token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID, approved: string | Address, amount: string | number | Big);
+    constructor(contract: string | Address, approved: string | Address, amount: string | number | Big, currency: string | CurrencyID);
     toBuffer(): Buffer;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedObject;
+    toString(): string;
+}
+export declare class ApproveFact extends OperationFact<ApproveItem> {
+    constructor(token: string, sender: string | Address, items: ApproveItem[]);
     get operationHint(): string;
 }

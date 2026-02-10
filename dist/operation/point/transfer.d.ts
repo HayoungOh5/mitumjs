@@ -1,15 +1,18 @@
 /// <reference types="node" />
 import { Buffer } from "buffer";
-import { PointFact } from "./fact";
-import { FactJson } from "../base";
-import { Big } from "../../types";
+import { PointItem } from "./item";
+import { OperationFact } from "../base";
+import { Big, HintedObject } from "../../types";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
-export declare class TransferFact extends PointFact {
+export declare class TransferItem extends PointItem {
     readonly receiver: Address;
-    readonly amount: Big;
-    constructor(token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID, receiver: string | Address, amount: string | number | Big);
+    constructor(contract: string | Address, receiver: string | Address, amount: string | number | Big, currency: string | CurrencyID);
     toBuffer(): Buffer;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedObject;
+    toString(): string;
+}
+export declare class TransferFact extends OperationFact<TransferItem> {
+    constructor(token: string, sender: string | Address, items: TransferItem[]);
     get operationHint(): string;
 }

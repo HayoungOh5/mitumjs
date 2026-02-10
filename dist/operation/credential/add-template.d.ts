@@ -3,9 +3,9 @@ import { Buffer } from "buffer";
 import { ContractFact, FactJson } from "../base";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
-import { Bool, ShortDate } from "../../types";
+import { Bool, ShortDate, URIString } from "../../types";
 export declare class AddTemplateFact extends ContractFact {
-    readonly templateID: string;
+    readonly templateID: URIString;
     readonly templateName: string;
     readonly serviceDate: ShortDate;
     readonly expirationDate: ShortDate;

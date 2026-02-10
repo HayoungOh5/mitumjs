@@ -2,11 +2,8 @@ import { RegisterModelFact } from "./register-model";
 import { MintFact } from "./mint";
 import { BurnFact } from "./burn";
 import { TransferFact } from "./transfer";
-import { TransfersFact } from "./transfers";
 import { ApproveFact } from "./approve";
-import { ApprovesFact } from "./approves";
 import { TransferFromFact } from "./transfer-from";
-import { TransfersFromFact } from "./transfers-from";
 import { ContractGenerator, BaseOperation } from "../base";
 import { Address } from "../../key/address";
 import type { CurrencyID } from "../../common";
@@ -55,15 +52,15 @@ export declare class Point extends ContractGenerator {
      */
     transfer(contract: string | Address, sender: string | Address, currency: string | CurrencyID, receiver: string | Address, amount: string | number | Big): BaseOperation<TransferFact>;
     /**
-     * Generate an `transfers` operation with multi items to transfer points from the sender to a receiver.
+     * Generate an `transfer` operation with multi items to transfer points from the sender to a receiver.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string[] | Address[]} [receiver] - The array of receiver's address.
      * @param {string[] | number[] | Big[]} [amount] - The array of amounts to transfer.
-     * @returns `transfers` operation with multi items.
+     * @returns `transfer` operation with multi items.
      */
-    multiTransfer(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, receiver: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<TransfersFact>;
+    multiTransfer(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, receiver: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<TransferFact>;
     /**
      * Generate a `transfer-from` operation for transferring points from target account to receiver.
      * @param {string | Address} [contract] - The contract's address.
@@ -76,7 +73,7 @@ export declare class Point extends ContractGenerator {
      */
     transferFrom(contract: string | Address, sender: string | Address, currency: string | CurrencyID, receiver: string | Address, target: string | Address, amount: string | number | Big): BaseOperation<TransferFromFact>;
     /**
-     * Generate a `transfers-from` operation with multi item to transfer points from targets account to receivers.
+     * Generate a `transfer-from` operation with multi item to transfer points from targets account to receivers.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
@@ -85,7 +82,7 @@ export declare class Point extends ContractGenerator {
      * @param {string[] | number[] | Big[]} [amount] - The array of amounts to transfer.
      * @returns `transfer-from` operation.
      */
-    multiTransferFrom(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, receiver: string[] | Address[], target: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<TransfersFromFact>;
+    multiTransferFrom(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, receiver: string[] | Address[], target: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<TransferFromFact>;
     /**
      * Generate an `approve` operation for approving certain amount points to approved account.
      * @param {string | Address} [contract] - The contract's address.
@@ -97,15 +94,15 @@ export declare class Point extends ContractGenerator {
      */
     approve(contract: string | Address, sender: string | Address, currency: string | CurrencyID, approved: string | Address, amount: string | number | Big): BaseOperation<ApproveFact>;
     /**
-     * Generate an `approves` operation with multi items to approve certain amount points to approved account.
+     * Generate an `approve` operation with multi items to approve certain amount points to approved account.
      * @param {string | Address | string[] | Address[]} [contract] - A single contract address (converted to an array) or an array of multiple contract addresses.
      * @param {string | Address} [sender] - The sender's address.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @param {string[] | Address[]} [approved] - The array of addresses to approve.
      * @param {string[] | number[] | Big[]} [amount] - The array amounts to approve.
-     * @returns `approves` operation with multi item
+     * @returns `approve` operation with multi item
      */
-    multiApprove(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, approved: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<ApprovesFact>;
+    multiApprove(contract: string | Address | string[] | Address[], sender: string | Address, currency: string | CurrencyID, approved: string[] | Address[], amount: string[] | number[] | Big[]): BaseOperation<ApproveFact>;
     /**
      * Get information about the specific point model on the contract.
      * @async

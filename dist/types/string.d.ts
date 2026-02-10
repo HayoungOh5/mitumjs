@@ -16,6 +16,9 @@ export declare class IP extends LongString {
     constructor(s: string);
     static from(s: string | IP): IP;
 }
-export declare class URIString {
+export declare class URIString implements IBuffer, IString {
+    private s;
     constructor(s: string, name: string);
+    toBuffer(): Buffer;
+    toString(): string;
 }

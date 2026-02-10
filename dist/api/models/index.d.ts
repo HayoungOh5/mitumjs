@@ -7,7 +7,6 @@ declare const _default: {
         nft: {
             getNFT: (api: string | undefined, contract: string | import("../../key/address").Address, nftIdx: string | number | import("../../types").Big, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
             getNFTs: (api: string | undefined, contract: string | import("../../key/address").Address, delegateIP: string | undefined, factHash?: string | undefined, limit?: number | undefined, offset?: number | undefined, reverse?: true | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
-            getNFTCount: (api: string | undefined, contract: string | import("../../key/address").Address, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
             getModel: (api: string | undefined, contract: string | import("../../key/address").Address, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
             getAccountOperators: (api: string | undefined, contract: string | import("../../key/address").Address, account: string | import("../../key/address").Address, delegateIP: string | undefined) => Promise<import("axios").AxiosResponse<any, any>>;
         };
