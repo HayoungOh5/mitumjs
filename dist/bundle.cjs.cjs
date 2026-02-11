@@ -1105,7 +1105,7 @@ var DAO$1 = {
     }
 };
 
-var KYC$1 = {
+var KYC = {
     CREATE_SERVICE: {
         FACT: "mitum-kyc-create-service-operation-fact",
         OPERATION: "mitum-kyc-create-service-operation",
@@ -1132,7 +1132,7 @@ var KYC$1 = {
     }
 };
 
-var STO$1 = {
+var STO = {
     CREATE_SECURITY_TOKEN: {
         ITEM: "mitum-sto-create-security-token-item",
         FACT: "mitum-sto-create-security-token-operation-fact",
@@ -1290,8 +1290,8 @@ var HINT = {
     NFT: NFT$1,
     CREDENTIAL,
     DAO: DAO$1,
-    KYC: KYC$1,
-    STO: STO$1,
+    KYC,
+    STO,
     TIMESTAMP,
     TOKEN,
     POINT,
@@ -15661,7 +15661,7 @@ class CredentialItem extends Item {
     }
 }
 
-let IssueItem$1 = class IssueItem extends CredentialItem {
+class IssueItem extends CredentialItem {
     constructor(contract, holder, templateID, credentialID, value, validFrom, validUntil, did, currency) {
         super(HINT.CREDENTIAL.ISSUE.ITEM, contract, holder, templateID, credentialID, currency);
         this.value = value;
@@ -15693,8 +15693,8 @@ let IssueItem$1 = class IssueItem extends CredentialItem {
     toString() {
         return `${super.toString()}-${this.templateID}-${this.credentialID}`;
     }
-};
-let IssueFact$2 = class IssueFact extends OperationFact {
+}
+let IssueFact$1 = class IssueFact extends OperationFact {
     constructor(token, sender, items) {
         super(HINT.CREDENTIAL.ISSUE.FACT, token, sender, items);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, `each item's combination of contract-templateID-credentialID must be unique`));
@@ -15795,8 +15795,8 @@ class Credential extends ContractGenerator {
             const s = data[key];
             Assert.check(s !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the templateData structure`));
         });
-        return new BaseOperation(this.networkID, new IssueFact$2(TimeStamp$1.new().UTC(), sender, [
-            new IssueItem$1(contract, data.holder, data.templateID, data.credentialID, data.value, data.validFrom, data.validUntil, data.did, currency)
+        return new BaseOperation(this.networkID, new IssueFact$1(TimeStamp$1.new().UTC(), sender, [
+            new IssueItem(contract, data.holder, data.templateID, data.credentialID, data.value, data.validFrom, data.validUntil, data.did, currency)
         ]));
     }
     /**
@@ -16626,726 +16626,6 @@ class DAO extends ContractGenerator {
         Address.from(contract);
         new URIString(proposalID, 'proposalID');
         return await getAPIData(() => contractApi.dao.getVotingStatus(this.api, contract, proposalID, this.delegateIP));
-    }
-}
-
-class STOItem extends Item {
-    constructor(hint, contract, currency) {
-        super(hint);
-        this.contract = Address.from(contract);
-        this.currency = CurrencyID.from(currency);
-    }
-    toBuffer() {
-        return this.contract.toBuffer();
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            contract: this.contract.toString(),
-            currency: this.currency.toString(),
-        };
-    }
-    toString() {
-        return this.contract.toString();
-    }
-}
-
-class Partition {
-    constructor(s) {
-        Assert.check(Config.STO.PARTITION.satisfy(s.length), MitumError.detail(ECODE.STO.INVALID_PARTITION, "partition length out of range"));
-        Assert.check(/^[A-Z0-9][A-Z0-9_\.\!\$\*\@]*[A-Z0-9]$/.test(s), MitumError.detail(ECODE.STO.INVALID_PARTITION, "invalid partition format"));
-        this.s = s;
-    }
-    static from(s) {
-        return s instanceof Partition ? s : new Partition(s);
-    }
-    toBuffer() {
-        return buffer.Buffer.from(this.s);
-    }
-    toString() {
-        return this.s;
-    }
-}
-
-class CreateSecurityTokenItem extends STOItem {
-    constructor(contract, granularity, defaultPartition, currency) {
-        super(HINT.STO.CREATE_SECURITY_TOKEN.ITEM, contract, currency);
-        this.granularity = Big.from(granularity);
-        this.defaultPartition = Partition.from(defaultPartition);
-        Assert.check(this.granularity.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "granularity must be over zero"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            this.contract.toBuffer(),
-            this.granularity.toBuffer("fill"),
-            this.defaultPartition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            granularity: this.granularity.v,
-            default_partition: this.defaultPartition.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.defaultPartition.toString()}`;
-    }
-}
-class CreateSecurityTokenFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.CREATE_SECURITY_TOKEN.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate contract found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.CREATE_SECURITY_TOKEN.OPERATION;
-    }
-}
-
-class IssueItem extends STOItem {
-    constructor(contract, receiver, amount, partition, currency) {
-        super(HINT.STO.ISSUE.ITEM, contract, currency);
-        this.receiver = Address.from(receiver);
-        this.amount = Big.from(amount);
-        this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "receiver is same with contract address"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.receiver.toBuffer(),
-            this.amount.toBuffer(),
-            this.partition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            receiver: this.receiver.toString(),
-            amount: this.amount.toString(),
-            partition: this.partition.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.receiver.toString()}-${this.partition.toString()}`;
-    }
-}
-let IssueFact$1 = class IssueFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.ISSUE.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate contract found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.ISSUE.OPERATION;
-    }
-};
-
-class AuthorizeOperatorItem extends STOItem {
-    constructor(contract, operator, partition, currency) {
-        super(HINT.STO.AUTHORIZE_OPERATOR.ITEM, contract, currency);
-        this.operator = Address.from(operator);
-        this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.operator.toString(), MitumError.detail(ECODE.INVALID_ITEM, "operator is same with contract address"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.operator.toBuffer(),
-            this.partition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            operator: this.operator.toString(),
-            partition: this.partition.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.operator.toString()}-${this.partition.toString()}`;
-    }
-}
-class AuthorizeOperatorFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.AUTHORIZE_OPERATOR.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate operator found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-            Assert.check(item.operator.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "operator is same with sender address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.AUTHORIZE_OPERATOR.OPERATION;
-    }
-}
-
-class RevokeOperatorItem extends STOItem {
-    constructor(contract, operator, partition, currency) {
-        super(HINT.STO.REVOKE_OPERATOR.ITEM, contract, currency);
-        this.operator = Address.from(operator);
-        this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.operator.toString(), MitumError.detail(ECODE.INVALID_ITEM, "operator is same with contract address"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.operator.toBuffer(),
-            this.partition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            operator: this.operator.toString(),
-            partition: this.partition.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.operator.toString()}-${this.partition.toString()}`;
-    }
-}
-class RevokeOperatorFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.REVOKE_OPERATOR.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate operator found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.REVOKE_OPERATOR.OPERATION;
-    }
-}
-
-class RedeemItem extends STOItem {
-    constructor(contract, tokenHolder, amount, partition, currency) {
-        super(HINT.STO.REDEEM.ITEM, contract, currency);
-        this.tokenHolder = Address.from(tokenHolder);
-        this.amount = Big.from(amount);
-        this.partition = Partition.from(partition);
-        Assert.check(this.contract.toString() !== this.tokenHolder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with contract address"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.tokenHolder.toBuffer(),
-            this.amount.toBuffer(),
-            this.partition.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            tokenHolder: this.tokenHolder.toString(),
-            amount: this.amount.toString(),
-            partition: this.partition.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.tokenHolder.toString()}-${this.partition.toString()}`;
-    }
-}
-class RedeemFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.REDEEM.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate token holder found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.REDEEM.OPERATION;
-    }
-}
-
-class SetDocumentFact extends ContractFact {
-    constructor(token, sender, contract, title, uri, documentHash, currency) {
-        super(HINT.STO.SET_DOCUMENT.FACT, token, sender, contract, currency);
-        this.title = title;
-        this.uri = uri;
-        this.documentHash = documentHash;
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            buffer.Buffer.from(this.title),
-            buffer.Buffer.from(this.uri),
-            buffer.Buffer.from(this.documentHash),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            title: this.title,
-            uri: this.uri,
-            documenthash: this.documentHash,
-        };
-    }
-    get operationHint() {
-        return HINT.STO.SET_DOCUMENT.OPERATION;
-    }
-}
-
-class TransferByPartitionItem extends STOItem {
-    constructor(contract, tokenHolder, receiver, partition, amount, currency) {
-        super(HINT.STO.TRANSFER_BY_PARTITION.ITEM, contract, currency);
-        this.tokenHolder = Address.from(tokenHolder);
-        this.receiver = Address.from(receiver);
-        this.partition = Partition.from(partition);
-        this.amount = Big.from(amount);
-        Assert.check(this.contract.toString() !== this.tokenHolder.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with contract address"));
-        Assert.check(this.contract.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "receiver is same with contract address"));
-        Assert.check(this.tokenHolder.toString() !== this.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEM, "tokenHolder is same with receiver address"));
-        Assert.check(this.amount.overZero(), MitumError.detail(ECODE.INVALID_ITEM, "amount must be over zero"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.tokenHolder.toBuffer(),
-            this.receiver.toBuffer(),
-            this.partition.toBuffer(),
-            this.amount.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            tokenholder: this.tokenHolder.toString(),
-            receiver: this.receiver.toString(),
-            partition: this.partition.toString(),
-            amount: this.amount.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.tokenHolder.toString()}-${this.receiver.toString()}-${this.partition.toString()}`;
-    }
-}
-class TransferByPartitionFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.STO.TRANSFER_BY_PARTITION.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate token holder-receiver-partition found in items"));
-        items.forEach(item => {
-            Assert.check(item.contract.toString() !== sender.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with contract address"));
-        });
-    }
-    get operationHint() {
-        return HINT.STO.TRANSFER_BY_PARTITION.OPERATION;
-    }
-}
-
-class STO extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    /**
-     * Generate `authorize-operator` operation to authorize an operator for the security token in specific partition.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [operator] - The operator's address to be authorized.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `authorize-operator` operation.
-     */
-    authorizeOperator(contract, sender, operator, partition, currency) {
-        return new BaseOperation(this.networkID, new AuthorizeOperatorFact(TimeStamp$1.new().UTC(), sender, [
-            new AuthorizeOperatorItem(contract, operator, partition, currency)
-        ]));
-    }
-    /**
-     * Generate `create-security-token` operation to create new security token.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {createServiceData} [data] - Data required to create the security token. The properties of `createServiceData` include:
-     * - {string | number | Big} `granularity` - The basic unit of the token.
-     * - {string | Partition} `defaultPartition` - Capital letters with length between 3 and 10 (can include numbers)
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `create-security-token` operation
-     */
-    createService(contract, sender, data, currency) {
-        const keysToCheck = ['granularity', 'defaultPartition'];
-        keysToCheck.forEach((key) => {
-            Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the createServiceData structure`));
-        });
-        return new BaseOperation(this.networkID, new CreateSecurityTokenFact(TimeStamp$1.new().UTC(), sender, [
-            new CreateSecurityTokenItem(contract, data.granularity, data.defaultPartition, currency)
-        ]));
-    }
-    /**
-     * Generate `issue` operation to issue new security token in specific partition to a specified receiver.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | number | Big} [amount] - The amount of tokens to issue.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `issue` operation.
-     */
-    issue(contract, sender, receiver, partition, amount, currency) {
-        return new BaseOperation(this.networkID, new IssueFact$1(TimeStamp$1.new().UTC(), sender, [
-            new IssueItem(contract, receiver, amount, partition, currency)
-        ]));
-    }
-    /**
-     * Generate `redeem` operation to redeem(burn) a specified amount of security token in a specific partition.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [tokenHolder] - The token holder's address.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | number | Big} [amount] - The amount of tokens to redeem.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `redeem` operation.
-     */
-    redeem(contract, sender, tokenHolder, partition, amount, currency) {
-        return new BaseOperation(this.networkID, new RedeemFact(TimeStamp$1.new().UTC(), sender, [
-            new RedeemItem(contract, tokenHolder, amount, partition, currency)
-        ]));
-    }
-    /**
-     * Generate `revoke` operation to revoke operator's authorization for the security token in specific partition.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [operator] - The operator's address.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `revoke` operation.
-     */
-    revokeOperator(contract, sender, operator, partition, currency) {
-        return new BaseOperation(this.networkID, new RevokeOperatorFact(TimeStamp$1.new().UTC(), sender, [
-            new RevokeOperatorItem(contract, operator, partition, currency)
-        ]));
-    }
-    /**
-     * Generate `setDocumnet` operation to set document for the security token on the contract.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string} [title] - The title of the document.
-     * @param {string} [uri] - The URI of the document.
-     * @param {string} [documentHash] - The hash value of the document.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `setDocumnet` operation.
-     */
-    setDocument(contract, sender, title, uri, documentHash, currency) {
-        return new BaseOperation(this.networkID, new SetDocumentFact(TimeStamp$1.new().UTC(), sender, contract, title, uri, documentHash, currency));
-    }
-    /**
-     * Generate `transfer-by-partition` operation to transfer security token in specific partitions.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {string | Address} [holder] - The token holder's address.
-     * @param {string | Address} [receiver] - The receiver's address.
-     * @param {string | Partition} [partition] - The partition ID.
-     * @param {string | number | Big} [amount] - The amount of tokens to transfer.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `transfer-by-partition` operation
-     */
-    transferByPartition(contract, sender, holder, receiver, partition, amount, currency) {
-        return new BaseOperation(this.networkID, new TransferByPartitionFact(TimeStamp$1.new().UTC(), sender, [
-            new TransferByPartitionItem(contract, holder, receiver, partition, amount, currency)
-        ]));
-    }
-    /**
-     * Get information about the security token on the contract.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @returns `data` of `SuccessResponse` is information of the security token:
-     * - `_hint`: Hint for STO design,
-     * - `granularity`: Basic unit for the token,
-     * - `policy`: {
-     *     _hint: Hint for the STO policy,
-     *     partitions: Array of name of partition,
-     *     aggregate: Total supply amount,
-     *     documents: Array of information about documents with `_hint`, `title`, `hash`, `uri`
-     * }
-     */
-    async getServiceInfo(contract) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.sto.getService(this.api, contract, this.delegateIP));
-    }
-    /**
-     * Get partitions of given holder.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [holder] - The token holder's address.
-     * @returns `data` of `SuccessResponse` is an array of token partition names owned by the holder.
-     */
-    async getPartitionsInfo(contract, holder) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(holder);
-        return await getAPIData(() => contractApi.sto.getPartitions(this.api, contract, holder, this.delegateIP));
-    }
-    /**
-     * Get balance of holder for the partition.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [holder] - The token holder's address.
-     * @param {string} [partition] - The partition ID.
-     * @returns `data` of `SuccessResponse` is the balance of holder for the partition
-     */
-    async getBalanceByHolder(contract, holder, partition) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(holder);
-        return await getAPIData(() => contractApi.sto.getBalanceByHolder(this.api, contract, holder, partition, this.delegateIP));
-    }
-    /**
-     * Get operators of the partition who granted by the holder.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [holder] - The token holder's address.
-     * @param {string} [partition] - The partition ID.
-     * @returns `data` of `SuccessResponse` is information of the operators:
-     * - `operators`: Array of the address of operators.
-     */
-    async getOperatorsByHolder(contract, holder, partition) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(holder);
-        return await getAPIData(() => contractApi.sto.getOperatorsByHolder(this.api, contract, holder, partition, this.delegateIP));
-    }
-    /**
-     * Get balance for a specific partition.
-     * @async
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string} [partition] - The partition ID.
-     * @returns `data` of `SuccessResponse` is the partition balance amount.
-     */
-    async getPartitionBalanceInfo(contract, partition) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        return await getAPIData(() => contractApi.sto.getPartitionBalance(this.api, contract, partition, this.delegateIP));
-    }
-    /**
-     * Get information about the holder who granted to the operator.
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [operator] - The operator's address.
-     * @returns `data` of `SuccessResponse` is information of holder:
-     * - `holders`: Array of the address of holders.
-     */
-    async getAuthorizedInfo(contract, operator) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
-        Address.from(contract);
-        Address.from(operator);
-        return await getAPIData(() => contractApi.sto.getAuthorized(this.api, contract, operator, this.delegateIP));
-    }
-}
-
-class CreateServiceFact extends ContractFact {
-    constructor(token, sender, contract, currency) {
-        super(HINT.KYC.CREATE_SERVICE.FACT, token, sender, contract, currency);
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    get operationHint() {
-        return HINT.KYC.CREATE_SERVICE.OPERATION;
-    }
-}
-
-class KYCItem extends Item {
-    constructor(hint, contract, currency) {
-        super(hint);
-        this.contract = Address.from(contract);
-        this.currency = CurrencyID.from(currency);
-    }
-    toBuffer() {
-        return this.contract.toBuffer();
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            contract: this.contract.toString(),
-            currency: this.currency.toString(),
-        };
-    }
-    toString() {
-        return this.contract.toString();
-    }
-}
-
-class AddControllerItem extends KYCItem {
-    constructor(contract, controller, currency) {
-        super(HINT.KYC.ADD_CONTROLLER.ITEM, contract, currency);
-        this.controller = Address.from(controller);
-        Assert.check(this.contract.toString() !== this.controller.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with controller address"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.controller.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            controller: this.controller.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.controller.toString()}`;
-    }
-}
-class AddControllerFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.KYC.ADD_CONTROLLER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate controller found in items"));
-    }
-    get operationHint() {
-        return HINT.KYC.ADD_CONTROLLER.OPERATION;
-    }
-}
-
-class RemoveControllerItem extends KYCItem {
-    constructor(contract, controller, currency) {
-        super(HINT.KYC.REMOVE_CONTROLLER.ITEM, contract, currency);
-        this.controller = Address.from(controller);
-        Assert.check(this.contract.toString() !== this.controller.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with controller address"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.controller.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            controller: this.controller.toString(),
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.controller.toString()}`;
-    }
-}
-class RemoveControllerFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.KYC.REMOVE_CONTROLLER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate controller found in items"));
-    }
-    get operationHint() {
-        return HINT.KYC.REMOVE_CONTROLLER.OPERATION;
-    }
-}
-
-class AddCustomerItem extends KYCItem {
-    constructor(contract, customer, status, currency) {
-        super(HINT.KYC.ADD_CUSTOMER.ITEM, contract, currency);
-        this.customer = Address.from(customer);
-        this.status = Bool.from(status);
-        Assert.check(this.contract.toString() !== this.customer.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with customer address"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.customer.toBuffer(),
-            this.status.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            customer: this.customer.toString(),
-            status: this.status.v,
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.customer.toString()}`;
-    }
-}
-class AddCustomerFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.KYC.ADD_CUSTOMER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate customer found in items"));
-    }
-    get operationHint() {
-        return HINT.KYC.ADD_CUSTOMER.OPERATION;
-    }
-}
-
-class UpdateCustomerItem extends KYCItem {
-    constructor(contract, customer, status, currency) {
-        super(HINT.KYC.UPDATE_CUSTOMER.ITEM, contract, currency);
-        this.customer = Address.from(customer);
-        this.status = Bool.from(status);
-        Assert.check(this.contract.toString() !== this.customer.toString(), MitumError.detail(ECODE.INVALID_ITEM, "contract is same with customer address"));
-    }
-    toBuffer() {
-        return buffer.Buffer.concat([
-            super.toBuffer(),
-            this.customer.toBuffer(),
-            this.status.toBuffer(),
-            this.currency.toBuffer(),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            customer: this.customer.toString(),
-            status: this.status.v,
-        };
-    }
-    toString() {
-        return `${super.toString()}-${this.customer.toString()}`;
-    }
-}
-class UpdateCustomerFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.KYC.UPDATE_CUSTOMER.FACT, token, sender, items);
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate customer found in items"));
-    }
-    get operationHint() {
-        return HINT.KYC.UPDATE_CUSTOMER.OPERATION;
-    }
-}
-
-class KYC extends ContractGenerator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    createService(contract, sender, currency) {
-        return new BaseOperation(this.networkID, new CreateServiceFact(TimeStamp$1.new().UTC(), sender, contract, currency));
-    }
-    addController(contract, sender, controller, currency) {
-        return new BaseOperation(this.networkID, new AddControllerFact(TimeStamp$1.new().UTC(), sender, [
-            new AddControllerItem(contract, controller, currency)
-        ]));
-    }
-    addCustomer(contract, sender, customer, status, currency) {
-        return new BaseOperation(this.networkID, new AddCustomerFact(TimeStamp$1.new().UTC(), sender, [
-            new AddCustomerItem(contract, customer, status, currency)
-        ]));
-    }
-    removeController(contract, sender, controller, currency) {
-        return new BaseOperation(this.networkID, new RemoveControllerFact(TimeStamp$1.new().UTC(), sender, [
-            new RemoveControllerItem(contract, controller, currency)
-        ]));
-    }
-    updateCustomer(contract, sender, customer, status, currency) {
-        return new BaseOperation(this.networkID, new UpdateCustomerFact(TimeStamp$1.new().UTC(), sender, [new UpdateCustomerItem(contract, customer, status, currency)]));
     }
 }
 
@@ -19242,8 +18522,8 @@ class Mitum extends Generator {
         this._nft = new NFT(this.networkID, this.api, this.delegateIP);
         this._credential = new Credential(this.networkID, this.api, this.delegateIP);
         this._timestamp = new TimeStamp(this.networkID, this.api, this.delegateIP);
-        this._sto = new STO(this.networkID, this.api, this.delegateIP);
-        this._kyc = new KYC(this.networkID, this.api, this.delegateIP);
+        // this._sto = new STO(this.networkID, this.api, this.delegateIP)
+        // this._kyc = new KYC(this.networkID, this.api, this.delegateIP)
         this._dao = new DAO(this.networkID, this.api, this.delegateIP);
         this._token = new Token(this.networkID, this.api, this.delegateIP);
         this._point = new Point(this.networkID, this.api, this.delegateIP);
@@ -19264,8 +18544,8 @@ class Mitum extends Generator {
         this._nft = new NFT(this.networkID, this.api, this.delegateIP);
         this._credential = new Credential(this.networkID, this.api, this.delegateIP);
         this._timestamp = new TimeStamp(this.networkID, this.api, this.delegateIP);
-        this._sto = new STO(this.networkID, this.api, this.delegateIP);
-        this._kyc = new KYC(this.networkID, this.api, this.delegateIP);
+        // this._sto = new STO(this.networkID, this.api, this.delegateIP)
+        // this._kyc = new KYC(this.networkID, this.api, this.delegateIP)
         this._dao = new DAO(this.networkID, this.api, this.delegateIP);
         this._token = new Token(this.networkID, this.api, this.delegateIP);
         this._point = new Point(this.networkID, this.api, this.delegateIP);
@@ -19303,12 +18583,12 @@ class Mitum extends Generator {
     get timestamp() {
         return this._timestamp;
     }
-    get sto() {
-        return this._sto;
-    }
-    get kyc() {
-        return this._kyc;
-    }
+    // get sto(): STO {
+    //     return this._sto
+    // }
+    // get kyc(): KYC {
+    //     return this._kyc
+    // }
     get dao() {
         return this._dao;
     }

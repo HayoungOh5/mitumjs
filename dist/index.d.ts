@@ -2,7 +2,7 @@ import { Generator } from "./types";
 import type { IP } from "./types";
 import { Block, Node } from "./node";
 import { Utils } from "./utils/transformUnit";
-import { Account, Currency, Contract, NFT, DAO, KYC, STO, TimeStamp, Credential, Token, Point, Storage, Payment, Signer } from "./operation";
+import { Account, Currency, Contract, NFT, DAO, TimeStamp, Credential, Token, Point, Storage, Payment, Signer } from "./operation";
 import { Operation } from "./operation/api";
 import { BrowserProvider } from "./providers";
 export declare class Mitum extends Generator {
@@ -16,8 +16,6 @@ export declare class Mitum extends Generator {
     private _nft;
     private _credential;
     private _timestamp;
-    private _sto;
-    private _kyc;
     private _dao;
     private _token;
     private _point;
@@ -39,8 +37,6 @@ export declare class Mitum extends Generator {
     get nft(): NFT;
     get credential(): Credential;
     get timestamp(): TimeStamp;
-    get sto(): STO;
-    get kyc(): KYC;
     get dao(): DAO;
     get token(): Token;
     get point(): Point;
