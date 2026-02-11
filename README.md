@@ -1,101 +1,115 @@
 ## Abstraction
-- __mitum.js__ is the framework of the mitum blockchain written in the typescript language and provided in esm, cjs builded form.
-- The Mitum blockchain operates on a __multi-sig account__ basis. However, for user convenience, __single-sig__ is prioritized.
-- Name the method so that it can be called intuitively from the user's perspective.
-- For consistency, method names use camel notation.
-- To eliminate confusion about the singular/plural representation of method names, we unify the singular notation.
-    
-    The exception is when there are more than one method with the same function and the return value is singular and plural.
-    
-</br> 
 
-</br> 
+- __imfact-sdk-js__ is the official JavaScript/TypeScript SDK for the ImFACT blockchain.
+- The ImFACT blockchain operates on a __multi-sig account__ basis. However, for user convenience, __single-sig__ is prioritized.
+- Method names are designed to be called intuitively from the user's perspective and use camelCase notation for consistency.
 
-## **Install**    
-- Both commonjs (cjs) and ES2020 (esm) are available.
-- For ESM, the runtime environment is detected automatically: XMLHttpRequests are supported in the browser, and HTTP requests are supported in Node.js.
-This project has been developed in the following environments:
-* node version <code>>=</code> 16
-* npm version <code>>=</code> 8
+<br>
 
-Check your node, npm version
-```bash
-$ node --version
-$ npm --version
-```
+## 1. Install (Recommended)
 
-You can install this package locally using this command:
+For all dApp and back-end development, we strongly recommend using the official [npm package](https://www.npmjs.com/package/@imfact/account-abstraction).
+
+This package automatically provides the correct bundle for your environment (Node.js).
 
 ```bash
-$ npm i @mitumjs/mitumjs
+$ npm install @imfact/account-abstraction
 ```
 
 </br> 
 
+## 2. Usage
+
+The SDK provides two main classes, which are both available as **named exports**:
+
+`Mitum`: The main SDK class for core logic. Use this to create operations, generate keys, and communicate directly with a blockchain node (via its **API Endpoint**).
+
 </br> 
 
-## Usage
-- Use the cjs module or esm module as described below.
-
-- This is an example of how to 'require' a CJS module.
+### Node.js Environments (Back-end, Scripts)
     
-    Enter an RPC-URL to communicate with the node.
-    
-    You can omit the RPC-URL if you don't need to communicate with the node (for example, to generate a simple key pair or an operation for signing).
-    
-    You can set the RPC-URL as shown below.
+Use the CommonJS (CJS) bundle via require. This bundle uses Node.js native modules (like the built-in Buffer) for optimal performance.
 
 ```jsx
-// test.cjs
-const { Mitum } = require("@mitumjs/mitumjs");
+// Example: Sending a transaction from a Node.js server
+const { Mitum } = require('@imfact/account-abstraction');
 
-const mitum = new Mitum("http://127.0.0.1:54320");
+// 1. Initialize the Mitum core class with the Node's API Endpoint URL
+//    This requires the Node's API Endpoint for blockchain queries/submissions.
+const mitum = new Mitum("https://testnet.imfact.im"); // API endpoint for imFact Testnet
 
-const keys = mitum.account.etherKeys(2);
-console.log(keys);
+// 2. Create and sign an operation
+const sender = "0x...";
+const privateKey = "...";
+const recipientAddress = "0x...";
+const op = mitum.currency.transfer(sender, recipientAddress, "FACT", 100);
+op.sign(privateKey);
+
+// 3. Send the signed operation directly to the node's API Endpoint
+const sendOperation = async () => {
+  try {
+    const info = await mitum.operation.send(op);
+    console.log(info); // Check the operation sended sucessfully.
+    const receipt = await info.wait(); // Wait for the transaction to be confirmed
+    console.log(receipt);
+  } catch (error) {
+    console.error("Failed to send operation:", error);
+  }
+};
+
+sendOperation();
 ```
 
-- This is an example of how to 'import' a ESM module.
+<br>
 
-```jsx
-// test.mjs
-import Mitum from '@mitumjs/mitumjs';
+## 3. Important Functions Note
 
-const mitum = new Mitum("http://127.0.0.1:54320");
+The operation objects created by the SDK (e.g., `mitum.currency.transfer(...)`) are **raw transaction messages**.
 
-const keys = mitum.account.etherKeys(2);
-console.log(keys);
+- They **require signing** via the `.sign()` method (in Node.js).
+
+- A signed operation must be **sent to the network** via the `mitum.operation.send()` function to be executed.
+
+<br>
+
+## 4. SDK User Guide
+For detailed information on all class, method, and advanced usage, please refer to our official GitBook documentation.
+
+Be sure to check it out before using the SDK.
+
+<a href="https://imfact.gitbook.io/mitum-js-sdk/account-abstraction"> 📖 ImFACT SDK user guide </a>
+
+<br>
+
+## 5. Exports Overview
+
+#### Classes
+* `Mitum` — Main SDK class for core logic and node communication.
+
+#### Types
+* `Fact`, `BaseOperation`, `Item`, `Authentication`, `ProxyPayer`, `Settlement`
+* `Account`, `HDAccount`, `defaultPath`
+
+#### Utilities
+* `isOpFact(object)`
+* `isHintedObject(object)`
+* `isHintedObjectFromUserOp(object)`
+
+
+<br/>
+
+---
+<details> <summary><b>Building from Source (For Contributors)</b></summary>
+
+If you need to contribute to the SDK development, you can build it locally.
+
+```Bash
+$git clone https://github.com/imfact-labs/imfact-sdk-js.git
+$ cd imfact-sdk-js
+$ git pull origin account-abstraction
+$ npm install
+$ npm run build
 ```
+After building, the dist directory will contain bundle.cjs.cjs (for Node.js testing).
 
-> **⚠️ Note**
-> 
-> If you want to specify whether to use CommonJS or ESM in your package, add the following entry in the <code>package.json</code> : </br>
-> <code>"type": "commonjs"</code> or <code>"type": "module"</code>. <br>
-> Also, consider explicitly specifying the file extension as <code>.cjs</code> or <code>.mjs</code> rather than <code>.js</code> in the execution file.</br>
-
-</br>
-
-</br> 
-
-## Functions
-
-**Important note** **about using functions :**
-
-The operation of Mitum is a transaction ‘message’.
-
-Thus if function returns an operation object, remember that you **haven't sent an operation to the network.**
-
-Any operation returned by the function is a raw transaction object, which **requires additional signing.**
-
-Signed operation object must be **sent to the network via the operation.send() function.**
-(This is similar to web3.js and ethers.js).
-
-</br> 
-
-## Mitum JS SDK user guide
-
-Futher etailed information on how to use each function and the contract model can be found at the link below.
-
-*Be sure to check it out before using SDK.* 
-
-<a href="https://socialinfratech.gitbook.io/mitum-js-sdk/introduction/installation"> 📖 Mitum JS SDK user guide </a>
+</details>

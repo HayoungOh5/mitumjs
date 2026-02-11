@@ -265,7 +265,13 @@ const DCODE = {
     IV_AUTH_TYPE: {
         code: "D303",
         keyword: ["Invalid Auth Type"],
-        description: "Occurs when there is a problem with authentication_id in the account abstraction operation.(If verificationMethod of social_login authentication is another social_login)",
+        description: "Occurs when there is a problem with authentication_id in the account abstraction operation.(If verificationMethod of linked authentication is another linked authentication)",
+        subject: ""
+    },
+    CA_RESTRICTED: {
+        code: "D304",
+        keyword: ["Contract account restricted"],
+        description: "Contract account with contract_account_status.balance_status is 1, the owner cannot withdraw.",
         subject: ""
     },
     // Insufficient balance
@@ -914,27 +920,252 @@ var AUTH_DID = {
         FACT: "mitum-did-create-did-operation-fact",
         OPERATION: "mitum-did-create-did-operation",
     },
-    MIGRATE_DID: {
-        ITEM: "mitum-did-migrate-did-item",
-        FACT: "mitum-did-migrate-did-operation-fact",
-        OPERATION: "mitum-did-migrate-did-operation",
-    },
     UPDATE_DID_DOCUMENT: {
         FACT: "mitum-did-update-did-document-operation-fact",
         OPERATION: "mitum-did-update-did-document-operation",
     },
     DOCUMENT: "mitum-did-document",
-    AUTHENTICATION: {
-        ASYMMETRIC_KEY: "mitum-did-asymmetric-key-authentication",
-        SOCIAL_LOGIN: "mitum-did-social-login-authentication",
-    },
+    AUTHENTICATION: "mitum-did-verification-method",
     VERIFICATION_METHOD: "mitum-did-verification-method-authentication"
+};
+
+var CREDENTIAL = {
+    REGISTER_MODEL: {
+        FACT: "mitum-credential-register-model-operation-fact",
+        OPERATION: "mitum-credential-register-model-operation",
+    },
+    ADD_TEMPLATE: {
+        FACT: "mitum-credential-add-template-operation-fact",
+        OPERATION: "mitum-credential-add-template-operation",
+    },
+    ISSUE: {
+        ITEM: "mitum-credential-issue-item",
+        FACT: "mitum-credential-issue-operation-fact",
+        OPERATION: "mitum-credential-issue-operation",
+    },
+    REVOKE: {
+        ITEM: "mitum-credential-revoke-item",
+        FACT: "mitum-credential-revoke-operation-fact",
+        OPERATION: "mitum-credential-revoke-operation",
+    },
+};
+
+var DAO = {
+    DESIGN: "mitum-dao-design",
+    POLICY: "mitum-dao-policy",
+    CALLDATA: {
+        TRANSFER: "mitum-dao-transfer-calldata",
+        GOVERNANCE: "mitum-dao-governance-calldata",
+    },
+    PROPOSAL: {
+        CRYPTO: "mitum-dao-crypto-proposal",
+        BIZ: "mitum-dao-biz-proposal",
+    },
+    WHITELIST: "mitum-dao-whitelist",
+    REGISTER_MODEL: {
+        FACT: "mitum-dao-register-model-operation-fact",
+        OPERATION: "mitum-dao-register-model-operation",
+    },
+    UPDATE_MODEL_CONFIG: {
+        FACT: "mitum-dao-update-model-config-operation-fact",
+        OPERATION: "mitum-dao-update-model-config-operation",
+    },
+    PROPOSE: {
+        FACT: "mitum-dao-propose-operation-fact",
+        OPERATION: "mitum-dao-propose-operation",
+    },
+    CANCEL_PROPOSAL: {
+        FACT: "mitum-dao-cancel-proposal-operation-fact",
+        OPERATION: "mitum-dao-cancel-proposal-operation",
+    },
+    REGISTER: {
+        FACT: "mitum-dao-register-operation-fact",
+        OPERATION: "mitum-dao-register-operation",
+    },
+    PRE_SNAP: {
+        FACT: "mitum-dao-pre-snap-operation-fact",
+        OPERATION: "mitum-dao-pre-snap-operation",
+    },
+    POST_SNAP: {
+        FACT: "mitum-dao-post-snap-operation-fact",
+        OPERATION: "mitum-dao-post-snap-operation",
+    },
+    VOTE: {
+        FACT: "mitum-dao-vote-operation-fact",
+        OPERATION: "mitum-dao-vote-operation",
+    },
+    EXECUTE: {
+        FACT: "mitum-dao-execute-operation-fact",
+        OPERATION: "mitum-dao-execute-operation",
+    }
+};
+
+var NFT = {
+    SIGNER: "mitum-nft-signer",
+    SIGNERS: "mitum-nft-signers",
+    REGISTER_MODEL: {
+        FACT: "mitum-nft-register-model-operation-fact",
+        OPERATION: "mitum-nft-register-model-operation",
+    },
+    UPDATE_MODEL_CONFIG: {
+        FACT: "mitum-nft-update-model-config-operation-fact",
+        OPERATION: "mitum-nft-update-model-config-operation",
+    },
+    MINT: {
+        FORM: "mitum-nft-mint-form",
+        ITEM: "mitum-nft-mint-item",
+        FACT: "mitum-nft-mint-operation-fact",
+        OPERATION: "mitum-nft-mint-operation",
+    },
+    APPROVE_ALL: {
+        ITEM: "mitum-nft-approve-all-item",
+        FACT: "mitum-nft-approve-all-operation-fact",
+        OPERATION: "mitum-nft-approve-all-operation",
+    },
+    APPROVE: {
+        ITEM: "mitum-nft-approve-item",
+        FACT: "mitum-nft-approve-operation-fact",
+        OPERATION: "mitum-nft-approve-operation",
+    },
+    TRANSFER: {
+        ITEM: "mitum-nft-transfer-item",
+        FACT: "mitum-nft-transfer-operation-fact",
+        OPERATION: "mitum-nft-transfer-operation",
+    },
+    ADD_SIGNATURE: {
+        ITEM: "mitum-nft-add-signature-item",
+        FACT: "mitum-nft-add-signature-operation-fact",
+        OPERATION: "mitum-nft-add-signature-operation",
+    }
+};
+
+var PAYMENT = {
+    REGISTER_MODEL: {
+        FACT: "mitum-payment-register-model-operation-fact",
+        OPERATION: "mitum-payment-register-model-operation",
+    },
+    DEPOSIT: {
+        FACT: "mitum-payment-deposit-operation-fact",
+        OPERATION: "mitum-payment-deposit-operation",
+    },
+    UPDATE_ACCOUNT_SETTING: {
+        FACT: "mitum-payment-update-account-setting-operation-fact",
+        OPERATION: "mitum-payment-update-account-setting-operation",
+    },
+    WITHDRAW: {
+        FACT: "mitum-payment-withdraw-operation-fact",
+        OPERATION: "mitum-payment-withdraw-operation",
+    },
+    TRANSFER: {
+        FACT: "mitum-payment-transfer-operation-fact",
+        OPERATION: "mitum-payment-transfer-operation",
+    }
+};
+
+var POINT = {
+    REGISTER_MODEL: {
+        FACT: "mitum-point-register-model-operation-fact",
+        OPERATION: "mitum-point-register-model-operation",
+    },
+    MINT: {
+        FACT: "mitum-point-mint-operation-fact",
+        OPERATION: "mitum-point-mint-operation",
+    },
+    TRANSFER: {
+        ITEM: "mitum-point-transfer-item",
+        FACT: "mitum-point-transfer-operation-fact",
+        OPERATION: "mitum-point-transfer-operation"
+    },
+    APPROVE: {
+        ITEM: "mitum-point-approve-item",
+        FACT: "mitum-point-approve-operation-fact",
+        OPERATION: "mitum-point-approve-operation",
+    },
+    BURN: {
+        FACT: "mitum-point-burn-operation-fact",
+        OPERATION: "mitum-point-burn-operation",
+    },
+    TRANSFER_FROM: {
+        ITEM: "mitum-point-transfer-from-item",
+        FACT: "mitum-point-transfer-from-operation-fact",
+        OPERATION: "mitum-point-transfer-from-operation",
+    }
+};
+
+var STORAGE = {
+    REGISTER_MODEL: {
+        FACT: "mitum-storage-register-model-operation-fact",
+        OPERATION: "mitum-storage-register-model-operation",
+    },
+    CREATE_DATA: {
+        ITEM: "mitum-storage-create-data-item",
+        FACT: "mitum-storage-create-data-operation-fact",
+        OPERATION: "mitum-storage-create-data-operation",
+    },
+    DELETE_DATA: {
+        FACT: "mitum-storage-delete-data-operation-fact",
+        OPERATION: "mitum-storage-delete-data-operation",
+    },
+    UPDATE_DATA: {
+        ITEM: "mitum-storage-update-data-item",
+        FACT: "mitum-storage-update-data-operation-fact",
+        OPERATION: "mitum-storage-update-data-operation",
+    },
+};
+
+var TIMESTAMP = {
+    REGISTER_MODEL: {
+        FACT: "mitum-timestamp-register-model-operation-fact",
+        OPERATION: "mitum-timestamp-register-model-operation",
+    },
+    ISSUE: {
+        FACT: "mitum-timestamp-issue-operation-fact",
+        OPERATION: "mitum-timestamp-issue-operation",
+    },
+};
+
+var TOKEN = {
+    REGISTER_MODEL: {
+        FACT: "mitum-token-register-model-operation-fact",
+        OPERATION: "mitum-token-register-model-operation",
+    },
+    MINT: {
+        FACT: "mitum-token-mint-operation-fact",
+        OPERATION: "mitum-token-mint-operation",
+    },
+    TRANSFER: {
+        ITEM: "mitum-token-transfer-item",
+        FACT: "mitum-token-transfer-operation-fact",
+        OPERATION: "mitum-token-transfer-operation"
+    },
+    APPROVE: {
+        ITEM: "mitum-token-approve-item",
+        FACT: "mitum-token-approve-operation-fact",
+        OPERATION: "mitum-token-approve-operation",
+    },
+    BURN: {
+        FACT: "mitum-token-burn-operation-fact",
+        OPERATION: "mitum-token-burn-operation",
+    },
+    TRANSFER_FROM: {
+        ITEM: "mitum-token-transfer-from-item",
+        FACT: "mitum-token-transfer-from-operation-fact",
+        OPERATION: "mitum-token-transfer-from-operation",
+    }
 };
 
 var HINT = {
     FACT_SIGN: "base-fact-sign",
     CURRENCY,
-    AUTH_DID
+    AUTH_DID,
+    CREDENTIAL,
+    DAO,
+    NFT,
+    PAYMENT,
+    POINT,
+    STORAGE,
+    TIMESTAMP,
+    TOKEN
 };
 
 const KEY = {
@@ -955,10 +1186,22 @@ var SUFFIX = {
 
 class Hint {
     constructor(s) {
-        this.s = s;
+        this.s = Hint.hasVersion(s) ? s : `${s}-${Version.get()}`;
     }
     toString() {
-        return `${this.s}-${Version.get()}`;
+        return this.s;
+    }
+    static hasVersion(s) {
+        const suffix = `-${Version.get()}`;
+        return s.endsWith(suffix);
+    }
+    static fromString(s) {
+        if (!Hint.hasVersion(s)) {
+            throw new Error(`Invalid hinted string (missing version): ${s}`);
+        }
+        const h = Object.create(Hint.prototype);
+        h.s = s;
+        return h;
     }
 }
 
@@ -1312,14 +1555,14 @@ class OperationFact extends Fact {
         return Buffer.concat([
             super.toBuffer(),
             this.sender.toBuffer(),
-            Buffer.concat(this.items.sort(SortFunc).map((i) => i.toBuffer())),
+            Buffer.concat(this.items.map((i) => i.toBuffer())),
         ]);
     }
     toHintedObject() {
         return {
             ...super.toHintedObject(),
             sender: this.sender.toString(),
-            items: this.items.sort(SortFunc).map(i => i.toHintedObject()),
+            items: this.items.map(i => i.toHintedObject()),
         };
     }
 }
@@ -1500,8 +1743,11 @@ class UserOperation extends Operation$1 {
         this.auth = new Authentication$1(this.auth.contract, this.auth.authenticationId, base58.encode(alterSign)); // base58 인코딩 후 저장
     }
     /**
-     * Updates the settlement details of a userOperation.
-     * @param {string | Address} opSender - The opseration sender's address (Bundler's address).
+     * Sets settlement information for the userOperation.
+     * `op_sender` is the account address that will **sign this UserOperation**.
+     * When signatures are added later, the operation **must be signed using the private key of `op_sender`**.
+     * If no `proxyPayer` is specified, `op_sender` will also act as the **fee payer** for this UserOperation.
+     * @param {string | Address} opSender - The account address that acts as the signer .
      * @returns void.
      **/
     setSettlement(opSender) {
@@ -1509,8 +1755,16 @@ class UserOperation extends Operation$1 {
         this.settlement = new Settlement(opSender);
     }
     /**
-     * Updates the proxy payer details of a userOperation.
-     * @param {string | Address} proxyPayer - The proxy payer's address. (address of CA)
+     * Sets a proxy payer for the UserOperation.
+     *
+     * `proxyPayer` is an address of a **CA (Contract Account)** that pays the transaction fee
+     * from its own balance when this userOperation is executed.
+     * The proxy payer **must be preconfigured** to allow this operation:
+     * the `sender` of the UserOperation's Fact must be registered as a
+     * permitted recipient in the proxy payer contract.
+     *
+     * This setting is optional. If not set, the fee will be paid by `settlement.op_sender`.
+     * @param {string | Address} proxyPayer - The CA address that will pay the transaction fee.
      * @returns void.
      **/
     setProxyPayer(proxyPayer) {
@@ -1555,6 +1809,43 @@ class ContractGenerator extends Generator {
     }
 }
 
+let AllowedOperation$1 = class AllowedOperation {
+    constructor(operationHint, contract, requireContract = false) {
+        this.operationHint =
+            Hint.hasVersion(operationHint)
+                ? Hint.fromString(operationHint)
+                : new Hint(operationHint);
+        if (requireContract && !contract) {
+            throw MitumError.detail(ECODE.INVALID_ADDRESS, "Contract address is required for this operation.");
+        }
+        this.contract = contract
+            ? contract instanceof Address
+                ? contract
+                : new Address(contract)
+            : undefined;
+    }
+    toBuffer() {
+        if (!this.contract) {
+            return Buffer.from(this.operationHint.toString());
+        }
+        return Buffer.concat([
+            this.contract.toBuffer(),
+            Buffer.from(this.operationHint.toString())
+        ]);
+    }
+    toHintedObject() {
+        if (!this.contract) {
+            return {
+                operation: this.operationHint.toString()
+            };
+        }
+        return {
+            contract: this.contract.toString(),
+            operation: this.operationHint.toString()
+        };
+    }
+};
+
 const isOpFact = (operation) => {
     return operation instanceof Operation$1;
 };
@@ -1590,33 +1881,33 @@ const isBase58Encoded = (value) => {
     const base58Chars = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
     return base58Chars.test(value);
 };
+const invalidDid = (value, reason) => {
+    throw MitumError.detail(ECODE.AUTH_DID.INVALID_DID, `Invalid DID: "${value}" (${reason})`);
+};
 const validateDID = (did, id) => {
+    if (typeof did !== "string" || did.length === 0) {
+        invalidDid(String(did), "value must be a non-empty string");
+    }
     const parts = did.split(":");
     if (parts.length !== 3) {
-        throw MitumError.detail(ECODE.AUTH_DID.INVALID_DID, "Invalid did structure");
+        invalidDid(did, `expected format "did:<method>:<identifier>"`);
     }
     if (parts[0] !== "did") {
-        throw MitumError.detail(ECODE.AUTH_DID.INVALID_DID, "Invalid did structure");
-    }
-    if (id && (did.match(/#/g) || []).length !== 1) {
-        throw MitumError.detail(ECODE.AUTH_DID.INVALID_DID, "Invalid authentication id");
+        invalidDid(did, `must start with "did:"`);
     }
     if (id) {
+        const hashCount = (did.match(/#/g) || []).length;
+        if (hashCount !== 1) {
+            invalidDid(did, `authentication id (or service id) must contain exactly one "#" (did#key)`);
+        }
         const subparts = parts[2].split("#");
-        if (subparts.length !== 2) {
-            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DID, "Invalid authentication id");
+        if (subparts.length !== 2 || !subparts[0] || !subparts[1]) {
+            invalidDid(did, `invalid authentication (or service id) id format, expected "<did>#<key-id>"`);
         }
-        else {
-            return Address.from(subparts[0]);
-        }
+        return Address.from(subparts[0]);
     }
-    else {
-        return Address.from(parts[2]);
-    }
+    return Address.from(parts[2]);
 };
-// export const isFactInstance = (obj: unknown): obj is Fact => {
-//     return obj instanceof Fact;
-// }
 const isFactJson = (obj) => {
     return (typeof obj === "object" &&
         obj !== null &&
@@ -1627,6 +1918,9 @@ const isFactJson = (obj) => {
 
 class BaseAddress {
     constructor(s, type) {
+        if (typeof s !== "string") {
+            throw MitumError.detail(ECODE.INVALID_ADDRESS, `address must be a string, got ${typeof s}`);
+        }
         this.s = s;
         if (type) {
             this.type = type;
@@ -1942,7 +2236,7 @@ KeyPair.generator = {
         return new KeyPair(Wallet.createRandom().privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
     },
     fromSeed(seed) {
-        StringAssert.with(seed, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"))
+        StringAssert.with(seed, MitumError.detail(ECODE.INVALID_SEED, `Seed must be at least 36 characters long (got ${seed.length})`))
             .satisfyConfig(Config.SEED)
             .excute();
         return new KeyPair(BaseKeyPair.K(seed).toString(16) + SUFFIX.KEY.MITUM.PRIVATE);
@@ -2158,7 +2452,7 @@ async function getAccountByPublicKey(api, publicKey, delegateIP) {
     const apiPath = `${api}/accounts?publickey=${Key.from(publicKey).toString()}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var account = {
+var account$1 = {
     getAccount,
     getAccountByPublicKey,
 };
@@ -2236,7 +2530,7 @@ async function getCurrency(api, currency, delegateIP) {
     const apiPath = `${api}/currency/${CurrencyID.from(currency).toString()}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var currency$1 = {
+var currency$2 = {
     getCurrencies,
     getCurrency,
 };
@@ -2254,27 +2548,27 @@ async function getByDID(api, contract, did, delegateIP) {
     const apiPath = `${url(api, contract)}/document?did=${did}`;
     return !delegateIP ? await fetchAxios.get(apiPath) : await fetchAxios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var authdid = {
+var authdid$1 = {
     getModel,
     getByAccount,
     getByDID
 };
 
 var models = {
-    currency: currency$1,
+    currency: currency$2,
     contract: {
-        authdid
+        authdid: authdid$1
     },
 };
 
-const currency = models.currency;
+const currency$1 = models.currency;
 const contractApi = models.contract;
 var api = {
-    account,
+    account: account$1,
     block,
     node,
     operation: api$1,
-    currency,
+    currency: currency$1,
     contractApi,
 };
 async function getAPIData(f, _links) {
@@ -2868,13 +3162,13 @@ class MintFact extends NodeFact {
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
-            Buffer.concat(this.items.sort(SortFunc).map(it => it.toBuffer())),
+            Buffer.concat(this.items.map(it => it.toBuffer())),
         ]);
     }
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            items: this.items.sort(SortFunc).map(it => it.toHintedObject()),
+            items: this.items.map(it => it.toHintedObject()),
         };
     }
     get operationHint() {
@@ -3536,6 +3830,33 @@ class Contract extends KeyG {
         return await new Operation(this.networkID, this.api, this.delegateIP).send(op);
     }
 }
+const currency = {
+    transfer() {
+        return new AllowedOperation$1(HINT.CURRENCY.TRANSFER.OPERATION);
+    },
+};
+const account = {
+    create() {
+        return new AllowedOperation$1(HINT.CURRENCY.CREATE_ACCOUNT.OPERATION);
+    },
+    updateKey() {
+        return new AllowedOperation$1(HINT.CURRENCY.UPDATE_HANDLER.OPERATION);
+    },
+};
+const contract = {
+    create() {
+        return new AllowedOperation$1(HINT.CURRENCY.CREATE_CONTRACT_ACCOUNT.OPERATION);
+    },
+    withdraw() {
+        return new AllowedOperation$1(HINT.CURRENCY.WITHDRAW.OPERATION);
+    },
+    updateRecipient() {
+        return new AllowedOperation$1(HINT.CURRENCY.UPDATE_RECIPIENT.OPERATION);
+    },
+    updateHandler() {
+        return new AllowedOperation$1(HINT.CURRENCY.UPDATE_HANDLER.OPERATION);
+    },
+};
 
 class AccountAbstraction extends Generator {
     constructor(networkID, api, delegateIP) {
@@ -3546,7 +3867,7 @@ class AccountAbstraction extends Generator {
      * @param {Fact | FactJson} fact - The operation fact or fact property (json) of HintedObject of operation.
      * @param {string | Address} contract - The did contract address.
      * @param {string} authentication_id - The authentication ID for the did contract.
-     * @returns {UserOperation<Fact>} - The created `UserOperation` instance.
+     * @returns {UserOperation<Fact>} The created `UserOperation` instance.
      */
     createUserOperation(fact, contract, authentication_id) {
         return new UserOperation(this.networkID, fact, new Authentication$1(contract, authentication_id, undefined), null, new Settlement(undefined));
@@ -3645,39 +3966,19 @@ class RegisterModelFact extends ContractFact {
 }
 
 class CreateFact extends ContractFact {
-    constructor(token, sender, contract, authType, publicKey, serviceType, serviceEndpoints, currency) {
+    constructor(token, sender, contract, currency) {
         super(HINT.AUTH_DID.CREATE_DID.FACT, token, sender, contract, currency);
-        if (authType === "ECDSA") {
-            this.authType = LongString.from("EcdsaSecp256k1VerificationKey2019");
-        }
-        else if (authType === "EdDSA") {
-            this.authType = LongString.from("Ed25519VerificationKey2018");
-        }
-        else {
-            throw MitumError.detail(ECODE.INVALID_FACT, "invalid authType");
-        }
-        this.publicKey = Key.from(publicKey);
-        this.serviceType = LongString.from(serviceType);
-        this.serviceEndpoints = LongString.from(serviceEndpoints);
         this._hash = this.hashing();
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
-            this.authType.toBuffer(),
-            this.publicKey.toBuffer(),
-            this.serviceType.toBuffer(),
-            this.serviceEndpoints.toBuffer(),
             this.currency.toBuffer(),
         ]);
     }
     toHintedObject() {
         return {
             ...super.toHintedObject(),
-            authType: this.authType.toString(),
-            publicKey: this.publicKey.toString(),
-            serviceType: this.serviceType.toString(),
-            serviceEndpoints: this.serviceEndpoints.toString()
         };
     }
     get operationHint() {
@@ -3685,8 +3986,6 @@ class CreateFact extends ContractFact {
     }
 }
 
-// import { Config } from "../../node"
-// import { Assert, ECODE, MitumError } from "../../error"
 class UpdateDocumentFact extends ContractFact {
     constructor(token, sender, contract, did, document, currency) {
         super(HINT.AUTH_DID.UPDATE_DID_DOCUMENT.FACT, token, sender, contract, currency);
@@ -3714,6 +4013,7 @@ class UpdateDocumentFact extends ContractFact {
     }
 }
 
+const SECP256K1_PUB_PREFIX = new Uint8Array([0xe7, 0x01]);
 class Authentication {
     constructor(hint) {
         this.hint = new Hint(hint);
@@ -3728,133 +4028,206 @@ class Authentication {
     }
 }
 class AsymKeyAuth extends Authentication {
-    constructor(id, authType, controller, publicKey) {
-        super(HINT.AUTH_DID.AUTHENTICATION.ASYMMETRIC_KEY);
+    constructor(id, type, controller, publicKey) {
+        super(HINT.AUTH_DID.AUTHENTICATION);
         this.id = LongString.from(id);
-        this.authType = authType;
+        validateDID(this.id.toString(), true);
+        this.type = type;
         this.controller = LongString.from(controller);
         this.publicKey = new PubKey(publicKey, 100);
+        this.publicKeyMultibase = this.type == "EcdsaSecp256k1VerificationKey2019" ? this.setPublicKeyMultibase(this.publicKey.toString()) : undefined;
+    }
+    setPublicKeyMultibase(pubKey) {
+        const hex = Key.from(pubKey).noSuffix;
+        let compressed;
+        try {
+            compressed = Uint8Array.from(Buffer.from(hex, "hex"));
+        }
+        catch {
+            throw MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid hex public key");
+        }
+        if (compressed.length !== 33) {
+            throw MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid compressed secp256k1 public key length");
+        }
+        let normalizedCompressed;
+        try {
+            const point = secp256k1.Point.fromHex(compressed);
+            normalizedCompressed = point.toRawBytes(true); // compressed
+        }
+        catch {
+            throw MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid secp256k1 public key");
+        }
+        const data = new Uint8Array(SECP256K1_PUB_PREFIX.length + normalizedCompressed.length);
+        data.set(SECP256K1_PUB_PREFIX, 0);
+        data.set(normalizedCompressed, SECP256K1_PUB_PREFIX.length);
+        return "z" + base58.encode(data);
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             this.id.toBuffer(),
-            Buffer.from(this.authType),
+            Buffer.from(this.type),
             this.controller.toBuffer(),
-            Buffer.from(this.publicKey.toString())
+            ...(this.publicKeyMultibase
+                ? [Buffer.from(this.publicKeyMultibase)]
+                : []),
+            Buffer.from(this.publicKey.toString()),
         ]);
     }
     toHintedObject() {
         return {
             ...super.toHintedObject(),
             id: this.id.toString(),
-            authType: this.authType.toString(),
             controller: this.controller.toString(),
-            publicKey: this.publicKey.toString(),
+            type: this.type.toString(),
+            ...(this.publicKeyMultibase
+                ? { publicKeyMultibase: this.publicKeyMultibase }
+                : {}),
+            publicKeyImFact: this.publicKey.toString(),
         };
     }
     toString() {
         return this.id.toString();
     }
 }
-class SocialLoginAuth extends Authentication {
-    constructor(id, 
-    //authType: "VerifiableCredential", 
-    controller, serviceEndpoint, proofMethod) {
-        super(HINT.AUTH_DID.AUTHENTICATION.SOCIAL_LOGIN);
+class LinkedAuth extends Authentication {
+    constructor(id, controller, targetId, allowed) {
+        super(HINT.AUTH_DID.AUTHENTICATION);
         this.id = LongString.from(id);
-        this.authType = "VerifiableCredential";
+        validateDID(this.id.toString(), true);
+        this.type = "LinkedVerificationMethod";
         this.controller = LongString.from(controller);
-        this.serviceEndpoint = LongString.from(serviceEndpoint);
-        this.proofMethod = LongString.from(proofMethod);
+        this.targetId = LongString.from(targetId);
+        validateDID(this.id.toString(), true);
+        this.allowed = allowed.map((el, idx) => {
+            if (el instanceof AllowedOperation$1) {
+                return el;
+            }
+            try {
+                return new AllowedOperation$1(el.operation, el.contract);
+            }
+            catch (e) {
+                throw MitumError.detail(ECODE.INVALID_TYPE, `allowed[${idx}] cannot be converted to AllowedOperation: ${JSON.stringify(el)}`);
+            }
+        });
     }
     toBuffer() {
         return Buffer.concat([
             super.toBuffer(),
             this.id.toBuffer(),
-            Buffer.from(this.authType),
+            Buffer.from(this.type),
             this.controller.toBuffer(),
-            this.serviceEndpoint.toBuffer(),
-            this.proofMethod.toBuffer()
+            this.targetId.toBuffer(),
+            Buffer.concat(this.allowed.map((a) => a.toBuffer())),
         ]);
     }
     toHintedObject() {
         return {
             ...super.toHintedObject(),
             id: this.id.toString(),
-            authType: this.authType.toString(),
             controller: this.controller.toString(),
-            serviceEndpoint: this.serviceEndpoint.toString(),
-            proof: {
-                verificationMethod: this.proofMethod.toString()
-            }
+            type: this.type,
+            targetId: this.targetId.toString(),
+            allowed: this.allowed.map((a) => a.toHintedObject()),
         };
     }
     toString() {
         return this.id.toString();
     }
 }
-class Document {
-    constructor(context, id, authentication, verificationMethod, service_id, service_type, service_end_point) {
-        this.hint = new Hint(HINT.AUTH_DID.DOCUMENT);
-        this.context = LongString.from(context);
+class Service {
+    constructor(id, type, service_end_point) {
         this.id = LongString.from(id);
-        Assert.check(new Set(authentication.map(i => i.toString())).size === authentication.length, MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "duplicate authentication id found in document"));
-        this.authentication = authentication;
-        this.verificationMethod = verificationMethod;
-        this.service_id = LongString.from(service_id);
-        this.service_type = LongString.from(service_type);
+        this.type = LongString.from(type);
         this.service_end_point = LongString.from(service_end_point);
     }
     toBuffer() {
         return Buffer.concat([
-            this.context.toBuffer(),
             this.id.toBuffer(),
-            Buffer.concat(this.authentication.map(el => el.toBuffer())),
-            this.service_id.toBuffer(),
-            this.service_type.toBuffer(),
+            this.type.toBuffer(),
             this.service_end_point.toBuffer(),
         ]);
     }
     toHintedObject() {
         return {
-            _hint: this.hint.toString(),
-            "@context": this.context.toString(),
             id: this.id.toString(),
-            authentication: this.authentication.map(el => el.toHintedObject()),
-            verificationMethod: [],
-            service: {
-                id: this.service_id.toString(),
-                type: this.service_type.toString(),
-                service_end_point: this.service_end_point.toString(),
-            }
+            type: this.type.toString(),
+            service_end_point: this.service_end_point.toString(),
         };
     }
 }
+class Document {
+    constructor(context, id, authentication, verificationMethod, service) {
+        this.hint = new Hint(HINT.AUTH_DID.DOCUMENT);
+        const contexts = Array.isArray(context) ? context : [context];
+        this.context = contexts.map(ctx => LongString.from(ctx));
+        this.id = LongString.from(id);
+        validateDID(this.id.toString());
+        Assert.check(new Set(authentication.map(i => i.toString())).size === authentication.length, MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "duplicate authentication id found in authentication"));
+        this.authentication = authentication;
+        Assert.check(new Set(verificationMethod.map(i => i.toString())).size === verificationMethod.length, MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "duplicate authentication id found in verificationMethod"));
+        this.verificationMethod = verificationMethod;
+        if (service !== undefined) {
+            Assert.check(Array.isArray(service) && service.every(s => s instanceof Service), MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "service must be an array of Service"));
+            this.service = service;
+        }
+    }
+    toBuffer() {
+        return Buffer.concat([
+            Buffer.concat(this.context.map(ctx => ctx.toBuffer())),
+            this.id.toBuffer(),
+            Buffer.concat(this.authentication.map(el => Buffer.concat([el.toBuffer(), Buffer.from([1])]))),
+            Buffer.concat(this.verificationMethod.map(el => el.toBuffer())),
+            ...(this.service
+                ? [Buffer.concat(this.service.map(s => s.toBuffer()))]
+                : []),
+        ]);
+    }
+    toHintedObject() {
+        const obj = {
+            _hint: this.hint.toString(),
+            "@context": this.context.map(ctx => ctx.toString()),
+            id: this.id.toString(),
+            authentication: this.authentication.map(el => el.toHintedObject()),
+            verificationMethod: this.verificationMethod.map(el => el.toHintedObject()),
+        };
+        if (this.service) {
+            obj.service = this.service.map(s => s.toHintedObject());
+        }
+        else {
+            obj.service = null;
+        }
+        return obj;
+    }
+}
 
+const ASYMKEY_TYPE_MAP = {
+    SECP256K1_2019: "EcdsaSecp256k1VerificationKey2019",
+    SECP256K1_IMFACT_2025: "EcdsaSecp256k1VerificationKeyImFact2025",
+};
 const isOfType = (obj, keys) => typeof obj === "object" && obj !== null && keys.every((key) => key in obj);
 const validateAuthentication = (auth, index) => {
-    const baseKeys = ["_hint", "id", "authType", "controller"];
+    const baseKeys = ["_hint", "id", "type", "controller"];
     if (!isOfType(auth, baseKeys)) {
         throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, "Invalid authentication type");
     }
-    if (auth.authType === "Ed25519VerificationKey2018" || auth.authType === "EcdsaSecp256k1VerificationKey2019") {
-        const asymkeyAuthKeys = [...baseKeys, "publicKey"];
+    if (auth.type === "Ed25519VerificationKey2020" || auth.type === "EcdsaSecp256k1VerificationKeyImFact2025" || auth.type === "EcdsaSecp256k1VerificationKey2019") {
+        const asymkeyAuthKeys = [...baseKeys, "publicKeyImFact"];
         if (!isOfType(auth, asymkeyAuthKeys)) {
             throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `Asymkey authentication at index ${index} is missing required fields.`);
         }
     }
-    else if (auth.authType === "VerifiableCredential") {
-        const socialLoginAuthKeys = [...baseKeys, "serviceEndpoint", "proof"];
-        if (!isOfType(auth, socialLoginAuthKeys)) {
-            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `Social login authentication at index ${index} is missing required fields.`);
+    else if (auth.type === "LinkedVerificationMethod") {
+        const linkedAuthKeys = [...baseKeys, "targetId", "allowed"];
+        if (!isOfType(auth, linkedAuthKeys)) {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `Linked authentication at index ${index} is missing required fields.`);
         }
-        if (!auth.proof || typeof auth.proof !== "object") {
-            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `Proof in social login authentication at index ${index} is invalid or missing.`);
+        if (!Array.isArray(auth.allowed)) {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `The 'allowed' field in linked authentication at index ${index} must be an array.`);
         }
-        const proofKeys = ["verificationMethod"];
-        if (!isOfType(auth.proof, proofKeys)) {
-            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `Proof in social login authentication at index ${index} is missing required fields.`);
+        if (typeof auth.targetId !== "string" &&
+            !(auth.targetId instanceof LongString)) {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `Invalid 'targetId' in linked authentication at index ${index}.`);
         }
     }
     else {
@@ -3865,72 +4238,160 @@ class AuthDID extends ContractGenerator {
     constructor(networkID, api, delegateIP) {
         super(networkID, api, delegateIP);
     }
+    normalizeDocument(doc, sender) {
+        if (doc instanceof Document) {
+            return doc;
+        }
+        this.validateDocument(doc);
+        this.isSenderDidOwner(sender, doc.id);
+        if (doc.service) {
+            doc.service.forEach(service => {
+                this.isSenderDidOwner(sender, service.id, true);
+            });
+        }
+        return new Document(doc["@context"], doc.id, doc.authentication.map(el => this.mapAuthToClass(el, sender)), doc.verificationMethod.map(el => this.mapAuthToClass(el, sender)), doc.service
+            ? doc.service.map(service => new Service(service.id, service.type, service.service_end_point))
+            : undefined);
+    }
     validateDocument(doc) {
-        if (typeof doc !== "object" || doc === null) {
-            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "invalid document type");
+        if (!doc || typeof doc !== "object") {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, `document must be an object, got ${doc === null ? "null" : typeof doc}`);
         }
-        const requiredKeys = ["_hint", "@context", "id", "authentication", "verificationMethod", "service"];
-        if (!isOfType(doc, requiredKeys)) {
-            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "The document structure is invalid or missing required fields.");
+        const d = doc;
+        if (typeof d._hint !== "string") {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "_hint must be a string");
         }
-        if (!Array.isArray(doc.authentication)) {
-            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, "The 'authentication' field must be an array.");
+        if (!Array.isArray(d["@context"])) {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "@context must be an array");
         }
-        doc.authentication.forEach((auth, index) => validateAuthentication(auth, index));
-        const serviceKeys = ["id", "type", "service_end_point"];
-        if (!isOfType(doc.service, serviceKeys)) {
-            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "The 'service' structure is invalid or missing required fields.");
+        if (!d.id) {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "id is required");
+        }
+        if (!Array.isArray(d.authentication)) {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "authentication must be an array");
+        }
+        if (!Array.isArray(d.verificationMethod)) {
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "verificationMethod must be an array");
+        }
+        for (const [i, ctx] of d["@context"].entries()) {
+            if (typeof ctx !== "string" && !(ctx instanceof LongString)) {
+                throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, `@context[${i}] must be string or LongString`);
+            }
+        }
+        d.authentication.forEach((auth, i) => {
+            try {
+                validateAuthentication(auth, i);
+            }
+            catch (e) {
+                throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, `invalid authentication[${i}]: ${e.message}`);
+            }
+        });
+        d.verificationMethod.forEach((vm, i) => {
+            try {
+                validateAuthentication(vm, i);
+            }
+            catch (e) {
+                throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, `invalid verificationMethod[${i}]: ${e.message}`);
+            }
+        });
+        if (d.service !== undefined && d.service !== null) {
+            if (!Array.isArray(d.service)) {
+                throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, "service must be an array if provided");
+            }
+            d.service.forEach((el, i) => {
+                if (!el || typeof el !== "object") {
+                    throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, `service[${i}] must be an object`);
+                }
+                if (!el.id || !el.type || !el.service_end_point) {
+                    throw MitumError.detail(ECODE.AUTH_DID.INVALID_DOCUMENT, `service[${i}] requires id, type, service_end_point`);
+                }
+            });
         }
     }
     isSenderDidOwner(sender, did, id) {
         Assert.check(sender.toString() === validateDID(did.toString(), id).toString(), MitumError.detail(ECODE.AUTH_DID.INVALID_DID, `The owner of did must match the sender(${sender.toString()}). check the did (${did.toString()})`));
     }
+    mapAuth(auth) {
+        if (auth.type === "LinkedVerificationMethod") {
+            return new LinkedAuth(auth.id, auth.controller, auth.targetId, auth.allowed);
+        }
+        if (auth.type === "Ed25519VerificationKey2020" ||
+            auth.type === "EcdsaSecp256k1VerificationKey2019" ||
+            auth.type === "EcdsaSecp256k1VerificationKeyImFact2025") {
+            return new AsymKeyAuth(auth.id, auth.type, auth.controller, auth.publicKeyImFact);
+        }
+        throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `Unknown authentication type: ${String(auth.type)}`);
+    }
+    mapAuthToClass(el, sender) {
+        this.isSenderDidOwner(sender, el.id, true);
+        this.isSenderDidOwner(sender, el.controller);
+        return this.mapAuth(el);
+    }
     /**
      * Creates an AsymKeyAuth object with the provided authentication details.
-     * @param {string} id - The unique identifier for the authentication.
-     * @param {"EcdsaSecp256k1VerificationKey2019"} authType - The type of the asymmetric key used for verification.
+     * @param {string} id - The unique identifier for the authentication. <did>#<key-id> format.
+     * @param {"SECP256K1_2019" | "SECP256K1_IMFACT_2025"} option - Short identifier for verification key type.
+     *  - SECP256K1_2019 → EcdsaSecp256k1VerificationKey2019
+     *  - SECP256K1_IMFACT_2025 → EcdsaSecp256k1VerificationKeyImFact2025
      * @param {string} controller - The controller responsible for the authentication.
-     * @param {string} publicKey - The public key associated with the authentication.
-     * @returns {object} An asymkeyAuth object.
+     * @param {string} publicKeyImFact - The public key associated with the authentication.
+     * @returns {AsymKeyAuth} An AsymKeyAuth Instance.
      */
-    writeAsymkeyAuth(id, authType, controller, publicKey) {
-        const auth = new AsymKeyAuth(id, authType, controller, publicKey);
-        return auth.toHintedObject();
+    writeAsymkeyAuth(id, option, controller, publicKeyImFact) {
+        const verificationType = ASYMKEY_TYPE_MAP[option];
+        if (!verificationType) {
+            throw MitumError.detail(ECODE.INVALID_TYPE, `Unsupported asym key option: ${option}`);
+        }
+        return new AsymKeyAuth(id, verificationType, controller, publicKeyImFact);
     }
-    ;
     /**
-     * Creates a SocialLoginAuth object with the provided authentication details.
-     * @param {string} id - The unique identifier for the authentication.
-     * @param {string} controller - The controller responsible for the authentication.
-     * @param {string} serviceEndpoint - The endpoint URL for the social login service.
-     * @param {string} verificationMethod - The verification method used for authentication.
-     * @returns {object} A socialLoginAuth object.
+     * Creates a LinkedAuth object that allows another authentication method
+     * (e.g. OAuth provider, biometric service, custody service)
+     * to act on behalf of the DID subject with restricted operation capabilities.
+     * @param {string} id - The unique identifier of this linked authentication method. <did>#<key-id> format.
+     * @param {string} controller - The DID controller that authorizes this linked authentication.
+     * @param {string} targetId - The identifier of the authentication method that performs verification on behalf of the DID subject.
+     * @param {AllowedOperation[]} allowedOperations - A list of operation capabilities that this linked authentication is permitted to execute on behalf of the DID subject.
+     *   Each allowedOperation must be created using {@link Mitum.allowedOperation}, which provides a safe, typed registry of core-supported operations.
+     *   Example:
+     *   ```ts
+     *   const allowed = [
+     *     Mitum.allowedOperation.currency.transfer(),
+     *     Mitum.allowedOperation.authdid.create(contract),
+     *   ];
+     *   ```
+     * @returns {LinkedAuth} LinkedAuth instance.
      */
-    writeSocialLoginAuth(id, controller, serviceEndpoint, verificationMethod) {
-        const auth = new SocialLoginAuth(id, controller, serviceEndpoint, verificationMethod);
-        return auth.toHintedObject();
+    writeLinkedAuth(id, controller, targetId, allowedOperations) {
+        return new LinkedAuth(id, controller, targetId, allowedOperations);
     }
-    ;
     /**
-     * Creates a DID Document with the provided context, DID ID, authentications, and service details.
-     * Use return value of this method for updateDocument()
-     * @param {string} didContext - The context for the DID document.
-     * @param {string} didID - The unique identifier for the DID.
-     * @param {(asymkeyAuth | socialLoginAuth)[]} authentications - An array of authentication objects.
-     *        Each object must be either an instance of `asymkeyAuth` or `socialLoginAuth`.
-     * @param {string} serviceID - The identifier for the associated service.
-     * @param {string} serviceType - The type of the service (e.g., `LinkedDataProof`, `BlockchainService`).
-     * @param {string} serviceEndPoint - The endpoint URL of the service.
-     * @returns {object} A hinted object representation of the created DID Document. Use it for updateDocument().
+     * The returned Document can be passed directly to `updateDocument()`.
+     * @param {Array<string | LongString>} didContext - DID document contexts (e.g. DID Core context, service-specific context).
+     * @param {string} didID - DID identifier.
+     * @param {Array<AsymKeyAuth | LinkedAuth>} authentications - Authentication methods for the DID.
+     * @param {Array<AsymKeyAuth | LinkedAuth>} [verificationMethods] - Verification methods for the DID.
+     * @param {Array<Object>} [services] - Optional service definitions.
+     * @param {string} services[].id - Service identifier. <did>#<key-id> format.
+     * @param {string} services[].type - Service type.
+     * @param {string} services[].service_end_point - Service endpoint URL.
+     * @returns {Document} DID Document instance.
      */
-    writeDocument(didContext, didID, authentications, serviceID, serviceType, serviceEndPoint) {
-        const document = new Document(didContext, didID, authentications.map((auth) => "proof" in auth
-            ? (validateDID(auth.proof.verificationMethod.toString(), true),
-                new SocialLoginAuth(auth.id, auth.controller, auth.serviceEndpoint, auth.proof.verificationMethod))
-            : new AsymKeyAuth(auth.id, auth.authType, auth.controller, auth.publicKey)), [], serviceID, serviceType, serviceEndPoint);
-        return document.toHintedObject();
+    writeDocument(didContext, didID, authentications, verificationMethods = [], service) {
+        return new Document(didContext, didID, authentications.map((auth, idx) => {
+            if (auth instanceof AsymKeyAuth || auth instanceof LinkedAuth) {
+                return auth;
+            }
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `authentication[${idx}] must be AsymKeyAuth or LinkedAuth instance`);
+        }), verificationMethods.map((auth, idx) => {
+            if (auth instanceof AsymKeyAuth || auth instanceof LinkedAuth) {
+                return auth;
+            }
+            throw MitumError.detail(ECODE.AUTH_DID.INVALID_AUTHENTICATION, `verificationMethods[${idx}] must be AsymKeyAuth or LinkedAuth instance`);
+        }), service
+            ? service.map(el => new Service(el.id, el.type, el.service_end_point))
+            : undefined);
     }
-    ;
     /**
      * Generate a `register-model` operation to register new did registry model on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -3946,42 +4407,53 @@ class AuthDID extends ContractGenerator {
      * Generate `create-did` operation to create new did and did document.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {"ECDSA"} [authType] - The encryption method to use for authentication.
-     * @param {publicKey} [publicKey] - The public key to use for authentication.
-     * @param {serviceType} [serviceType] - The serivce type.
-     * @param {serviceEndpoints} [serviceEndpoints] - The service end point.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-did` operation
      */
-    create(contract, sender, authType, //"ECDSA" | "EdDSA"
-    publicKey, serviceType, serviceEndpoints, currency) {
-        const fact = new CreateFact(TimeStamp.new().UTC(), sender, contract, authType, publicKey, serviceType, serviceEndpoints, currency);
+    create(contract, sender, currency) {
+        const fact = new CreateFact(TimeStamp.new().UTC(), sender, contract, currency);
         return new Operation$1(this.networkID, fact);
     }
     /**
-     * Generate `update-did-document` operation to update the did document.
-     * `document` must comply with document type
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {document} [document] - The did document to be updated.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `update-did-document` operation
+     * Update an Auth DID document using a strongly-typed document object.
+     *
+     * This method expects the `document` parameter to conform to the SDK's
+     * internal `document` type. All authentication entries must already be
+     * validated and structurally correct, and will be converted into
+     * corresponding class instances (`AsymKeyAuth`, `LinkedAuth`, etc.).
+     *
+     * Ownership checks are enforced:
+     * - The sender must be the owner of the document DID.
+     * - The sender must also own any controller or service DID referenced
+     *   in the document
+     * @param contract - The Auth DID contract address.
+     * @param sender - The transaction sender; must be the owner of the document DID.
+     * @param document - A validated document object matching the SDK `document` type.
+     * @param currency - Currency ID used for the operation fee.
+     * @returns An `Operation` instance that can be signed and submitted to the network.
      */
     updateDocument(contract, sender, document, currency) {
-        this.validateDocument(document);
-        this.isSenderDidOwner(sender, document.id);
-        this.isSenderDidOwner(sender, document.service.id);
-        const fact = new UpdateDocumentFact(TimeStamp.new().UTC(), sender, contract, document.id.toString(), new Document(document["@context"], document.id, document.authentication.map((el) => {
-            this.isSenderDidOwner(sender, el.id, true);
-            this.isSenderDidOwner(sender, el.controller);
-            if ("proof" in el) {
-                validateDID(el.proof.verificationMethod.toString(), true);
-                return new SocialLoginAuth(el.id, el.controller, el.serviceEndpoint, el.proof.verificationMethod);
-            }
-            else {
-                return new AsymKeyAuth(el.id, el.authType, el.controller, el.publicKey);
-            }
-        }), document.verificationMethod, document.service.id, document.service.type, document.service.service_end_point), currency);
+        const normalized = this.normalizeDocument(document, sender);
+        const fact = new UpdateDocumentFact(TimeStamp.new().UTC(), sender, contract, normalized.id.toString(), normalized, currency);
+        return new Operation$1(this.networkID, fact);
+    }
+    /**
+     * Update an Auth DID document from a raw JSON object.
+     *
+     * This method accepts an untyped document (e.g. parsed JSON), validates
+     * its structure and authentication entries, and converts it into internal
+     * SDK classes before creating the operation.
+     *
+     * Use this method when the document comes from external or untrusted sources.
+     * @param contract - The Auth DID contract address.
+     * @param sender - The transaction sender; must own the document DID.
+     * @param documentJson - A raw JSON object representing an Auth DID document.
+     * @param currency - Currency ID used for the operation fee.
+     * @returns An `Operation` instance ready to be signed and submitted.
+     */
+    updateDocumentByDocumentJson(contract, sender, documentJson, currency) {
+        const normalized = this.normalizeDocument(documentJson, sender);
+        const fact = new UpdateDocumentFact(TimeStamp.new().UTC(), sender, contract, normalized.id.toString(), normalized, currency);
         return new Operation$1(this.networkID, fact);
     }
     /**
@@ -4020,19 +4492,7 @@ class AuthDID extends ContractGenerator {
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | LongString} [did] - The did value.
-     * @returns `data` of `SuccessResponse` is did document:
-     * - `did_document`: object
-     * - - `'@context'`: The context of did,
-     * - - `id`: The did value,
-     * - - `authentication`: object,
-     * - - - `id`: The did value,
-     * - - - `type`: The type of authentication
-     * - - - `controller`: The did value
-     * - - - `publicKey`: The publickey used when did create,
-     * - - `service`: object
-     * - - - `id`: The did value
-     * - - - `type`: The type of did service,
-     * - - - `service_end_point`: The end point of did service,
+     * @returns `data` of `SuccessResponse` is did document.
      */
     async getDocument(contract, did) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
@@ -4042,6 +4502,17 @@ class AuthDID extends ContractGenerator {
         return response;
     }
 }
+const authdid = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.AUTH_DID.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    create(contract) {
+        return new AllowedOperation$1(HINT.AUTH_DID.CREATE_DID.OPERATION, contract, true);
+    },
+    updateDocument(contract) {
+        return new AllowedOperation$1(HINT.AUTH_DID.UPDATE_DID_DOCUMENT.OPERATION, contract, true);
+    },
+};
 
 class Signer extends Generator {
     constructor(networkID, api) {
@@ -4361,7 +4832,160 @@ class OperationResponse extends Operation {
         Assert.check(stop, MitumError.detail(ECODE.TIME_OUT, `timeout reached (${maxTimeout / 1000} seconds).`));
     }
 }
+const credential = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.CREDENTIAL.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    addTemplate(contract) {
+        return new AllowedOperation$1(HINT.CREDENTIAL.ADD_TEMPLATE.OPERATION, contract, true);
+    },
+    issue(contract) {
+        return new AllowedOperation$1(HINT.CREDENTIAL.ISSUE.OPERATION, contract, true);
+    },
+    revoke(contract) {
+        return new AllowedOperation$1(HINT.CREDENTIAL.REVOKE.OPERATION, contract, true);
+    },
+};
+const dao = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.DAO.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    updateModelConfig(contract) {
+        return new AllowedOperation$1(HINT.DAO.UPDATE_MODEL_CONFIG.OPERATION, contract, true);
+    },
+    propose(contract) {
+        return new AllowedOperation$1(HINT.DAO.PROPOSE.OPERATION, contract, true);
+    },
+    cancelProposal(contract) {
+        return new AllowedOperation$1(HINT.DAO.CANCEL_PROPOSAL.OPERATION, contract, true);
+    },
+    register(contract) {
+        return new AllowedOperation$1(HINT.DAO.REGISTER.OPERATION, contract, true);
+    },
+    preSnap(contract) {
+        return new AllowedOperation$1(HINT.DAO.PRE_SNAP.OPERATION, contract, true);
+    },
+    postSnap(contract) {
+        return new AllowedOperation$1(HINT.DAO.POST_SNAP.OPERATION, contract, true);
+    },
+    vote(contract) {
+        return new AllowedOperation$1(HINT.DAO.VOTE.OPERATION, contract, true);
+    },
+    execute(contract) {
+        return new AllowedOperation$1(HINT.DAO.EXECUTE.OPERATION, contract, true);
+    },
+};
+const nft = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.NFT.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    updateModelConfig(contract) {
+        return new AllowedOperation$1(HINT.NFT.UPDATE_MODEL_CONFIG.OPERATION, contract, true);
+    },
+    mint(contract) {
+        return new AllowedOperation$1(HINT.NFT.MINT.OPERATION, contract, true);
+    },
+    approveAll(contract) {
+        return new AllowedOperation$1(HINT.NFT.APPROVE_ALL.OPERATION, contract, true);
+    },
+    approve(contract) {
+        return new AllowedOperation$1(HINT.NFT.APPROVE.OPERATION, contract, true);
+    },
+    transfer(contract) {
+        return new AllowedOperation$1(HINT.NFT.TRANSFER.OPERATION, contract, true);
+    },
+    addSignature(contract) {
+        return new AllowedOperation$1(HINT.NFT.ADD_SIGNATURE.OPERATION, contract, true);
+    },
+};
+const payment = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.PAYMENT.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    deposit(contract) {
+        return new AllowedOperation$1(HINT.PAYMENT.DEPOSIT.OPERATION, contract, true);
+    },
+    updateAccountSetting(contract) {
+        return new AllowedOperation$1(HINT.PAYMENT.UPDATE_ACCOUNT_SETTING.OPERATION, contract, true);
+    },
+    withdraw(contract) {
+        return new AllowedOperation$1(HINT.PAYMENT.WITHDRAW.OPERATION, contract, true);
+    },
+    transfer(contract) {
+        return new AllowedOperation$1(HINT.PAYMENT.REGISTER_MODEL.OPERATION, contract, true);
+    },
+};
+const point = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.POINT.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    mint(contract) {
+        return new AllowedOperation$1(HINT.POINT.MINT.OPERATION, contract, true);
+    },
+    transfer(contract) {
+        return new AllowedOperation$1(HINT.POINT.TRANSFER.OPERATION, contract, true);
+    },
+    approve(contract) {
+        return new AllowedOperation$1(HINT.POINT.APPROVE.OPERATION, contract, true);
+    },
+    burn(contract) {
+        return new AllowedOperation$1(HINT.POINT.BURN.OPERATION, contract, true);
+    },
+    transferFrom(contract) {
+        return new AllowedOperation$1(HINT.POINT.TRANSFER_FROM.OPERATION, contract, true);
+    },
+};
+const storage = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.STORAGE.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    createData(contract) {
+        return new AllowedOperation$1(HINT.STORAGE.CREATE_DATA.OPERATION, contract, true);
+    },
+    deleteData(contract) {
+        return new AllowedOperation$1(HINT.STORAGE.DELETE_DATA.OPERATION, contract, true);
+    },
+    updateData(contract) {
+        return new AllowedOperation$1(HINT.STORAGE.UPDATE_DATA.OPERATION, contract, true);
+    },
+};
+const timestamp = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.TIMESTAMP.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    issue(contract) {
+        return new AllowedOperation$1(HINT.TIMESTAMP.ISSUE.OPERATION, contract, true);
+    },
+};
+const token = {
+    registerModel(contract) {
+        return new AllowedOperation$1(HINT.TOKEN.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    mint(contract) {
+        return new AllowedOperation$1(HINT.TOKEN.MINT.OPERATION, contract, true);
+    },
+    transfer(contract) {
+        return new AllowedOperation$1(HINT.TOKEN.TRANSFER.OPERATION, contract, true);
+    },
+    approve(contract) {
+        return new AllowedOperation$1(HINT.TOKEN.APPROVE.OPERATION, contract, true);
+    },
+    burn(contract) {
+        return new AllowedOperation$1(HINT.TOKEN.BURN.OPERATION, contract, true);
+    },
+    transferFrom(contract) {
+        return new AllowedOperation$1(HINT.TOKEN.TRANSFER_FROM.OPERATION, contract, true);
+    },
+};
 
+const AllowedOperation = {
+    currency,
+    account,
+    contract,
+    authdid,
+    credential, dao, nft, payment,
+    point, storage, timestamp, token
+};
 class Mitum extends Generator {
     constructor(api, delegateIP) {
         super(NetworkID.get(), api, delegateIP);
@@ -4374,9 +4998,6 @@ class Mitum extends Generator {
         this._contract = new Contract(this.networkID, this.api, this.delegateIP);
         this._authdid = new AuthDID(this.networkID, this.api, this.delegateIP);
         this._accountAbstraction = new AccountAbstraction(this.networkID, this.api, this.delegateIP);
-        this.ECODE = ECODE;
-        this.PCODE = PCODE;
-        this.DCODE = DCODE;
         this._utils = new Utils();
     }
     refresh() {
@@ -4464,5 +5085,10 @@ class Mitum extends Generator {
         return this.networkID;
     }
 }
+Mitum.allowedOperation = AllowedOperation;
+Mitum.ECODE = ECODE;
+Mitum.PCODE = PCODE;
+Mitum.DCODE = DCODE;
 
 export { Mitum, Mitum as default };
+//# sourceMappingURL=bundle.esm.mjs.map
