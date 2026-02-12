@@ -113,10 +113,10 @@ const PCODE = {
         description: "Ambiguous error",
         subject: "",
     },
-    MITUM_CORE: {
-        code: "P0M",
-        keyword: [""],
-        description: "Error from Mitum core",
+    MITUM_NETWORK: {
+        code: "P0N",
+        keyword: ["Too Many Requests"],
+        description: "Error from network",
         subject: "",
     },
     UNDEFINED: {
@@ -330,6 +330,12 @@ const DCODE = {
         description: "The state already exists on the blockchain.",
         subject: ""
     },
+    EXIST_FACT_HASH: {
+        code: "D509",
+        keyword: ["already in state"],
+        description: "The operation exists on the blockchain. Check it using fact hash",
+        subject: ""
+    }
 };
 const assignCodeFromErrorMessage = (errorMessage) => {
     const findCode = (codeSet, errorMessage) => {
@@ -4195,7 +4201,7 @@ class Document {
             obj.service = this.service.map(s => s.toHintedObject());
         }
         else {
-            obj.service = null;
+            obj.service = [];
         }
         return obj;
     }
