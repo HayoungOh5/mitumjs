@@ -8,10 +8,12 @@ declare const _default: {
         OPERATION: string;
     };
     TRANSFER: {
+        ITEM: string;
         FACT: string;
         OPERATION: string;
     };
     APPROVE: {
+        ITEM: string;
         FACT: string;
         OPERATION: string;
     };
@@ -20,6 +22,7 @@ declare const _default: {
         OPERATION: string;
     };
     TRANSFER_FROM: {
+        ITEM: string;
         FACT: string;
         OPERATION: string;
     };

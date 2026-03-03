@@ -8,7 +8,7 @@ import { UpdateRecipientFact } from "./update-recipient";
 import { RegisterCurrencyFact } from "./register-currency";
 import { UpdateCurrencyFact } from "./update-currency";
 import { MintFact } from "./mint";
-import { Operation } from "../base";
+import { Operation, AllowedOperation } from "../base";
 import { CurrencyID } from "../../common";
 import { Big, Generator, IP } from "../../types";
 import { Address, Key, PubKey, Account as AccountType, KeyG } from "../../key";
@@ -386,4 +386,17 @@ export declare class Contract extends KeyG {
         operation: Operation<CreateContractAccountFact>;
     }): Promise<import("../").OperationResponse>;
 }
+export declare const currency: {
+    transfer(): AllowedOperation;
+};
+export declare const account: {
+    create(): AllowedOperation;
+    updateKey(): AllowedOperation;
+};
+export declare const contract: {
+    create(): AllowedOperation;
+    withdraw(): AllowedOperation;
+    updateRecipient(): AllowedOperation;
+    updateHandler(): AllowedOperation;
+};
 export {};

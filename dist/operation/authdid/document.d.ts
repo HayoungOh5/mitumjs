@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { HintedObject, IBuffer, IHintedObject, LongString } from "../../types";
 import { Key } from "../../key";
+import { AllowedOperation } from "../base";
 declare abstract class Authentication implements IBuffer, IHintedObject {
     private hint;
     constructor(hint: string);
@@ -9,21 +10,23 @@ declare abstract class Authentication implements IBuffer, IHintedObject {
 }
 export declare class AsymKeyAuth extends Authentication {
     readonly id: LongString;
-    readonly authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019";
+    readonly type: "Ed25519VerificationKey2020" | "EcdsaSecp256k1VerificationKey2019" | "EcdsaSecp256k1VerificationKeyImFact2025";
     readonly controller: LongString;
     readonly publicKey: Key;
-    constructor(id: string | LongString, authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019", controller: string | LongString, publicKey: string | Key);
+    readonly publicKeyMultibase: undefined | string;
+    constructor(id: string | LongString, type: "Ed25519VerificationKey2020" | "EcdsaSecp256k1VerificationKey2019" | "EcdsaSecp256k1VerificationKeyImFact2025", controller: string | LongString, publicKey: string | Key);
+    private setPublicKeyMultibase;
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
     toString(): string;
 }
-export declare class SocialLoginAuth extends Authentication {
+export declare class LinkedAuth extends Authentication {
     readonly id: LongString;
-    readonly authType: "VerifiableCredential";
+    readonly type: "LinkedVerificationMethod";
     readonly controller: LongString;
-    readonly serviceEndpoint: LongString;
-    readonly proofMethod: LongString;
-    constructor(id: string | LongString, controller: string | LongString, serviceEndpoint: string | LongString, proofMethod: string | LongString);
+    readonly targetId: LongString;
+    readonly allowed: AllowedOperation[];
+    constructor(id: string | LongString, controller: string | LongString, targetId: string | LongString, allowed: AllowedOperation[]);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
     toString(): string;
@@ -38,14 +41,12 @@ export declare class Service implements IBuffer, IHintedObject {
 }
 export declare class Document implements IBuffer, IHintedObject {
     private hint;
-    readonly context: LongString;
+    readonly context: LongString[];
     readonly id: LongString;
-    readonly authentication: (AsymKeyAuth | SocialLoginAuth)[];
-    readonly verificationMethod: [];
-    readonly service_id: LongString;
-    readonly service_type: LongString;
-    readonly service_end_point: LongString;
-    constructor(context: string | LongString, id: string | LongString, authentication: (AsymKeyAuth | SocialLoginAuth)[], verificationMethod: [], service_id: string | LongString, service_type: string | LongString, service_end_point: string | LongString);
+    readonly authentication: (AsymKeyAuth | LinkedAuth)[];
+    readonly verificationMethod: (AsymKeyAuth | LinkedAuth)[];
+    readonly service?: Service[];
+    constructor(context: string | LongString | (string | LongString)[], id: string | LongString, authentication: (AsymKeyAuth | LinkedAuth)[], verificationMethod: (AsymKeyAuth | LinkedAuth)[], service?: Service[]);
     toBuffer(): Buffer;
     toHintedObject(): HintedObject;
 }

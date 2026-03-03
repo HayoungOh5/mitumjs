@@ -5,7 +5,7 @@ import { IBuffer, IString } from "../types";
 declare abstract class BaseAddress implements IBuffer, IString {
     private s;
     readonly type: AddressType;
-    constructor(s: string, type?: AddressType);
+    constructor(s: unknown, type?: AddressType);
     toBuffer(): Buffer;
     toString(): string;
 }

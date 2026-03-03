@@ -3,17 +3,19 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
-    CREATE_DATA: {
-        ITEM: string;
+    DEPOSIT: {
         FACT: string;
         OPERATION: string;
     };
-    DELETE_DATA: {
+    UPDATE_ACCOUNT_SETTING: {
         FACT: string;
         OPERATION: string;
     };
-    UPDATE_DATA: {
-        ITEM: string;
+    WITHDRAW: {
+        FACT: string;
+        OPERATION: string;
+    };
+    TRANSFER: {
         FACT: string;
         OPERATION: string;
     };

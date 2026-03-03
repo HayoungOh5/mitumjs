@@ -75,10 +75,10 @@ export declare const PCODE: {
         readonly description: "Ambiguous error";
         readonly subject: "";
     };
-    readonly MITUM_CORE: {
-        readonly code: "P0M";
-        readonly keyword: readonly [""];
-        readonly description: "Error from Mitum core";
+    readonly MITUM_NETWORK: {
+        readonly code: "P0N";
+        readonly keyword: readonly ["Too Many Requests"];
+        readonly description: "Error from network";
         readonly subject: "";
     };
     readonly UNDEFINED: {
@@ -199,7 +199,7 @@ export declare const DCODE: {
     };
     readonly IV_SIGN: {
         readonly code: "D201";
-        readonly keyword: readonly ["Invalid signing"];
+        readonly keyword: readonly ["Invalid signing", "BaseNodeSign"];
         readonly description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold";
         readonly subject: "";
     };
@@ -224,7 +224,13 @@ export declare const DCODE: {
     readonly IV_AUTH_TYPE: {
         readonly code: "D303";
         readonly keyword: readonly ["Invalid Auth Type"];
-        readonly description: "Occurs when there is a problem with authentication_id in the account abstraction operation.(If verificationMethod of social_login authentication is another social_login)";
+        readonly description: "Occurs when there is a problem with authentication_id in the account abstraction operation.(If verificationMethod of linked authentication is another linked authentication)";
+        readonly subject: "";
+    };
+    readonly CA_RESTRICTED: {
+        readonly code: "D304";
+        readonly keyword: readonly ["Contract account restricted"];
+        readonly description: "Contract account with contract_account_status.balance_status is 1, the owner cannot withdraw.";
         readonly subject: "";
     };
     readonly INSUFF_BAL: {
@@ -279,6 +285,12 @@ export declare const DCODE: {
         readonly code: "D508";
         readonly keyword: readonly ["State exist"];
         readonly description: "The state already exists on the blockchain.";
+        readonly subject: "";
+    };
+    readonly EXIST_FACT_HASH: {
+        readonly code: "D509";
+        readonly keyword: readonly ["already in state"];
+        readonly description: "The operation exists on the blockchain. Check it using fact hash";
         readonly subject: "";
     };
 };

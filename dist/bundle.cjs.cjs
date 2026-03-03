@@ -13,6 +13,7 @@ var sha256$1 = require('@noble/hashes/sha256');
 var secp256k1 = require('@noble/secp256k1');
 var crypto = require('crypto');
 var elliptic = require('elliptic');
+var buffer = require('buffer');
 
 function _interopNamespaceDefault(e) {
     var n = Object.create(null);
@@ -254,7 +255,7 @@ const DCODE = {
     // Related to signature
     IV_SIGN: {
         code: "D201",
-        keyword: ["Invalid signing"],
+        keyword: ["Invalid signing", "BaseNodeSign"],
         description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold",
         subject: ""
     },
@@ -903,7 +904,6 @@ var CURRENCY = {
         OPERATION: "mitum-currency-update-currency-operation",
     },
     MINT: {
-        ITEM: "mitum-currency-mint-item",
         FACT: "mitum-currency-mint-operation-fact",
         OPERATION: "mitum-currency-mint-operation",
     },
@@ -3149,14 +3149,16 @@ class UpdateCurrencyFact extends NodeFact {
     }
 }
 
-class MintItem extends Item {
-    constructor(receiver, amount) {
-        super(HINT.CURRENCY.MINT.ITEM);
+class MintFact extends NodeFact {
+    constructor(token, receiver, amount) {
+        super(HINT.CURRENCY.MINT.FACT, token);
         this.amount = amount;
         this.receiver = Address.from(receiver);
+        this._hash = this.hashing();
     }
     toBuffer() {
-        return Buffer.concat([
+        return buffer.Buffer.concat([
+            super.toBuffer(),
             this.receiver.toBuffer(),
             this.amount.toBuffer(),
         ]);
@@ -3170,27 +3172,6 @@ class MintItem extends Item {
     }
     toString() {
         return `${this.receiver.toString()}-${this.amount.currency.toString()}`;
-    }
-}
-class MintFact extends NodeFact {
-    constructor(token, items) {
-        super(HINT.CURRENCY.MINT.FACT, token);
-        Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length), MitumError.detail(ECODE.INVALID_ITEMS, "items length out of range"));
-        Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate receiver-currency found in items"));
-        this.items = items;
-        this._hash = this.hashing();
-    }
-    toBuffer() {
-        return Buffer.concat([
-            super.toBuffer(),
-            Buffer.concat(this.items.map(it => it.toBuffer())),
-        ]);
-    }
-    toHintedObject() {
-        return {
-            ...super.toHintedObject(),
-            items: this.items.map(it => it.toHintedObject()),
-        };
     }
     get operationHint() {
         return HINT.CURRENCY.MINT.OPERATION;
@@ -3451,9 +3432,7 @@ class Currency extends Generator {
      * @returns `mint` operation.
      */
     mint(receiver, currency, amount) {
-        return new Operation$1(this.networkID, new MintFact(TimeStamp.new().UTC(), [
-            new MintItem(receiver, new Amount(currency, amount))
-        ]));
+        return new Operation$1(this.networkID, new MintFact(TimeStamp.new().UTC(), receiver, new Amount(currency, amount)));
     }
     /**
      * Get a list of all currency in the blockchain network.

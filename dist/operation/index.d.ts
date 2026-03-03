@@ -3,7 +3,7 @@ import { Currency, Account, Contract } from "./currency";
 import { AccountAbstraction } from "./accountAbstraction";
 import { AuthDID } from "./authdid";
 import { Signer } from "./signer";
-import { Key, KeyPair } from "../key";
+import { Key, KeyPair, Address } from "../key";
 import { Generator, HintedObject, IP, SuccessResponse, ErrorResponse } from "../types";
 import * as Base from "./base";
 export declare class Operation extends Generator {
@@ -126,4 +126,63 @@ export declare class OperationResponse extends Operation {
      */
     wait(timeout?: number, interval?: number): Promise<any>;
 }
-export { Currency, Account, Contract, AuthDID, AccountAbstraction, Signer, Base, };
+declare const credential: {
+    registerModel(contract: string | Address): Base.AllowedOperation;
+    addTemplate(contract: string | Address): Base.AllowedOperation;
+    issue(contract: string | Address): Base.AllowedOperation;
+    revoke(contract: string | Address): Base.AllowedOperation;
+};
+declare const dao: {
+    registerModel(contract: string | Address): Base.AllowedOperation;
+    updateModelConfig(contract: string | Address): Base.AllowedOperation;
+    propose(contract: string | Address): Base.AllowedOperation;
+    cancelProposal(contract: string | Address): Base.AllowedOperation;
+    register(contract: string | Address): Base.AllowedOperation;
+    preSnap(contract: string | Address): Base.AllowedOperation;
+    postSnap(contract: string | Address): Base.AllowedOperation;
+    vote(contract: string | Address): Base.AllowedOperation;
+    execute(contract: string | Address): Base.AllowedOperation;
+};
+declare const nft: {
+    registerModel(contract: string | Address): Base.AllowedOperation;
+    updateModelConfig(contract: string | Address): Base.AllowedOperation;
+    mint(contract: string | Address): Base.AllowedOperation;
+    approveAll(contract: string | Address): Base.AllowedOperation;
+    approve(contract: string | Address): Base.AllowedOperation;
+    transfer(contract: string | Address): Base.AllowedOperation;
+    addSignature(contract: string | Address): Base.AllowedOperation;
+};
+declare const payment: {
+    registerModel(contract: string | Address): Base.AllowedOperation;
+    deposit(contract: string | Address): Base.AllowedOperation;
+    updateAccountSetting(contract: string | Address): Base.AllowedOperation;
+    withdraw(contract: string | Address): Base.AllowedOperation;
+    transfer(contract: string | Address): Base.AllowedOperation;
+};
+declare const point: {
+    registerModel(contract: string | Address): Base.AllowedOperation;
+    mint(contract: string | Address): Base.AllowedOperation;
+    transfer(contract: string | Address): Base.AllowedOperation;
+    approve(contract: string | Address): Base.AllowedOperation;
+    burn(contract: string | Address): Base.AllowedOperation;
+    transferFrom(contract: string | Address): Base.AllowedOperation;
+};
+declare const storage: {
+    registerModel(contract: string | Address): Base.AllowedOperation;
+    createData(contract: string | Address): Base.AllowedOperation;
+    deleteData(contract: string | Address): Base.AllowedOperation;
+    updateData(contract: string | Address): Base.AllowedOperation;
+};
+declare const timestamp: {
+    registerModel(contract: string | Address): Base.AllowedOperation;
+    issue(contract: string | Address): Base.AllowedOperation;
+};
+declare const token: {
+    registerModel(contract: string | Address): Base.AllowedOperation;
+    mint(contract: string | Address): Base.AllowedOperation;
+    transfer(contract: string | Address): Base.AllowedOperation;
+    approve(contract: string | Address): Base.AllowedOperation;
+    burn(contract: string | Address): Base.AllowedOperation;
+    transferFrom(contract: string | Address): Base.AllowedOperation;
+};
+export { Currency, Account, Contract, AuthDID, AccountAbstraction, Signer, Base, credential, dao, nft, payment, point, storage, timestamp, token };

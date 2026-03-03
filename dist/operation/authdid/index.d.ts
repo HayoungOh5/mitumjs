@@ -1,74 +1,94 @@
 import { RegisterModelFact } from "./register-model";
 import { CreateFact } from "./create-did";
-import { UpdateDocumentFact } from "./update_did_document";
-import { ContractGenerator, Operation } from "../base";
+import { UpdateDocumentFact } from "./update-did-document";
+import { AsymKeyAuth, LinkedAuth, Document } from "./document";
+import { ContractGenerator, Operation, AllowedOperation } from "../base";
 import { Address, Key } from "../../key";
 import { CurrencyID } from "../../common";
 import { IP, LongString } from "../../types";
+type verificationKeyType = "Ed25519VerificationKey2020" | "EcdsaSecp256k1VerificationKey2019" | "EcdsaSecp256k1VerificationKeyImFact2025";
+type asymKeyAuthOpt = "SECP256K1_2019" | "SECP256K1_IMFACT_2025";
 type asymkeyAuth = {
     _hint: string;
     id: string | LongString;
-    authType: "Ed25519VerificationKey2018" | "EcdsaSecp256k1VerificationKey2019";
+    type: verificationKeyType;
     controller: string | LongString;
-    publicKey: string | Key;
+    publicKeyImFact: string | Key;
 };
-type socialLoginAuth = {
+type linkedAuth = {
     _hint: string;
     id: string | LongString;
-    authType: "VerifiableCredential";
+    type: "LinkedVerificationMethod";
     controller: string | LongString;
-    serviceEndpoint: string | LongString;
-    proof: {
-        verificationMethod: string | LongString;
-    };
+    targetId: string | LongString;
+    allowed: AllowedOperation[];
 };
 type document = {
     _hint: string;
-    "@context": string | LongString;
+    "@context": string[] | LongString[];
     id: string | LongString;
-    authentication: (asymkeyAuth | socialLoginAuth)[];
+    authentication: (asymkeyAuth | linkedAuth)[];
     verificationMethod: [];
-    service: {
+    service?: {
         id: string | LongString;
         type: string | LongString;
         service_end_point: string | LongString;
-    };
+    }[];
 };
 export declare class AuthDID extends ContractGenerator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
+    private normalizeDocument;
     private validateDocument;
     private isSenderDidOwner;
+    private mapAuth;
+    private mapAuthToClass;
     /**
      * Creates an AsymKeyAuth object with the provided authentication details.
-     * @param {string} id - The unique identifier for the authentication.
-     * @param {"EcdsaSecp256k1VerificationKey2019"} authType - The type of the asymmetric key used for verification.
+     * @param {string} id - The unique identifier for the authentication. <did>#<key-id> format.
+     * @param {"SECP256K1_2019" | "SECP256K1_IMFACT_2025"} option - Short identifier for verification key type.
+     *  - SECP256K1_2019 → EcdsaSecp256k1VerificationKey2019
+     *  - SECP256K1_IMFACT_2025 → EcdsaSecp256k1VerificationKeyImFact2025
      * @param {string} controller - The controller responsible for the authentication.
-     * @param {string} publicKey - The public key associated with the authentication.
-     * @returns {object} An asymkeyAuth object.
+     * @param {string} publicKeyImFact - The public key associated with the authentication.
+     * @returns {AsymKeyAuth} An AsymKeyAuth Instance.
      */
-    writeAsymkeyAuth(id: string, authType: "EcdsaSecp256k1VerificationKey2019", controller: string, publicKey: string): asymkeyAuth;
+    writeAsymkeyAuth(id: string, option: asymKeyAuthOpt, controller: string, publicKeyImFact: string): AsymKeyAuth;
     /**
-     * Creates a SocialLoginAuth object with the provided authentication details.
-     * @param {string} id - The unique identifier for the authentication.
-     * @param {string} controller - The controller responsible for the authentication.
-     * @param {string} serviceEndpoint - The endpoint URL for the social login service.
-     * @param {string} verificationMethod - The verification method used for authentication.
-     * @returns {object} A socialLoginAuth object.
+     * Creates a LinkedAuth object that allows another authentication method
+     * (e.g. OAuth provider, biometric service, custody service)
+     * to act on behalf of the DID subject with restricted operation capabilities.
+     * @param {string} id - The unique identifier of this linked authentication method. <did>#<key-id> format.
+     * @param {string} controller - The DID controller that authorizes this linked authentication.
+     * @param {string} targetId - The identifier of the authentication method that performs verification on behalf of the DID subject.
+     * @param {AllowedOperation[]} allowedOperations - A list of operation capabilities that this linked authentication is permitted to execute on behalf of the DID subject.
+     *   Each allowedOperation must be created using {@link Mitum.allowedOperation}, which provides a safe, typed registry of core-supported operations.
+     *   Example:
+     *   ```ts
+     *   const allowed = [
+     *     Mitum.allowedOperation.currency.transfer(),
+     *     Mitum.allowedOperation.authdid.create(contract),
+     *   ];
+     *   ```
+     * @returns {LinkedAuth} LinkedAuth instance.
      */
-    writeSocialLoginAuth(id: string, controller: string, serviceEndpoint: string, verificationMethod: string): socialLoginAuth;
+    writeLinkedAuth(id: string, controller: string, targetId: string, allowedOperations: AllowedOperation[]): LinkedAuth;
     /**
-     * Creates a DID Document with the provided context, DID ID, authentications, and service details.
-     * Use return value of this method for updateDocument()
-     * @param {string} didContext - The context for the DID document.
-     * @param {string} didID - The unique identifier for the DID.
-     * @param {(asymkeyAuth | socialLoginAuth)[]} authentications - An array of authentication objects.
-     *        Each object must be either an instance of `asymkeyAuth` or `socialLoginAuth`.
-     * @param {string} serviceID - The identifier for the associated service.
-     * @param {string} serviceType - The type of the service (e.g., `LinkedDataProof`, `BlockchainService`).
-     * @param {string} serviceEndPoint - The endpoint URL of the service.
-     * @returns {object} A hinted object representation of the created DID Document. Use it for updateDocument().
+     * The returned Document can be passed directly to `updateDocument()`.
+     * @param {Array<string | LongString>} didContext - DID document contexts (e.g. DID Core context, service-specific context).
+     * @param {string} didID - DID identifier.
+     * @param {Array<AsymKeyAuth | LinkedAuth>} authentications - Authentication methods for the DID.
+     * @param {Array<AsymKeyAuth | LinkedAuth>} [verificationMethods] - Verification methods for the DID.
+     * @param {Array<Object>} [services] - Optional service definitions.
+     * @param {string} services[].id - Service identifier. <did>#<key-id> format.
+     * @param {string} services[].type - Service type.
+     * @param {string} services[].service_end_point - Service endpoint URL.
+     * @returns {Document} DID Document instance.
      */
-    writeDocument(didContext: string, didID: string, authentications: (asymkeyAuth | socialLoginAuth)[], serviceID: string, serviceType: string, serviceEndPoint: string): document;
+    writeDocument(didContext: string[], didID: string, authentications: (AsymKeyAuth | LinkedAuth)[], verificationMethods?: (AsymKeyAuth | LinkedAuth)[], service?: {
+        id: string;
+        type: string;
+        service_end_point: string;
+    }[]): Document;
     /**
      * Generate a `register-model` operation to register new did registry model on the contract.
      * @param {string | Address} [contract] - The contract's address.
@@ -82,25 +102,44 @@ export declare class AuthDID extends ContractGenerator {
      * Generate `create-did` operation to create new did and did document.
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | Address} [sender] - The sender's address.
-     * @param {"ECDSA"} [authType] - The encryption method to use for authentication.
-     * @param {publicKey} [publicKey] - The public key to use for authentication.
-     * @param {serviceType} [serviceType] - The serivce type.
-     * @param {serviceEndpoints} [serviceEndpoints] - The service end point.
      * @param {string | CurrencyID} [currency] - The currency ID.
      * @returns `create-did` operation
      */
-    create(contract: string | Address, sender: string | Address, authType: "ECDSA", //"ECDSA" | "EdDSA"
-    publicKey: string, serviceType: string, serviceEndpoints: string, currency: string | CurrencyID): Operation<CreateFact>;
+    create(contract: string | Address, sender: string | Address, currency: string | CurrencyID): Operation<CreateFact>;
     /**
-     * Generate `update-did-document` operation to update the did document.
-     * `document` must comply with document type
-     * @param {string | Address} [contract] - The contract's address.
-     * @param {string | Address} [sender] - The sender's address.
-     * @param {document} [document] - The did document to be updated.
-     * @param {string | CurrencyID} [currency] - The currency ID.
-     * @returns `update-did-document` operation
+     * Update an Auth DID document using a strongly-typed document object.
+     *
+     * This method expects the `document` parameter to conform to the SDK's
+     * internal `document` type. All authentication entries must already be
+     * validated and structurally correct, and will be converted into
+     * corresponding class instances (`AsymKeyAuth`, `LinkedAuth`, etc.).
+     *
+     * Ownership checks are enforced:
+     * - The sender must be the owner of the document DID.
+     * - The sender must also own any controller or service DID referenced
+     *   in the document
+     * @param contract - The Auth DID contract address.
+     * @param sender - The transaction sender; must be the owner of the document DID.
+     * @param document - A validated document object matching the SDK `document` type.
+     * @param currency - Currency ID used for the operation fee.
+     * @returns An `Operation` instance that can be signed and submitted to the network.
      */
-    updateDocument(contract: string | Address, sender: string | Address, document: document, currency: string | CurrencyID): Operation<UpdateDocumentFact>;
+    updateDocument(contract: string | Address, sender: string | Address, document: Document, currency: string | CurrencyID): Operation<UpdateDocumentFact>;
+    /**
+     * Update an Auth DID document from a raw JSON object.
+     *
+     * This method accepts an untyped document (e.g. parsed JSON), validates
+     * its structure and authentication entries, and converts it into internal
+     * SDK classes before creating the operation.
+     *
+     * Use this method when the document comes from external or untrusted sources.
+     * @param contract - The Auth DID contract address.
+     * @param sender - The transaction sender; must own the document DID.
+     * @param documentJson - A raw JSON object representing an Auth DID document.
+     * @param currency - Currency ID used for the operation fee.
+     * @returns An `Operation` instance ready to be signed and submitted.
+     */
+    updateDocumentByDocumentJson(contract: string | Address, sender: string | Address, documentJson: document, currency: string | CurrencyID): Operation<UpdateDocumentFact>;
     /**
      * Get information for did-registry model.
      * @async
@@ -124,20 +163,13 @@ export declare class AuthDID extends ContractGenerator {
      * @async
      * @param {string | Address} [contract] - The contract's address.
      * @param {string | LongString} [did] - The did value.
-     * @returns `data` of `SuccessResponse` is did document:
-     * - `did_document`: object
-     * - - `'@context'`: The context of did,
-     * - - `id`: The did value,
-     * - - `authentication`: object,
-     * - - - `id`: The did value,
-     * - - - `type`: The type of authentication
-     * - - - `controller`: The did value
-     * - - - `publicKey`: The publickey used when did create,
-     * - - `service`: object
-     * - - - `id`: The did value
-     * - - - `type`: The type of did service,
-     * - - - `service_end_point`: The end point of did service,
+     * @returns `data` of `SuccessResponse` is did document.
      */
     getDocument(contract: string | Address, did: string): Promise<import("../../types").SuccessResponse | import("../../types").ErrorResponse>;
 }
+export declare const authdid: {
+    registerModel(contract: string | Address): AllowedOperation;
+    create(contract: string | Address): AllowedOperation;
+    updateDocument(contract: string | Address): AllowedOperation;
+};
 export {};
