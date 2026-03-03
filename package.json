@@ -1,6 +1,6 @@
 {
   "name": "@imfact/sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "framework for imfact network",
   "main": "dist/bundle.cjs.cjs",
   "module": "dist/bundle.esm.mjs",

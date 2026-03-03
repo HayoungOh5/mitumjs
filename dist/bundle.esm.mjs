@@ -7,6 +7,7 @@ const fetchAxios = axios.create({
     adapter: isNode ? undefined : 'fetch',
 });
 
+
 const ECODE = {
     // General Errors
     NO_API: "EC_NO_API",
@@ -118,7 +119,7 @@ const PCODE = {
     },
     MITUM_NETWORK: {
         code: "P0N",
-        keyword: ["found -", "Too Many Requests"],
+        keyword: ["Too Many Requests"],
         description: "Error from network",
         subject: "",
     },
