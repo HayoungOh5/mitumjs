@@ -5,10 +5,9 @@ import { Block, Node, NetworkID } from "./node"
 import { Utils } from "./utils/transformUnit"
 import { 
     Account, Currency, Contract, 
-    NFT, DAO,
-    // KYC, STO,
-    TimeStamp, Credential,
-    Token, Point, Storage, Payment,
+    NFT, DAO, Credential,
+    // KYC, STO, Point,
+    TimeStamp, Token,  Storage, Payment,
     Signer
 } from "./operation"
 import { Operation } from "./operation/api"
@@ -29,9 +28,9 @@ export class Mitum extends Generator {
     private _timestamp: TimeStamp
     // private _sto: STO
     // private _kyc: KYC
+    // private _point: Point
     private _dao: DAO
     private _token: Token
-    private _point: Point
     private _storage: Storage
     private _payment: Payment
 
@@ -57,9 +56,9 @@ export class Mitum extends Generator {
         this._timestamp = new TimeStamp(this.networkID, this.api, this.delegateIP)
         // this._sto = new STO(this.networkID, this.api, this.delegateIP)
         // this._kyc = new KYC(this.networkID, this.api, this.delegateIP)
+        // this._point = new Point(this.networkID, this.api, this.delegateIP)
         this._dao = new DAO(this.networkID, this.api, this.delegateIP)
         this._token = new Token(this.networkID, this.api, this.delegateIP)
-        this._point = new Point(this.networkID, this.api, this.delegateIP)
         this._storage = new Storage(this.networkID, this.api, this.delegateIP)
         this._payment = new Payment(this.networkID, this.api, this.delegateIP)
 
@@ -84,9 +83,9 @@ export class Mitum extends Generator {
         this._timestamp = new TimeStamp(this.networkID, this.api, this.delegateIP)
         // this._sto = new STO(this.networkID, this.api, this.delegateIP)
         // this._kyc = new KYC(this.networkID, this.api, this.delegateIP)
+        // this._point = new Point(this.networkID, this.api, this.delegateIP)
         this._dao = new DAO(this.networkID, this.api, this.delegateIP)
         this._token = new Token(this.networkID, this.api, this.delegateIP)
-        this._point = new Point(this.networkID, this.api, this.delegateIP)
         this._storage = new Storage(this.networkID, this.api, this.delegateIP)
         this._payment = new Payment(this.networkID, this.api, this.delegateIP)
 
@@ -149,9 +148,9 @@ export class Mitum extends Generator {
         return this._token
     }
 
-    get point(): Point {
-        return this._point
-    }
+    // get point(): Point {
+    //     return this._point
+    // }
 
     get storage(): Storage {
         return this._storage
