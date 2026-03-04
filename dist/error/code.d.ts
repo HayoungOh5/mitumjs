@@ -211,7 +211,7 @@ export declare const DCODE: {
     };
     readonly IV_SIGN: {
         readonly code: "D201";
-        readonly keyword: readonly ["Invalid signing"];
+        readonly keyword: readonly ["Invalid signing", "BaseNodeSign"];
         readonly description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold";
         readonly subject: "";
     };

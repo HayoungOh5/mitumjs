@@ -1,6 +1,6 @@
 {
   "name": "@imfact/sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "framework for imfact network",
   "main": "dist/bundle.cjs.cjs",
   "module": "dist/bundle.esm.mjs",
@@ -22,7 +22,6 @@
     "mitum",
     "mitum-currency",
     "mitum-token",
-    "mitum-point",
     "mitum-nft",
     "mitum-dao",
     "mitum-credential",

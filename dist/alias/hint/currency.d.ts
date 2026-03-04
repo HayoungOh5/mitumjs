@@ -32,7 +32,6 @@ declare const _default: {
         OPERATION: string;
     };
     MINT: {
-        ITEM: string;
         FACT: string;
         OPERATION: string;
     };

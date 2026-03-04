@@ -2,7 +2,7 @@ import { Generator } from "./types";
 import type { IP } from "./types";
 import { Block, Node } from "./node";
 import { Utils } from "./utils/transformUnit";
-import { Account, Currency, Contract, NFT, DAO, TimeStamp, Credential, Token, Point, Storage, Payment, Signer } from "./operation";
+import { Account, Currency, Contract, NFT, DAO, Credential, TimeStamp, Token, Storage, Payment, Signer } from "./operation";
 import { Operation } from "./operation/api";
 import { BrowserProvider } from "./providers";
 export declare class Mitum extends Generator {
@@ -18,7 +18,6 @@ export declare class Mitum extends Generator {
     private _timestamp;
     private _dao;
     private _token;
-    private _point;
     private _storage;
     private _payment;
     ECODE: Object;
@@ -39,7 +38,6 @@ export declare class Mitum extends Generator {
     get timestamp(): TimeStamp;
     get dao(): DAO;
     get token(): Token;
-    get point(): Point;
     get storage(): Storage;
     get payment(): Payment;
     get utils(): Utils;
