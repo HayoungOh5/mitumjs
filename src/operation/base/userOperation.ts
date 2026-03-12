@@ -1,4 +1,4 @@
-import { isBase58Encoded } from "../../utils/typeGuard"
+import { isHexEncoded } from "../../utils/typeGuard"
 import { Hint } from "../../common"
 import { HINT } from "../../alias"
 import { Assert, ECODE, MitumError } from "../../error"
@@ -23,7 +23,7 @@ export class Authentication implements IHintedObject {
         this.authenticationId = authenticationId;
         if (proofData) {
             Assert.check(
-                isBase58Encoded(proofData),
+                isHexEncoded(proofData, 32),
                 MitumError.detail(ECODE.INVALID_USER_OPERATION, `proof_data must in base58 encoded`)
             );
         };

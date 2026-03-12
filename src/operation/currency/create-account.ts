@@ -1,4 +1,3 @@
-import base58 from "bs58"
 import { Buffer } from "buffer";
 
 import { CurrencyItem } from "./item"
@@ -35,7 +34,7 @@ export class CreateAccountItem extends CurrencyItem {
     }
 
     toString(): string {
-        return base58.encode(this.keys.toBuffer())
+        return this.keys.toBuffer().toString("hex")
     }
 }
 

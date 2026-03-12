@@ -1,4 +1,3 @@
-import base58 from "bs58"
 import { Buffer } from "buffer";
 
 import { FS, GeneralFS, NodeFS } from "./types"
@@ -32,7 +31,7 @@ export abstract class FactSign implements IBuffer {
     toHintedObject(): FS {
         return {
             signer: this.signer.toString(),
-            signature: base58.encode(this.signature),
+            signature: this.signature.toString("hex"),
             signed_at: this.signedAt.ISO(),
         }
     }

@@ -1,4 +1,3 @@
-import base58 from "bs58"
 import { Buffer } from "buffer";
 
 import { Item } from "./item"
@@ -38,7 +37,7 @@ export abstract class Fact implements IBuffer, IHintedObject {
     toHintedObject(): FactJson {
         return {
             _hint: this.hint.toString(),
-            hash: base58.encode(this.hash ? this.hash : []),
+            hash: this.hash?.toString("hex") ?? "",
             token: this.token.toString()
         }
     }
@@ -103,7 +102,6 @@ export abstract class ContractFact extends Fact {
             this.sender.toString() !== this.contract.toString(),
             MitumError.detail(ECODE.INVALID_FACT, "sender is same with contract address")
         )
-        // this._hash = this.hashing()
     }
 
     toBuffer(): Buffer {

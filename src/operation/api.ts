@@ -8,7 +8,7 @@ import type { Key } from "../key/pub"
 import { KeyPair } from "../key/keypair"
 import { Generator, HintedObject, IP, SuccessResponse, ErrorResponse } from "../types"
 import { Assert, ECODE, MitumError, ArrayAssert } from "../error"
-import { isOpFact, isHintedObject, isBase58Encoded } from "../utils/typeGuard"
+import { isOpFact, isHintedObject, isHexEncoded } from "../utils/typeGuard"
 import { isSuccessResponse } from "../utils"
 
 export class Operation extends Generator {
@@ -99,7 +99,7 @@ export class Operation extends Generator {
 			.noDuplicates()
 			.rangeLength(Config.FACT_HASHES);
 		hashes.forEach((hash)=>{
-			Assert.check(isBase58Encoded(hash) && (hash.length === 44 || hash.length === 43),
+			Assert.check(isHexEncoded(hash, 32),
 			MitumError.detail(ECODE.INVALID_FACT_HASH, "fact hash must be base58 encoded string with 44 or 43 length."))
 		});
 		const response = await getAPIData(() => operationApi.getMultiOperations(this.api, hashes, this.delegateIP));

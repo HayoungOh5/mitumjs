@@ -1,4 +1,3 @@
-import base58 from "bs58"
 import { Buffer } from "buffer";
 import { Authentication, ProxyPayer, Settlement, GeneralFactSign, NodeFactSign } from "./base"
 import type { BaseOperation, Fact, UserOperationJson, OperationJson, SignOption } from "./base"
@@ -57,7 +56,7 @@ export class Signer extends Generator {
             keypair.sign(
                 Buffer.concat([
                     Buffer.from(this.networkID),
-                    base58.decode(operation.fact.hash),
+                    Buffer.from(operation.fact.hash, "hex"),
                     now.toBuffer(),
                 ])
             ),
@@ -79,14 +78,14 @@ export class Signer extends Generator {
             .map((s) =>
                 Buffer.concat([
                     Buffer.from(s.signer),
-                    base58.decode(s.signature),
+                    Buffer.from(s.signature, "hex"),
                     new FullTimeStamp(s.signed_at).toBuffer("super"),
                 ])
             )
             //.sort((a, b) => Buffer.compare(a, b))
 
         const msg = Buffer.concat([
-            base58.decode(operation.fact.hash),
+            Buffer.from(operation.fact.hash, "hex"),
             Buffer.concat(factSigns),
         ])
 
@@ -94,7 +93,7 @@ export class Signer extends Generator {
             return this.FillUserOpHash(operation as UserOperationJson);
         } 
 
-        operation.hash = base58.encode(sha3(msg))
+        operation.hash = sha3(msg).toString("hex");
 
         return operation
     }
@@ -110,7 +109,7 @@ export class Signer extends Generator {
                 Buffer.concat([
                     Buffer.from(this.networkID),
                     nd.toBuffer(),
-                    base58.decode(operation.fact.hash),
+                    Buffer.from(operation.fact.hash, "hex"),
                     now.toBuffer(),
                 ])
             ),
@@ -127,18 +126,18 @@ export class Signer extends Generator {
             .map((s) =>
                 Buffer.concat([
                     Buffer.from(s.signer),
-                    base58.decode(s.signature),
+                    Buffer.from(s.signature, "hex"),
                     new FullTimeStamp(s.signed_at).toBuffer("super"),
                 ])
             )
             .sort((a, b) => Buffer.compare(a, b))
 
         const msg = Buffer.concat([
-            base58.decode(operation.fact.hash),
+            Buffer.from(operation.fact.hash, "hex"),
             Buffer.concat(factSigns),
         ])
 
-        operation.hash = base58.encode(sha3(msg))
+        operation.hash = sha3(msg).toString("hex");
 
         return operation
     }
@@ -167,15 +166,15 @@ export class Signer extends Generator {
     
         const msg = Buffer.concat([
             Buffer.from(JSON.stringify(hintedExtension)),
-            base58.decode(userOperation.fact.hash),
+            Buffer.from(userOperation.fact.hash, "hex"),
             Buffer.concat(userOperation.signs.map((s) => Buffer.concat([
                 Buffer.from(s.signer),
-                base58.decode(s.signature),
+                Buffer.from(s.signature, "hex"),
                 new FullTimeStamp(s.signed_at).toBuffer("super"),
             ]))),
         ]);
     
-        userOperation.hash = base58.encode(sha3(msg));
+        userOperation.hash = sha3(msg).toString("hex");
         return userOperation;
     }
 

@@ -19,6 +19,7 @@ export class Token implements IBuffer, IString {
     }
 
     toString(): string {
+        //return Buffer.from(this.s, "utf8").toString("hex")
         return Buffer.from(this.s, "utf8").toString("base64")
     }
 }

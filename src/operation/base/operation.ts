@@ -1,4 +1,3 @@
-import base58 from "bs58"
 import { Buffer } from "buffer";
 
 import { Fact } from "./fact"
@@ -166,7 +165,7 @@ export class BaseOperation<T extends Fact> implements IBuffer, IHintedObject {
         const operation = {
             _hint: this.hint.toString(),
             fact: this.fact.toHintedObject(),
-            hash: this._hash.length === 0 ? "" : base58.encode(this._hash)
+            hash: this._hash.length === 0 ? "" : this._hash.toString("hex")
         }
 
         const factSigns = this._factSigns.length === 0 ? [] : this._factSigns.sort(SortFunc)

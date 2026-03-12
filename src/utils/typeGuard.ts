@@ -109,10 +109,14 @@ export const isSuccessResponse = (response: ErrorResponse | SuccessResponse): re
     return 'data' in response;
 }
 
-export const isBase58Encoded = (value: string): boolean => {
-    if (!value || typeof value !== 'string') {
-        return false;
-    }
-    const base58Chars = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
-    return base58Chars.test(value);
+export const isHexEncoded = (hash: string, expectedBytes: number | null): boolean =>{
+  if (typeof hash !== "string") return false;
+
+  const hex = hash.startsWith("0x") ? hash.slice(2) : hash;
+
+  if (!/^[0-9a-fA-F]+$/.test(hex)) return false;
+
+  if (expectedBytes !== null && hex.length !== expectedBytes * 2) return false;
+
+  return true;
 }
