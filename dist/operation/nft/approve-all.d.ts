@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { NFTItem } from "./item";
 import { OperationFact } from "../base";
 import { Address } from "../../key/address";
@@ -9,7 +7,7 @@ export declare class ApproveAllItem extends NFTItem {
     readonly approved: Address;
     readonly mode: "allow" | "cancel";
     constructor(contract: string | Address, approved: string | Address, mode: "allow" | "cancel", currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

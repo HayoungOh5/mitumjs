@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { Address } from "../../key/address";
 import type { HintedObject } from "../../types";
 import { LongString, URIString } from "../../types";
@@ -11,7 +9,7 @@ export declare class UpdateDataItem extends Item {
     readonly dataKey: URIString;
     readonly dataValue: LongString;
     constructor(contract: string | Address, currency: string | CurrencyID, dataKey: string, dataValue: string | LongString);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

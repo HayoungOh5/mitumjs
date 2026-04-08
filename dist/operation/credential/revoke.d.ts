@@ -1,12 +1,10 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { OperationFact } from "../base";
 import { CredentialItem } from "./item";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 export declare class RevokeItem extends CredentialItem {
     constructor(contract: string | Address, holder: string | Address, templateID: string, credentialID: string, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toString(): string;
 }
 export declare class RevokeFact extends OperationFact<RevokeItem> {

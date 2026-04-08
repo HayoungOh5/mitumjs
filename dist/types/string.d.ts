@@ -1,11 +1,9 @@
-/// <reference types="node" />
-import { IBuffer, IString } from "../types";
-import { Buffer } from "buffer";
-export declare class LongString implements IBuffer, IString {
+import { IBytes, IString } from "../types";
+export declare class LongString implements IBytes, IString {
     private s;
     constructor(s: string);
     static from(s: string | LongString): LongString;
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toString(): string;
 }
 export declare class ShortDate extends LongString {
@@ -16,9 +14,9 @@ export declare class IP extends LongString {
     constructor(s: string);
     static from(s: string | IP): IP;
 }
-export declare class URIString implements IBuffer, IString {
+export declare class URIString implements IBytes, IString {
     private s;
     constructor(s: string, name: string);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toString(): string;
 }

@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { Fact, FactJson } from "../base";
 import { CurrencyID } from "../../common";
 import { Address } from "../../key/address";
@@ -9,7 +7,7 @@ export declare class UpdateKeyFact extends Fact {
     readonly keys: Keys;
     readonly currency: CurrencyID;
     constructor(token: string, sender: string | Address, keys: Keys, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): FactJson;
     get operationHint(): string;
 }

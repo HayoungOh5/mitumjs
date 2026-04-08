@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { CurrencyItem } from "./item";
 import { OperationFact } from "../base";
 import { Amount } from "../../common";
@@ -9,7 +7,7 @@ import { Keys } from "../../key/pub";
 export declare class CreateContractAccountItem extends CurrencyItem {
     readonly keys: Keys;
     constructor(keys: Keys, amounts: Amount[]);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

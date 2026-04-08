@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { KYCItem } from "./item";
 import { OperationFact } from "../base";
 import { Address } from "../../key/address";
@@ -8,7 +6,7 @@ import { HintedObject } from "../../types";
 export declare class AddControllerItem extends KYCItem {
     readonly controller: Address;
     constructor(contract: string | Address, controller: string | Address, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

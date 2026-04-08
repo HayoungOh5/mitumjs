@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { KYCItem } from "./item";
 import { OperationFact } from "../base";
 import { Address } from "../../key/address";
@@ -9,7 +7,7 @@ export declare class UpdateCustomerItem extends KYCItem {
     readonly customer: Address;
     readonly status: Bool;
     constructor(contract: string | Address, customer: string | Address, status: boolean | Bool, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

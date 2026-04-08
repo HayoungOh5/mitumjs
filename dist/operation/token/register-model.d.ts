@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { TokenFact } from "./fact";
 import type { FactJson } from "../base";
 import { Address } from "../../key/address";
@@ -11,7 +9,7 @@ export declare class RegisterModelFact extends TokenFact {
     readonly decimal: Big;
     readonly initialSupply: Big;
     constructor(token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID, symbol: string | CurrencyID, name: string | LongString, decimal: string | number | Big, initialSupply: string | number | Big);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): FactJson;
     get operationHint(): string;
 }

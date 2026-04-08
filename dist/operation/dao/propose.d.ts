@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { DAOFact } from "./fact";
 import { FactJson } from "../base";
 import { Address } from "../../key/address";
@@ -8,7 +6,7 @@ import { BizProposal, CryptoProposal } from "./proposal";
 export declare class ProposeFact extends DAOFact {
     readonly proposal: CryptoProposal | BizProposal;
     constructor(token: string, sender: string | Address, contract: string | Address, proposalID: string, proposal: CryptoProposal | BizProposal, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): FactJson;
     get operationHint(): string;
 }

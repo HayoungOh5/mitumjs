@@ -16,12 +16,10 @@ import type { Account as AccountType } from "../../key/types";
 import { Key, PubKey } from "../../key/pub";
 type currencyPolicyData = {
     minBalance: string | number | Big;
-    feeType: "nil" | "fixed" | "ratio";
+    feeType: "nil" | "fixed" | "fixed-item";
     feeReceiver: string | Address;
     fee?: string | number | Big;
-    ratio?: number;
-    minFee?: string | number | Big;
-    maxFee?: string | number | Big;
+    item_fee?: string | number | Big;
 };
 type keysType = ({
     key: string | Key | PubKey;

@@ -31,6 +31,7 @@ export declare const Config: {
     ITEMS_IN_FACT: RangeConfig;
     OP_SIZE: RangeConfig;
     FACT_HASHES: RangeConfig;
+    MSG_SIZE: RangeConfig;
     KEY: {
         MITUM: {
             PRIVATE: RangeConfig;

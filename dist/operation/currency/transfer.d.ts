@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { CurrencyItem } from "./item";
 import { OperationFact } from "../base";
 import { Amount } from "../../common";
@@ -8,7 +6,7 @@ import { Address, ZeroAddress } from "../../key/address";
 export declare class TransferItem extends CurrencyItem {
     readonly receiver: Address | ZeroAddress;
     constructor(receiver: string | Address | ZeroAddress, amounts: Amount[]);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

@@ -1,13 +1,11 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { Address } from "../../key/address";
 import { Bool } from "../../types";
-import type { HintedObject, IBuffer, IHintedObject } from "../../types";
-export declare class Whitelist implements IBuffer, IHintedObject {
+import type { HintedObject, IBytes, IHintedObject } from "../../types";
+export declare class Whitelist implements IBytes, IHintedObject {
     private hint;
     readonly active: Bool;
     readonly accounts: Address[];
     constructor(active: boolean | Bool, accounts: (string | Address)[]);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }

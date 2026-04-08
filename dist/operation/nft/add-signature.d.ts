@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { NFTItem } from "./item";
 import { OperationFact } from "../base";
 import { Address } from "../../key/address";
@@ -8,7 +6,7 @@ import { Big, HintedObject } from "../../types";
 export declare class AddSignatureItem extends NFTItem {
     readonly nftIdx: Big;
     constructor(contract: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
 export declare class AddSignatureFact extends OperationFact<AddSignatureItem> {

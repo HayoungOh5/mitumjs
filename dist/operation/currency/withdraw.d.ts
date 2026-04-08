@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { CurrencyItem } from "./item";
 import { OperationFact } from "../base";
 import { Address } from "../../key/address";
@@ -8,7 +6,7 @@ import { HintedObject } from "../../types";
 export declare class WithdrawItem extends CurrencyItem {
     readonly target: Address;
     constructor(target: string | Address, amounts: Amount[]);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

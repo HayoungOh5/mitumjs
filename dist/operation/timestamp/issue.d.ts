@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import type { FactJson } from "../base";
 import { ContractFact } from "../base";
 import { Big } from "../../types";
@@ -10,7 +8,7 @@ export declare class IssueFact extends ContractFact {
     readonly requestTimeStamp: Big;
     readonly data: string;
     constructor(token: string, sender: string | Address, contract: string | Address, projectID: string, requestTimeStamp: string | number | Big, data: string, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): FactJson;
     get operationHint(): string;
 }

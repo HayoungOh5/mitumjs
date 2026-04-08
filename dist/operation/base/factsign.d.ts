@@ -1,24 +1,22 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { FS, GeneralFS, NodeFS } from "./types";
-import { IBuffer, FullTimeStamp } from "../../types";
+import { IBytes, FullTimeStamp } from "../../types";
 import { Address, NodeAddress } from "../../key/address";
 import { Key } from "../../key/pub";
-export declare abstract class FactSign implements IBuffer {
+export declare abstract class FactSign implements IBytes {
     readonly signer: Key;
-    readonly signature: Buffer;
+    readonly signature: Uint8Array;
     readonly signedAt: FullTimeStamp;
-    protected constructor(signer: string | Key, signature: Buffer, signedAt: string);
-    toBuffer(): Buffer;
+    protected constructor(signer: string | Key, signature: Uint8Array, signedAt: string);
+    toBytes(): Uint8Array;
     toHintedObject(): FS;
 }
 export declare class GeneralFactSign extends FactSign {
-    constructor(signer: string | Key, signature: Buffer, signedAt: string);
+    constructor(signer: string | Key, signature: Uint8Array, signedAt: string);
     toHintedObject(): GeneralFS;
 }
 export declare class NodeFactSign extends FactSign {
     readonly node: Address;
-    constructor(node: string | NodeAddress, signer: string | Key, signature: Buffer, signedAt: string);
-    toBuffer(): Buffer;
+    constructor(node: string | NodeAddress, signer: string | Key, signature: Uint8Array, signedAt: string);
+    toBytes(): Uint8Array;
     toHintedObject(): NodeFS;
 }

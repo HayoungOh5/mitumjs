@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { STOItem } from "./item";
 import { Partition } from "./partition";
 import { OperationFact } from "../base";
@@ -12,7 +10,7 @@ export declare class TransferByPartitionItem extends STOItem {
     readonly partition: Partition;
     readonly amount: Big;
     constructor(contract: string | Address, tokenHolder: string | Address, receiver: string | Address, partition: string | Partition, amount: string | number | Big, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

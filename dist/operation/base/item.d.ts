@@ -1,10 +1,8 @@
-/// <reference types="node" />
-import type { Buffer } from "buffer";
-import { HintedObject, IBuffer, IHintedObject, IString } from "../../types";
-export declare abstract class Item implements IBuffer, IString, IHintedObject {
+import { HintedObject, IBytes, IHintedObject, IString } from "../../types";
+export declare abstract class Item implements IBytes, IString, IHintedObject {
     private hint;
     protected constructor(hint: string);
-    abstract toBuffer(): Buffer;
+    abstract toBytes(): Uint8Array;
     abstract toString(): string;
     toHintedObject(): HintedObject;
 }

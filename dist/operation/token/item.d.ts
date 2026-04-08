@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import type { Buffer } from "buffer";
 import { Item } from "../base";
 import { Big } from "../../types";
 import { Address } from "../../key/address";
@@ -10,7 +8,7 @@ export declare abstract class TokenItem extends Item {
     readonly currency: CurrencyID;
     readonly amount: Big;
     protected constructor(hint: string, contract: string | Address, amount: string | number | Big, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

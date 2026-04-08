@@ -1,8 +1,6 @@
-/// <reference types="node" />
-import type { Buffer } from "buffer";
 import { HintedObject } from "./hinted";
-export interface IBuffer {
-    toBuffer(): Buffer;
+export interface IBytes {
+    toBytes(): Uint8Array;
 }
 export interface IHintedObject {
     toHintedObject(): HintedObject;

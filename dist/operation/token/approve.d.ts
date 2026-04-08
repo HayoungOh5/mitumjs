@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { TokenItem } from "./item";
 import { OperationFact } from "../base";
 import { Big, HintedObject } from "../../types";
@@ -8,7 +6,7 @@ import { CurrencyID } from "../../common";
 export declare class ApproveItem extends TokenItem {
     readonly approved: Address;
     constructor(contract: string | Address, approved: string | Address, amount: string | number | Big, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

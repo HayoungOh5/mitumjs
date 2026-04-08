@@ -1,10 +1,8 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
-import type { IBuffer, IString } from "../../types";
-export declare class Partition implements IBuffer, IString {
+import type { IBytes, IString } from "../../types";
+export declare class Partition implements IBytes, IString {
     private s;
     constructor(s: string);
     static from(s: string | Partition): Partition;
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toString(): string;
 }

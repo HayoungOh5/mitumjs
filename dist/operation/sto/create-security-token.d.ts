@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { STOItem } from "./item";
 import { Partition } from "./partition";
 import { OperationFact } from "../base";
@@ -10,7 +8,7 @@ export declare class CreateSecurityTokenItem extends STOItem {
     readonly granularity: Big;
     readonly defaultPartition: Partition;
     constructor(contract: string | Address, granularity: string | number | Big, defaultPartition: string | Partition, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

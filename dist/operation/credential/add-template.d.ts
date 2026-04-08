@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { ContractFact, FactJson } from "../base";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
@@ -16,7 +14,7 @@ export declare class AddTemplateFact extends ContractFact {
     readonly description: string;
     readonly creator: Address;
     constructor(token: string, sender: string | Address, contract: string | Address, templateID: string, templateName: string, serviceDate: string | ShortDate, expirationDate: string | ShortDate, templateShare: boolean | Bool, multiAudit: boolean | Bool, displayName: string, subjectKey: string, description: string, creator: string | Address, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): FactJson;
     get operationHint(): string;
 }

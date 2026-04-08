@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { OperationFact } from "../base";
 import { CredentialItem } from "./item";
 import type { Address } from "../../key/address";
@@ -11,7 +9,7 @@ export declare class IssueItem extends CredentialItem {
     readonly validUntil: Big;
     readonly did: string;
     constructor(contract: string | Address, holder: string | Address, templateID: string, credentialID: string, value: string, validFrom: string | number | Big, validUntil: string | number | Big, did: string, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

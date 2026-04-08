@@ -1,12 +1,10 @@
-/// <reference types="node" />
-import { IBuffer, IString } from "./interface";
-import { Buffer } from "buffer";
-export declare class TimeStamp implements IBuffer, IString {
+import { IBytes, IString } from "./interface";
+export declare class TimeStamp implements IBytes, IString {
     private t;
     constructor(t?: string | number | Date);
     static new(): TimeStamp;
     static from(t?: string | number | Date | TimeStamp): TimeStamp;
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toString(): string;
     ISO(): string;
     UTC(): string;
@@ -15,7 +13,7 @@ export declare class FullTimeStamp extends TimeStamp {
     private r;
     constructor(s: string);
     static from(t: string | FullTimeStamp): FullTimeStamp;
-    toBuffer(option?: "super"): Buffer;
+    toBytes(option?: "super"): Uint8Array;
     ISO(): string;
     UTC(): string;
 }

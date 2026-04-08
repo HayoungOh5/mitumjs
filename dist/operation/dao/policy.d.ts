@@ -1,9 +1,7 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { Whitelist } from "./whitelist";
 import { CurrencyID, Fee } from "../../common";
-import { Big, HintedObject, IBuffer, IHintedObject } from "../../types";
-export declare class DAOPolicy implements IBuffer, IHintedObject {
+import { Big, HintedObject, IBytes, IHintedObject } from "../../types";
+export declare class DAOPolicy implements IBytes, IHintedObject {
     private hint;
     readonly votingPowerToken: CurrencyID;
     readonly threshold: Big;
@@ -18,6 +16,6 @@ export declare class DAOPolicy implements IBuffer, IHintedObject {
     readonly turnout: Big;
     readonly quorum: Big;
     constructor(votingPowerToken: string | CurrencyID, threshold: string | number | Big, proposalFee: Fee, proposerWhitelist: Whitelist, proposalReviewPeriod: string | number | Big, registrationPeriod: string | number | Big, preSnapshotPeriod: string | number | Big, votingPeriod: string | number | Big, postSnapshotPeriod: string | number | Big, executionDelayPeriod: string | number | Big, turnout: string | number | Big, quorum: string | number | Big);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }

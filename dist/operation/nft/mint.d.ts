@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { NFTItem } from "./item";
 import { Signers } from "./signer";
 import { OperationFact } from "../base";
@@ -13,7 +11,7 @@ export declare class MintItem extends NFTItem {
     readonly uri: LongString;
     readonly creators: Signers;
     constructor(contract: string | Address, receiver: string | Address, hash: string | LongString, uri: string | LongString, creators: Signers, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
 export declare class MintFact extends OperationFact<MintItem> {

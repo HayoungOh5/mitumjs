@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { PointItem } from "./item";
 import { OperationFact } from "../base";
 import { Big, HintedObject } from "../../types";
@@ -9,7 +7,7 @@ export declare class TransferFromItem extends PointItem {
     readonly receiver: Address;
     readonly target: Address;
     constructor(contract: string | Address, receiver: string | Address, target: string | Address, amount: string | number | Big, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

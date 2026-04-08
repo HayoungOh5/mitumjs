@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { STOItem } from "./item";
 import { Partition } from "./partition";
 import { OperationFact } from "../base";
@@ -11,7 +9,7 @@ export declare class IssueItem extends STOItem {
     readonly amount: Big;
     readonly partition: Partition;
     constructor(contract: string | Address, receiver: string | Address, amount: string | number | Big, partition: string | Partition, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }

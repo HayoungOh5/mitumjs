@@ -7,7 +7,7 @@ declare const _default: {
     FEEER: {
         NIL: string;
         FIXED: string;
-        RATIO: string;
+        FIXED_ITEM: string;
     };
     CREATE_ACCOUNT: {
         ITEM: string;

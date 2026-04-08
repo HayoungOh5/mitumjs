@@ -1,11 +1,9 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { Address } from "./address";
 import { KeyPairType } from "./types";
-import { Big, HintedObject, IBuffer, IHintedObject, IString } from "../types";
+import { Big, HintedObject, IBytes, IHintedObject, IString } from "../types";
 type BigArg = string | number | Big;
 type Pub = [string | Key, BigArg] | PubKey;
-export declare class Key implements IBuffer, IString {
+export declare class Key implements IBytes, IString {
     private readonly key;
     private readonly suffix;
     readonly type: KeyPairType;
@@ -13,24 +11,25 @@ export declare class Key implements IBuffer, IString {
     constructor(s: string);
     static from(s: string | Key): Key;
     get noSuffix(): string;
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toString(): string;
 }
-export declare class PubKey extends Key implements IHintedObject {
+export declare class PubKey extends Key implements IHintedObject, IBytes {
     private static hint;
     readonly weight: Big;
     constructor(key: string | Key, weight: number | string | Big);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
-export declare class Keys implements IBuffer, IHintedObject {
+export declare class Keys implements IBytes, IHintedObject {
     private static hint;
     private readonly _keys;
     readonly threshold: Big;
     constructor(keys: Pub[], threshold: BigArg);
     get keys(): PubKey[];
+    private sortKeys;
     get checksum(): Address;
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
 export {};

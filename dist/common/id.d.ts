@@ -1,11 +1,9 @@
-/// <reference types="node" />
-import type { IBuffer, IString } from "../types";
-import { Buffer } from "buffer";
-declare abstract class ID implements IBuffer, IString {
+import type { IBytes, IString } from "../types";
+declare abstract class ID implements IBytes, IString {
     private s;
     constructor(s: string);
     equal(id: ID): boolean;
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toString(): string;
 }
 export declare class CurrencyID extends ID {

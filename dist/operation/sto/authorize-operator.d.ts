@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { Buffer } from "buffer";
 import { STOItem } from "./item";
 import { Partition } from "./partition";
 import { OperationFact } from "../base";
@@ -10,7 +8,7 @@ export declare class AuthorizeOperatorItem extends STOItem {
     readonly operator: Address;
     readonly partition: Partition;
     constructor(contract: string | Address, operator: string | Address, partition: string | Partition, currency: string | CurrencyID);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }
