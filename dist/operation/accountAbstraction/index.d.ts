@@ -1,4 +1,4 @@
-import { Fact, UserOperation } from "../base";
+import { Fact, UserOperation, OperationJson } from "../base";
 import { Generator, HintedObject, IP } from "../../types";
 import { Key, Address } from "../../key";
 import { FactJson } from "../base";
@@ -13,12 +13,19 @@ export declare class AccountAbstraction extends Generator {
      */
     createUserOperation(fact: Fact | FactJson, contract: string | Address, authentication_id: string): UserOperation<Fact>;
     /**
-     * Add alternative signature for userOperation, fill `proof_data` item of `authentication` object.
-     * @param {string | Key | KeyPair} [privateKey] - The private key or key pair for signing.
-     * @param {UserOperation<Fact> | HintedObject} [userOperation] - The operation to be signed.
-     * @returns The user operation fill with authentication.
+     * Adds an alternative signature to a user operation by filling the `proof_data`
+     * field of the `authentication` object.
+     *
+     * This method accepts either a `UserOperation` instance or a JSON-formatted
+     * hinted object. The operation is normalized internally and returned in
+     * hinted-object (JSON) format after the signature is applied.
+     *
+     * @param {string | Key} privateKey - The private key used to generate the signature.
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update.
+     * @returns {Promise<HintedObject | OperationJson>} A hinted-object representation of the user operation
+     * with the `authentication.proof_data` field populated.
      */
-    addAlterSign(privateKey: string | Key, userOperation: UserOperation<Fact> | HintedObject): HintedObject;
+    addAlterSign(privateKey: string | Key, userOperation: UserOperation<Fact> | HintedObject): Promise<HintedObject | OperationJson>;
     /**
      * Updates the settlement details of a userOperation and returns a new hinted object of user operation.
      * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update settlement.

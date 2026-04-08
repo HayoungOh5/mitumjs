@@ -1,11 +1,10 @@
-/// <reference types="node" />
 import { Fact } from "./fact";
 import { GeneralFactSign, NodeFactSign } from "./factsign";
 import { Operation } from "./operation";
 import { Hint } from "../../common";
 import { Address, Key } from "../../key";
 import { HintedObject, IHintedObject } from "../../types";
-import { FactJson } from "./types";
+import { FactJson, OperationJson } from "./types";
 type FactSign = GeneralFactSign | NodeFactSign;
 export declare class Authentication implements IHintedObject {
     readonly contract: Address;
@@ -35,20 +34,22 @@ export declare class UserOperation<T extends Fact> extends Operation<T> {
     protected proxyPayer: null | ProxyPayer;
     protected settlement: Settlement;
     protected _factSigns: FactSign[];
-    protected _hash: Buffer;
+    protected _hash: Uint8Array;
     constructor(networkID: string, fact: T | FactJson, auth: Authentication, proxyPayer: null | ProxyPayer, settlement: Settlement);
     static restoreFactFromJson<T extends Fact>(factJson: FactJson): T;
-    get hash(): Buffer;
-    toBuffer(): Buffer;
-    toHintedObject(): HintedObject;
+    get hash(): Uint8Array;
+    toBytes(): Uint8Array;
+    toHintedObject(): OperationJson;
     private toHintedExtension;
     private isSenderDidOwner;
     /**
-     * Add alternative signature for userOperation, fill `proof_data` item of `authentication` object.
-     * @param {string | Key | KeyPair} [privateKey] - The private key or key pair for signing.
-     * @returns void
+     * Adds an alternative signature to the user operation.
+     * This fills the `proof_data` field of the `authentication` object using the provided private key.
+     *
+     * @param {string | Key} privateKey - The private key used to generate the alternative signature.
+     * @returns {Promise<void>} Resolves when the alternative signature has been generated and applied.
      */
-    addAlterSign(privateKey: string | Key): void;
+    addAlterSign(privateKey: string | Key): Promise<void>;
     /**
      * Sets settlement information for the userOperation.
      * `op_sender` is the account address that will **sign this UserOperation**.
@@ -73,10 +74,14 @@ export declare class UserOperation<T extends Fact> extends Operation<T> {
      **/
     setProxyPayer(proxyPayer: string | Address): void;
     /**
-     * Sign the given userOperation in JSON format using given private key.
-     * @param {string | Key} [privatekey] - The private key used for signing.
-     * @returns void.
+     * Signs the user operation using the provided private key.
+     *
+     * This method validates required fields, generates a signature, and updates the internal
+     * factSigns and operation hash. The signing process is asynchronous and must be awaited.
+     *
+     * @param {string | Key} privatekey - The private key used for signing the operation.
+     * @returns {Promise<void>} Resolves when the operation has been successfully signed.
      */
-    sign(privatekey: string | Key): void;
+    sign(privatekey: string | Key): Promise<void>;
 }
 export {};

@@ -1,13 +1,15 @@
 import { SignOption, Operation as OP, Fact } from "./base";
 import { Currency, Account, Contract } from "./currency";
 import { AccountAbstraction } from "./accountAbstraction";
-import { AuthDID } from "./authdid";
+import { Did } from "./did";
 import { Signer } from "./signer";
 import { Key, KeyPair, Address } from "../key";
 import { Generator, HintedObject, IP, SuccessResponse, ErrorResponse } from "../types";
+import { CurrencyID } from "../common";
 import * as Base from "./base";
 export declare class Operation extends Generator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
+    private hasAuthenticationExtension;
     /**
      * Get all operations of the network.
      * @async
@@ -71,12 +73,12 @@ export declare class Operation extends Generator {
     getMultiOperations(hashes: string[]): Promise<SuccessResponse | ErrorResponse>;
     /**
      * Sign the given operation using the provided private key or key pair.
-     * @param {string | Key | KeyPair} [privatekey] - The private key or key pair for signing.
-     * @param {OP<Fact>} [operation] - The operation to sign.
+     * @param {string | Key | KeyPair} privatekey - The private key or key pair for signing.
+     * @param {OP<Fact>} operation - The operation to sign.
      * @param {SignOption} [option] - (Optional) Option for node sign.
-     * @returns The signed operation.
+     * @returns {Promise<OP<Fact>>} A Promise that resolves to the signed operation.
      */
-    sign(privatekey: string | Key | KeyPair, operation: OP<Fact>, option?: SignOption): OP<Fact>;
+    sign(privatekey: string | Key | KeyPair, operation: OP<Fact>, option?: SignOption): Promise<OP<Fact>>;
     /**
      * Send the given singed operation to blockchain network.
      * @async
@@ -99,6 +101,24 @@ export declare class Operation extends Generator {
     send(operation: HintedObject | OP<Fact>, headers?: {
         [i: string]: any;
     }): Promise<OperationResponse>;
+    /**
+     * Estimate the expected transaction fee based on the currency policy.
+     *
+     * This function fetches the currency policy from the blockchain and calculates
+     * the fee according to its configured fee model.
+     *
+     * Supported fee types:
+     * - NIL: always returns 0
+     * - FIXED: returns a constant fee
+     * - FIXED_ITEM:
+     *   - If no items → treated as 1 item → fee = baseFee + itemFee
+     *   - If items exist → fee = baseFee + (itemFee × item count)
+     *
+     * @param {HintedObject | BaseOperation<Fact>} operation - The operation to estimate fee for.
+     * @param {string | CurrencyID} currencyID - The currency identifier.
+     * @returns {Promise<number>} Estimated fee amount. (in smallest unit of the currency)
+     */
+    estimateFee(operation: HintedObject | OP<Fact>, currencyID: string | CurrencyID): Promise<number>;
 }
 export declare class OperationResponse extends Operation {
     readonly response: any;
@@ -185,4 +205,4 @@ declare const token: {
     burn(contract: string | Address): Base.AllowedOperation;
     transferFrom(contract: string | Address): Base.AllowedOperation;
 };
-export { Currency, Account, Contract, AuthDID, AccountAbstraction, Signer, Base, credential, dao, nft, payment, point, storage, timestamp, token };
+export { Currency, Account, Contract, Did, AccountAbstraction, Signer, Base, credential, dao, nft, payment, point, storage, timestamp, token };

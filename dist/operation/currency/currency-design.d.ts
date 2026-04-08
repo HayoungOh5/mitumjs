@@ -1,8 +1,7 @@
-/// <reference types="node" />
-import { Address } from "../../key";
+import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
-import { Big, Float, HintedObject, IBuffer, IHintedObject } from "../../types";
-export declare class CurrencyDesign implements IBuffer, IHintedObject {
+import { Big, HintedObject, IBytes, IHintedObject } from "../../types";
+export declare class CurrencyDesign implements IBytes, IHintedObject {
     private static hint;
     readonly initialSupply: Big;
     readonly currencyID: CurrencyID;
@@ -11,42 +10,40 @@ export declare class CurrencyDesign implements IBuffer, IHintedObject {
     readonly totalSupply: Big;
     readonly decimal: Big;
     constructor(initialSupply: string | number | Big, currencyID: string | CurrencyID, genesisAccount: string | Address, decimal: string | number | Big, policy: CurrencyPolicy);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
-export declare class CurrencyPolicy implements IBuffer, IHintedObject {
+export declare class CurrencyPolicy implements IBytes, IHintedObject {
     private static hint;
     readonly newAccountMinBalance: Big;
     readonly feeer: Feeer;
     constructor(newAccountMinBalance: string | number | Big, feeer: Feeer);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
-declare abstract class Feeer implements IBuffer, IHintedObject {
+declare abstract class Feeer implements IBytes, IHintedObject {
     private hint;
-    readonly exchangeMinAmount?: Big;
-    constructor(hint: string, exchangeMinAmount?: string | number | Big);
-    abstract toBuffer(): Buffer;
+    constructor(hint: string);
+    abstract toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
 export declare class NilFeeer extends Feeer {
     constructor();
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
 }
 export declare class FixedFeeer extends Feeer {
     readonly receiver: Address;
     readonly amount: Big;
     constructor(receiver: string | Address, amount: string | number | Big);
-    toBuffer(): Buffer;
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
-export declare class RatioFeeer extends Feeer {
+export declare class FixedItemFeeer extends Feeer {
     readonly receiver: Address;
-    readonly ratio: Float;
-    readonly min: Big;
-    readonly max: Big;
-    constructor(receiver: string | Address, ratio: number, min: string | number | Big, max: string | number | Big);
-    toBuffer(): Buffer;
+    readonly amount: Big;
+    readonly item_fee_amount: Big;
+    constructor(receiver: string | Address, amount: string | number | Big, item_fee_amount: string | number | Big);
+    toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
 export {};

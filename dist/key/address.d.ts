@@ -1,12 +1,11 @@
-/// <reference types="node" />
 import { AddressType } from "./types";
 import { CurrencyID } from "../common";
-import { IBuffer, IString } from "../types";
-declare abstract class BaseAddress implements IBuffer, IString {
+import { IBytes, IString } from "../types";
+declare abstract class BaseAddress implements IBytes, IString {
     private s;
     readonly type: AddressType;
-    constructor(s: unknown, type?: AddressType);
-    toBuffer(): Buffer;
+    constructor(s: string, type?: AddressType);
+    toBytes(): Uint8Array;
     toString(): string;
 }
 export declare class Address extends BaseAddress {

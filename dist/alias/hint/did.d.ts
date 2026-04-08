@@ -7,20 +7,12 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
-    MIGRATE_DID: {
-        ITEM: string;
-        FACT: string;
-        OPERATION: string;
-    };
     UPDATE_DID_DOCUMENT: {
         FACT: string;
         OPERATION: string;
     };
     DOCUMENT: string;
-    AUTHENTICATION: {
-        ASYMMETRIC_KEY: string;
-        SOCIAL_LOGIN: string;
-    };
+    AUTHENTICATION: string;
     VERIFICATION_METHOD: string;
 };
 export default _default;

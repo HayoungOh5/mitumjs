@@ -1,7 +1,7 @@
 import { Generator, IP } from "./types";
 import { Block, Node } from "./node";
 import { Utils } from "./utils/transformUnit";
-import { Account, Currency, Contract, Operation, Signer, AuthDID, AccountAbstraction } from "./operation";
+import { Account, Currency, Contract, Operation, Signer, Did, AccountAbstraction } from "./operation";
 export declare class Mitum extends Generator {
     static allowedOperation: {
         readonly currency: {
@@ -17,7 +17,7 @@ export declare class Mitum extends Generator {
             updateRecipient(): import("./operation/base").AllowedOperation;
             updateHandler(): import("./operation/base").AllowedOperation;
         };
-        readonly authdid: {
+        readonly did: {
             registerModel(contract: string | import("./key").Address): import("./operation/base").AllowedOperation;
             create(contract: string | import("./key").Address): import("./operation/base").AllowedOperation;
             updateDocument(contract: string | import("./key").Address): import("./operation/base").AllowedOperation;
@@ -143,7 +143,7 @@ export declare class Mitum extends Generator {
             readonly INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY";
             readonly INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN";
         };
-        readonly AUTH_DID: {
+        readonly DID: {
             readonly INVALID_DID: "EC_INVALID_DID";
             readonly INVALID_DOCUMENT: "EC_INVALID_DOCUMENT";
             readonly INVALID_AUTHENTICATION: "EC_INVALID_AUTHENTICATION";
@@ -168,22 +168,18 @@ export declare class Mitum extends Generator {
             readonly code: "P00";
             readonly keyword: readonly [""];
             readonly description: "Undefined error";
-            readonly subject: "";
-        };
-        readonly IV_BASE_OP: {
-            /**Get the API URL in use.
+            readonly subject: ""; /**Get the API URL in use.
              * @returns {string | undefined} The API URL.
             */
+        };
+        readonly IV_BASE_OP: {
             readonly code: "P01";
             readonly keyword: readonly ["Invalid BaseOperation"];
             readonly description: "Error from IsValid(BaseOperation)";
             readonly subject: "";
         };
         readonly IV_BASE_NODE_OP: {
-            readonly code: "P02"; /**
-             * Get the delegate IP in use.
-             * @returns {string} The delegate IP address.
-             */
+            readonly code: "P02";
             readonly keyword: readonly ["Invalid BaseNodeOperation"];
             readonly description: "Error from IsValid(BaseNodeOperation)";
             readonly subject: "";
@@ -191,9 +187,6 @@ export declare class Mitum extends Generator {
         readonly IV_BASE_STATE: {
             readonly code: "P03";
             readonly keyword: readonly ["Invalid BaseState"];
-            /**Get the network ID in use.
-             * @returns {string} The network ID (chain).
-            */
             readonly description: "Error from IsValid(BaseState)";
             readonly subject: "";
         };
@@ -394,7 +387,7 @@ export declare class Mitum extends Generator {
     private _block;
     private _operation;
     private _signer;
-    private _authdid;
+    private _did;
     private _accountAbstraction;
     constructor(api?: string, delegateIP?: string);
     private refresh;
@@ -405,7 +398,7 @@ export declare class Mitum extends Generator {
     get operation(): Operation;
     get signer(): Signer;
     get contract(): Contract;
-    get authdid(): AuthDID;
+    get did(): Did;
     get aa(): AccountAbstraction;
     get utils(): Utils;
     /**

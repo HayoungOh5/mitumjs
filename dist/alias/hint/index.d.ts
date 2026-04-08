@@ -9,7 +9,7 @@ declare const _default: {
         FEEER: {
             NIL: string;
             FIXED: string;
-            RATIO: string;
+            FIXED_ITEM: string;
         };
         CREATE_ACCOUNT: {
             ITEM: string;
@@ -61,7 +61,7 @@ declare const _default: {
             SETTLEMENT: string;
         };
     };
-    AUTH_DID: {
+    DID: {
         REGISTER_MODEL: {
             FACT: string;
             OPERATION: string;
