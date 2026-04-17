@@ -9,6 +9,7 @@ const fetchAxios = axios.create({
     adapter: isNode ? undefined : 'fetch',
 });
 
+
 const ECODE = {
     // General Errors
     NO_API: "EC_NO_API",
@@ -552,7 +553,18 @@ class Generator {
     }
     setAPI(api) {
         if (typeof api === "string") {
-            this._api = IP.from(api.endsWith('/') ? api.slice(0, -1) : api);
+            if (api === "") {
+                this._api = undefined;
+                return;
+            }
+            const cleanApi = api.endsWith('/') ? api.slice(0, -1) : api;
+            try {
+                new URL(cleanApi);
+            }
+            catch {
+                throw MitumError.detail(ECODE.INVALID_IP, `Invalid API URL provided: ${cleanApi}`);
+            }
+            this._api = IP.from(cleanApi);
         }
         else if (api instanceof IP) {
             this._api = api;
@@ -563,7 +575,18 @@ class Generator {
     }
     setDelegate(delegateIP) {
         if (typeof delegateIP === "string") {
-            this._delegateIP = IP.from(delegateIP.endsWith('/') ? delegateIP.slice(0, -1) : delegateIP);
+            if (delegateIP === "") {
+                this._delegateIP = undefined;
+                return;
+            }
+            const cleanDelegate = delegateIP.endsWith('/') ? delegateIP.slice(0, -1) : delegateIP;
+            try {
+                new URL(cleanDelegate);
+            }
+            catch {
+                throw MitumError.detail(ECODE.INVALID_IP, `Invalid delegate URL provided: ${cleanDelegate}`);
+            }
+            this._delegateIP = IP.from(cleanDelegate);
         }
         else if (delegateIP instanceof IP) {
             this._delegateIP = delegateIP;
@@ -3289,6 +3312,7 @@ var CURRENCY = {
         NIL: "mitum-currency-nil-feeer",
         FIXED: "mitum-currency-fixed-feeer",
         FIXED_ITEM: "mitum-currency-fixed-item-feeer",
+        FIXED_DETAILED: "mitum-currency-fixed-item-data-size-execution-feeer",
     },
     CREATE_ACCOUNT: {
         ITEM: "mitum-currency-create-account-multiple-amounts",
@@ -4754,10 +4778,11 @@ class Fact {
         };
     }
 }
-class OperationFact extends Fact {
-    constructor(hint, token, sender, items) {
+class ItemOperationFact extends Fact {
+    constructor(hint, token, sender, items, currency) {
         super(hint, token);
         this.sender = Address.from(sender);
+        this.currency = CurrencyID.from(currency);
         Assert.check(Config.ITEMS_IN_FACT.satisfy(items.length), MitumError.detail(ECODE.INVALID_ITEMS, "length of items is out of range"));
         if (hint !== HINT.NFT.MINT.FACT) {
             Assert.check(new Set(items.map(i => i.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate items found"));
@@ -4769,6 +4794,7 @@ class OperationFact extends Fact {
         return concatBytes([
             super.toBytes(),
             this.sender.toBytes(),
+            this.currency.toBytes(),
             concatBytes(this.items.map((i) => i.toBytes())),
         ]);
     }
@@ -4777,6 +4803,7 @@ class OperationFact extends Fact {
             ...super.toHintedObject(),
             sender: this.sender.toString(),
             items: this.items.map(i => i.toHintedObject()),
+            currency: this.currency.toString()
         };
     }
 }
@@ -5916,9 +5943,9 @@ class CreateAccountItem extends CurrencyItem {
         return base58.encode(this.keys.toBytes());
     }
 }
-class CreateAccountFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.CURRENCY.CREATE_ACCOUNT.FACT, token, sender, items);
+class CreateAccountFact extends ItemOperationFact {
+    constructor(token, sender, items, currency) {
+        super(HINT.CURRENCY.CREATE_ACCOUNT.FACT, token, sender, items, currency);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate key hash found in items"));
     }
     get operationHint() {
@@ -5991,9 +6018,9 @@ class TransferItem extends CurrencyItem {
         return this.receiver.toString();
     }
 }
-class TransferFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.CURRENCY.TRANSFER.FACT, token, sender, items);
+class TransferFact extends ItemOperationFact {
+    constructor(token, sender, items, currency) {
+        super(HINT.CURRENCY.TRANSFER.FACT, token, sender, items, currency);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate receiver found in items"));
         this.items.forEach(it => Assert.check(this.sender.toString() != it.receiver.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with receiver address")));
     }
@@ -6023,9 +6050,9 @@ class CreateContractAccountItem extends CurrencyItem {
         return base58.encode(this.keys.toBytes());
     }
 }
-class CreateContractAccountFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.CURRENCY.CREATE_CONTRACT_ACCOUNT.FACT, token, sender, items);
+class CreateContractAccountFact extends ItemOperationFact {
+    constructor(token, sender, items, currency) {
+        super(HINT.CURRENCY.CREATE_CONTRACT_ACCOUNT.FACT, token, sender, items, currency);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate key hash found in items"));
     }
     get operationHint() {
@@ -6054,9 +6081,9 @@ class WithdrawItem extends CurrencyItem {
         return this.target.toString();
     }
 }
-class WithdrawFact extends OperationFact {
-    constructor(token, sender, items) {
-        super(HINT.CURRENCY.WITHDRAW.FACT, token, sender, items);
+class WithdrawFact extends ItemOperationFact {
+    constructor(token, sender, items, currency) {
+        super(HINT.CURRENCY.WITHDRAW.FACT, token, sender, items, currency);
         Assert.check(new Set(items.map(it => it.toString())).size === items.length, MitumError.detail(ECODE.INVALID_ITEMS, "duplicate target found in items"));
         this.items.forEach(it => Assert.check(this.sender.toString() != it.target.toString(), MitumError.detail(ECODE.INVALID_ITEMS, "sender is same with target address")));
     }
@@ -6393,7 +6420,7 @@ class Currency extends Generator {
     transfer(sender, receiver, currency, amount) {
         return new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, [
             new TransferItem(receiver, [new Amount(currency, amount)])
-        ]));
+        ], currency));
     }
     /**
      * Generate a `transfer` operation for transferring currency to multiple accounts at once.
@@ -6406,7 +6433,7 @@ class Currency extends Generator {
      */
     batchTransfer(sender, receivers, currency, amounts) {
         ArrayAssert.check(receivers, "receivers").rangeLength(Config.ITEMS_IN_FACT).noDuplicates().sameLength(amounts, "amounts");
-        return new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, receivers.map((receiver, idx) => new TransferItem(receiver, [new Amount(currency, amounts[idx])]))));
+        return new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, receivers.map((receiver, idx) => new TransferItem(receiver, [new Amount(currency, amounts[idx])])), currency));
     }
     /**
      * Generate a `withdraw`operation for withdrawing currency from an contract account.
@@ -6420,7 +6447,7 @@ class Currency extends Generator {
     withdraw(sender, target, currency, amount) {
         return new Operation$1(this.networkID, new WithdrawFact(TimeStamp.new().UTC(), sender, [
             new WithdrawItem(target, [new Amount(currency, amount)])
-        ]));
+        ], currency));
     }
     /**
      * Generate a `withdraw` operation with multiple items for withdrawing currency from multiple contract accounts.
@@ -6434,7 +6461,7 @@ class Currency extends Generator {
     multiWithdraw(sender, targets, currency, amounts) {
         ArrayAssert.check(targets, "targets").rangeLength(Config.ITEMS_IN_FACT).sameLength(amounts, "amounts");
         const items = targets.map((el, idx) => { return new WithdrawItem(el, [new Amount(currency, amounts[idx])]); });
-        return new Operation$1(this.networkID, new WithdrawFact(TimeStamp.new().UTC(), sender, items));
+        return new Operation$1(this.networkID, new WithdrawFact(TimeStamp.new().UTC(), sender, items, currency));
     }
     /**
      * Generate a `mint` operation for minting currency and allocating it to a receiver.
@@ -6504,7 +6531,7 @@ class Account extends KeyG {
             },
             operation: new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, [
                 new TransferItem(ks.checksum, [new Amount(currency, amount)])
-            ])),
+            ], currency)),
         };
     }
     /**
@@ -6520,7 +6547,7 @@ class Account extends KeyG {
         const items = keyArray.map((ks) => new TransferItem(ks.address, [new Amount(currency, amount)]));
         return {
             wallet: keyArray,
-            operation: new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, items)),
+            operation: new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, items, currency)),
         };
     }
     /**
@@ -6535,7 +6562,7 @@ class Account extends KeyG {
         const ks = new Keys([new PubKey(key, 100)], 100);
         return new Operation$1(this.networkID, new TransferFact(TimeStamp.new().UTC(), sender, [
             new TransferItem(ks.checksum, [new Amount(currency, amount)])
-        ]));
+        ], currency));
     }
     /**
      * Generate a `create-account` operation for the multi-signature account.
@@ -6560,7 +6587,7 @@ class Account extends KeyG {
     createMultiSig(sender, keys, currency, amount, threshold) {
         return new Operation$1(this.networkID, new CreateAccountFact(TimeStamp.new().UTC(), sender, [
             new CreateAccountItem(new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold), [new Amount(currency, amount)])
-        ]));
+        ], currency));
     }
     /**
      * Generate an `update-key` operation for replace the public keys involved in given address.
@@ -6735,7 +6762,7 @@ class Contract extends KeyG {
             },
             operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, [
                 new CreateContractAccountItem(ks, [new Amount(currency, amount)])
-            ])),
+            ], currency)),
         };
     }
     /**
@@ -6751,7 +6778,7 @@ class Contract extends KeyG {
         const items = keyArray.map((ks) => new CreateContractAccountItem(new Keys([new PubKey(ks.publickey, 100)], 100), [new Amount(currency, amount)]));
         return {
             wallet: keyArray,
-            operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, items)),
+            operation: new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, items, currency)),
         };
     }
     /**
@@ -6765,7 +6792,7 @@ class Contract extends KeyG {
     createAccount(sender, key, currency, amount) {
         return new Operation$1(this.networkID, new CreateContractAccountFact(TimeStamp.new().UTC(), sender, [
             new CreateContractAccountItem(new Keys([new PubKey(key, 100)], 100), [new Amount(currency, amount)])
-        ]));
+        ], currency));
     }
     /**
      * Get contract account information for the given address.
@@ -6839,7 +6866,7 @@ class Contract extends KeyG {
     async touch(privatekey, wallet) {
         Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         const op = wallet.operation;
-        op.sign(privatekey);
+        await op.sign(privatekey);
         return await new Operation(this.networkID, this.api, this.delegateIP).send(op);
     }
 }
@@ -7748,6 +7775,611 @@ class Signer extends Generator {
     }
 }
 
+// // ── Token ──────────────────────────────────────────────────────────────
+// import { RegisterModelFact as TokenRegisterModelFact } from "../operation/token/register-model"
+// import { MintFact as TokenMintFact } from "../operation/token/mint"
+// import { BurnFact as TokenBurnFact } from "../operation/token/burn"
+// import { TransferFact as TokenTransferFact, TransferItem as TokenTransferItem } from "../operation/token/transfer"
+// import { ApproveFact as TokenApproveFact, ApproveItem as TokenApproveItem } from "../operation/token/approve"
+// import { TransferFromFact as TokenTransferFromFact, TransferFromItem as TokenTransferFromItem } from "../operation/token/transfer-from"
+// // ── Storage ────────────────────────────────────────────────────────────
+// import { RegisterModelFact as StorageRegisterModelFact } from "../operation/storage/resgister-model"
+// import { CreateDataFact, CreateDataItem } from "../operation/storage/create-data"
+// import { UpdateDataFact, UpdateDataItem } from "../operation/storage/update-data"
+// import { DeleteDataFact } from "../operation/storage/delete-data"
+// // ── Credential ─────────────────────────────────────────────────────────
+// import { RegisterModelFact as CredentialRegisterModelFact } from "../operation/credential/register-model"
+// import { AddTemplateFact } from "../operation/credential/add-template"
+// import { IssueFact as CredentialIssueFact, IssueItem as CredentialIssueItem } from "../operation/credential/issue"
+// import { RevokeFact, RevokeItem } from "../operation/credential/revoke"
+// // ── DAO ────────────────────────────────────────────────────────────────
+// import { RegisterModelFact as DAORegisterModelFact } from "../operation/dao/register-model"
+// import { UpdateModelConfigFact as DAOUpdateModelConfigFact } from "../operation/dao/update-model-config"
+// import { ProposeFact } from "../operation/dao/propose"
+// import { CancelProposalFact } from "../operation/dao/cancel-proposal"
+// import { RegisterFact as DAORegisterFact } from "../operation/dao/register"
+// import { PreSnapFact } from "../operation/dao/pre-snap"
+// import { PostSnapFact } from "../operation/dao/post-snap"
+// import { VoteFact } from "../operation/dao/vote"
+// import { ExecuteFact } from "../operation/dao/execute"
+// import { DAOPolicy } from "../operation/dao/policy"
+// import { Whitelist } from "../operation/dao/whitelist"
+// import { CryptoProposal, BizProposal, TransferCalldata, GovernanceCalldata } from "../operation/dao/proposal"
+// // ── NFT ────────────────────────────────────────────────────────────────
+// import { RegisterModelFact as NFTRegisterModelFact } from "../operation/nft/register-model"
+// import { UpdateModelConfigFact as NFTUpdateModelConfigFact } from "../operation/nft/update-model-config"
+// import { MintFact as NFTMintFact, MintItem as NFTMintItem } from "../operation/nft/mint"
+// import { ApproveAllFact, ApproveAllItem } from "../operation/nft/approve-all"
+// import { ApproveFact as NFTApproveFact, ApproveItem as NFTApproveItem } from "../operation/nft/approve"
+// import { TransferFact as NFTTransferFact, TransferItem as NFTTransferItem } from "../operation/nft/transfer"
+// import { AddSignatureFact, AddSignatureItem } from "../operation/nft/add-signature"
+// import { Signer, Signers } from "../operation/nft/signer"
+// // ── Payment ────────────────────────────────────────────────────────────
+// import { RegisterModelFact as PaymentRegisterModelFact } from "../operation/payment/resgister-model"
+// import { DepositFact } from "../operation/payment/deposit"
+// import { TransferFact as PaymentTransferFact } from "../operation/payment/transfer"
+// import { WithdrawFact as PaymentWithdrawFact } from "../operation/payment/withdraw"
+// import { UpdateFact as PaymentUpdateFact } from "../operation/payment/update-account-setting"
+// // ── Point ──────────────────────────────────────────────────────────────
+// import { RegisterModelFact as PointRegisterModelFact } from "../operation/point/register-model"
+// import { MintFact as PointMintFact } from "../operation/point/mint"
+// import { TransferFact as PointTransferFact, TransferItem as PointTransferItem } from "../operation/point/transfer"
+// import { ApproveFact as PointApproveFact, ApproveItem as PointApproveItem } from "../operation/point/approve"
+// import { BurnFact as PointBurnFact } from "../operation/point/burn"
+// import { TransferFromFact as PointTransferFromFact, TransferFromItem as PointTransferFromItem } from "../operation/point/transfer-from"
+// // ── Timestamp ──────────────────────────────────────────────────────────
+// import { RegisterModelFact as TimestampRegisterModelFact } from "../operation/timestamp/resgister-model"
+// import { IssueFact as TimestampIssueFact } from "../operation/timestamp/issue"
+/**
+ * Decodes the base64-encoded token back to the raw token string.
+ *
+ * Background: Token.toString() returns bytesToBase64(TextEncoder.encode(rawString)),
+ * so toHintedObject() stores the token as base64. Constructors expect the raw
+ * string, so we must reverse the encoding here.
+ */
+function decodeBase64Token(base64) {
+    if (typeof Buffer !== "undefined") {
+        return Buffer.from(base64, "base64").toString("utf8");
+    }
+    // Browser fallback
+    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+}
+/** Reconstruct Amount instances from Amount.toHintedObject() JSON. */
+function amountsFromJson(amountsJson) {
+    return amountsJson.map(a => new Amount(a.currency, a.amount));
+}
+/** Reconstruct Keys from Keys.toHintedObject() JSON: { keys: [{key, weight}], threshold }. */
+function keysFromJson(keysJson) {
+    return new Keys(keysJson.keys.map(k => new PubKey(k.key, k.weight)), keysJson.threshold);
+}
+/** Reconstruct an Authentication (AsymKeyAuth or LinkedAuth) from its toHintedObject() JSON. */
+function authFromJson(json) {
+    if (json.type === "LinkedVerificationMethod") {
+        return new LinkedAuth(json.id, json.controller, json.targetId, json.allowed.map(a => new AllowedOperation$1(a.operation, a.contract)));
+    }
+    return new AsymKeyAuth(json.id, json.type, json.controller, json.publicKeyImFact);
+}
+/** Reconstruct a Document from its toHintedObject() JSON. */
+function documentFromJson(json) {
+    return new Document(json["@context"], json.id, json.authentication.map(authFromJson), json.verificationMethod.map(authFromJson), json.service && json.service.length > 0
+        ? json.service.map(s => new Service(s.id, s.type, s.service_end_point))
+        : undefined);
+}
+// /** Reconstruct NFT Signers from Signers.toHintedObject() JSON: { signers: [{account, share, signed}] }. */
+// function signersFromJson(json: any): Signers {
+//     return new Signers(
+//         (json.signers as any[]).map(s => new Signer(s.account, s.share, s.signed))
+//     )
+// }
+// /** Reconstruct DAOPolicy from the fields spread into a DAO fact's toHintedObject(). */
+// function daoPolicyFromJson(json: any): DAOPolicy {
+//     const whitelist = new Whitelist(
+//         json.proposer_whitelist.active,
+//         (json.proposer_whitelist.accounts as string[]) ?? [],
+//     )
+//     return new DAOPolicy(
+//         json.voting_power_token,
+//         json.threshold,
+//         new Fee(json.proposal_fee.currency, json.proposal_fee.amount),
+//         whitelist,
+//         json.proposal_review_period,
+//         json.registration_period,
+//         json.pre_snapshot_period,
+//         json.voting_period,
+//         json.post_snapshot_period,
+//         json.execution_delay_period,
+//         json.turnout,
+//         json.quorum,
+//     )
+// }
+// /** Reconstruct a DAO Proposal (CryptoProposal or BizProposal) from its JSON. */
+// function proposalFromJson(json: any): CryptoProposal | BizProposal {
+//     const hint: string = json._hint
+//     if (hint.includes(HINT.DAO.PROPOSAL.CRYPTO)) {
+//         const cd = json.call_data
+//         const cdHint: string = cd._hint
+//         let calldata: TransferCalldata | GovernanceCalldata
+//         if (cdHint.includes(HINT.DAO.CALLDATA.TRANSFER)) {
+//             calldata = new TransferCalldata(
+//                 cd.sender,
+//                 cd.receiver,
+//                 new Amount(cd.amount.currency, cd.amount.amount),
+//             )
+//         } else {
+//             calldata = new GovernanceCalldata(daoPolicyFromJson(cd.policy))
+//         }
+//         return new CryptoProposal(json.proposer, json.start_time, calldata)
+//     }
+//     // BizProposal
+//     return new BizProposal(json.proposer, json.start_time, json.url, json.hash, json.options)
+// }
+/**
+ * Reconstructs a Fact instance from its JSON representation (the output of
+ * BaseOperation.toHintedObject().fact). This lets you call fact.toBytes() when
+ * only the serialised JSON is available — e.g. for FIXED_DETAILED fee estimation.
+ *
+ * Supported domains: Currency, Token, Storage, Credential, DAO, NFT, Payment,
+ * Point, Timestamp. (KYC and STO are excluded.)
+ *
+ * To add a new type, follow the same pattern below.
+ *
+ * @throws {Error} when the hint is not recognised
+ */
+function factFromJson(factJson) {
+    const hint = factJson._hint;
+    const token = decodeBase64Token(factJson.token);
+    // ======== CURRENCY ========
+    if (hint.includes(HINT.CURRENCY.MINT.FACT)) {
+        return new MintFact(token, factJson.receiver, new Amount(factJson.amount.currency, factJson.amount.amount));
+    }
+    if (hint.includes(HINT.CURRENCY.TRANSFER.FACT)) {
+        const items = factJson.items.map(item => new TransferItem(item.receiver, amountsFromJson(item.amounts)));
+        return new TransferFact(token, factJson.sender, items, factJson.currency);
+    }
+    if (hint.includes(HINT.CURRENCY.WITHDRAW.FACT)) {
+        const items = factJson.items.map(item => new WithdrawItem(item.target, amountsFromJson(item.amounts)));
+        return new WithdrawFact(token, factJson.sender, items, factJson.currency);
+    }
+    // Check CREATE_CONTRACT_ACCOUNT before CREATE_ACCOUNT (more specific first)
+    if (hint.includes(HINT.CURRENCY.CREATE_CONTRACT_ACCOUNT.FACT)) {
+        const items = factJson.items.map(item => new CreateContractAccountItem(keysFromJson(item.keys), amountsFromJson(item.amounts)));
+        return new CreateContractAccountFact(token, factJson.sender, items, factJson.currency);
+    }
+    if (hint.includes(HINT.CURRENCY.CREATE_ACCOUNT.FACT)) {
+        const items = factJson.items.map(item => new CreateAccountItem(keysFromJson(item.keys), amountsFromJson(item.amounts)));
+        return new CreateAccountFact(token, factJson.sender, items, factJson.currency);
+    }
+    if (hint.includes(HINT.CURRENCY.UPDATE_KEY.FACT)) {
+        return new UpdateKeyFact(token, factJson.sender, keysFromJson(factJson.keys), factJson.currency);
+    }
+    if (hint.includes(HINT.CURRENCY.UPDATE_HANDLER.FACT)) {
+        return new UpdateHandlerFact(token, factJson.sender, factJson.contract, factJson.currency, factJson.handlers);
+    }
+    // // ======== TOKEN ========
+    // if (hint.includes(HINT.TOKEN.REGISTER_MODEL.FACT)) {
+    //     return new TokenRegisterModelFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.symbol,
+    //         factJson.name,
+    //         factJson.decimal,
+    //         factJson.initial_supply,
+    //     )
+    // }
+    // if (hint.includes(HINT.TOKEN.MINT.FACT)) {
+    //     return new TokenMintFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.receiver,
+    //         factJson.amount,
+    //     )
+    // }
+    // if (hint.includes(HINT.TOKEN.BURN.FACT)) {
+    //     return new TokenBurnFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.amount,
+    //     )
+    // }
+    // // Check TRANSFER_FROM before TRANSFER (more specific first)
+    // if (hint.includes(HINT.TOKEN.TRANSFER_FROM.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new TokenTransferFromItem(item.contract, item.receiver, item.target, item.amount, item.currency)
+    //     )
+    //     return new TokenTransferFromFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.TOKEN.TRANSFER.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new TokenTransferItem(item.contract, item.receiver, item.amount, item.currency)
+    //     )
+    //     return new TokenTransferFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.TOKEN.APPROVE.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new TokenApproveItem(item.contract, item.approved, item.amount, item.currency)
+    //     )
+    //     return new TokenApproveFact(token, factJson.sender, items)
+    // }
+    // // ======== STORAGE ========
+    // if (hint.includes(HINT.STORAGE.REGISTER_MODEL.FACT)) {
+    //     return new StorageRegisterModelFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.project,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.STORAGE.CREATE_DATA.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new CreateDataItem(item.contract, item.currency, item.dataKey, item.dataValue)
+    //     )
+    //     return new CreateDataFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.STORAGE.UPDATE_DATA.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new UpdateDataItem(item.contract, item.currency, item.dataKey, item.dataValue)
+    //     )
+    //     return new UpdateDataFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.STORAGE.DELETE_DATA.FACT)) {
+    //     return new DeleteDataFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.dataKey,
+    //         factJson.currency,
+    //     )
+    // }
+    // // ======== CREDENTIAL ========
+    // if (hint.includes(HINT.CREDENTIAL.REGISTER_MODEL.FACT)) {
+    //     return new CredentialRegisterModelFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.CREDENTIAL.ADD_TEMPLATE.FACT)) {
+    //     return new AddTemplateFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.template_id,
+    //         factJson.template_name,
+    //         factJson.service_date,
+    //         factJson.expiration_date,
+    //         factJson.template_share,
+    //         factJson.multi_audit,
+    //         factJson.display_name,
+    //         factJson.subject_key,
+    //         factJson.description,
+    //         factJson.creator,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.CREDENTIAL.ISSUE.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new CredentialIssueItem(
+    //             item.contract,
+    //             item.holder,
+    //             item.template_id,
+    //             item.credential_id,
+    //             item.value,
+    //             item.valid_from,
+    //             item.valid_until,
+    //             item.did,
+    //             item.currency,
+    //         )
+    //     )
+    //     return new CredentialIssueFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.CREDENTIAL.REVOKE.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new RevokeItem(
+    //             item.contract,
+    //             item.holder,
+    //             item.template_id,
+    //             item.credential_id,
+    //             item.currency,
+    //         )
+    //     )
+    //     return new RevokeFact(token, factJson.sender, items)
+    // }
+    // // ======== DAO ========
+    // // RegisterModel and UpdateModelConfig spread policy fields into the fact JSON directly.
+    // if (hint.includes(HINT.DAO.REGISTER_MODEL.FACT)) {
+    //     return new DAORegisterModelFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.option,
+    //         daoPolicyFromJson(factJson),
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.DAO.UPDATE_MODEL_CONFIG.FACT)) {
+    //     return new DAOUpdateModelConfigFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.option,
+    //         daoPolicyFromJson(factJson),
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.DAO.PROPOSE.FACT)) {
+    //     return new ProposeFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.proposal_id,
+    //         proposalFromJson(factJson.proposal),
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.DAO.CANCEL_PROPOSAL.FACT)) {
+    //     return new CancelProposalFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.proposal_id,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.DAO.REGISTER.FACT)) {
+    //     return new DAORegisterFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.proposal_id,
+    //         factJson.approved,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.DAO.PRE_SNAP.FACT)) {
+    //     return new PreSnapFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.proposal_id,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.DAO.POST_SNAP.FACT)) {
+    //     return new PostSnapFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.proposal_id,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.DAO.VOTE.FACT)) {
+    //     return new VoteFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.proposal_id,
+    //         factJson.vote_option,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.DAO.EXECUTE.FACT)) {
+    //     return new ExecuteFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.proposal_id,
+    //         factJson.currency,
+    //     )
+    // }
+    // // ======== NFT ========
+    // if (hint.includes(HINT.NFT.REGISTER_MODEL.FACT)) {
+    //     return new NFTRegisterModelFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.name,
+    //         factJson.royalty,
+    //         factJson.uri,
+    //         factJson.minter_whitelist ?? [],
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.NFT.UPDATE_MODEL_CONFIG.FACT)) {
+    //     return new NFTUpdateModelConfigFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.name,
+    //         factJson.royalty,
+    //         factJson.uri,
+    //         factJson.minter_whitelist ?? [],
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.NFT.MINT.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new NFTMintItem(
+    //             item.contract,
+    //             item.receiver,
+    //             item.hash,
+    //             item.uri,
+    //             signersFromJson(item.creators),
+    //             item.currency,
+    //         )
+    //     )
+    //     return new NFTMintFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.NFT.APPROVE_ALL.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new ApproveAllItem(item.contract, item.approved, item.mode, item.currency)
+    //     )
+    //     return new ApproveAllFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.NFT.APPROVE.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new NFTApproveItem(item.contract, item.approved, item.nft_idx, item.currency)
+    //     )
+    //     return new NFTApproveFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.NFT.TRANSFER.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new NFTTransferItem(item.contract, item.receiver, item.nft_idx, item.currency)
+    //     )
+    //     return new NFTTransferFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.NFT.ADD_SIGNATURE.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new AddSignatureItem(item.contract, item.nft_idx, item.currency)
+    //     )
+    //     return new AddSignatureFact(token, factJson.sender, items)
+    // }
+    // // ======== PAYMENT ========
+    // if (hint.includes(HINT.PAYMENT.REGISTER_MODEL.FACT)) {
+    //     return new PaymentRegisterModelFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.PAYMENT.DEPOSIT.FACT)) {
+    //     return new DepositFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.amount,
+    //         factJson.transfer_limit,
+    //         factJson.start_time,
+    //         factJson.end_time,
+    //         factJson.duration,
+    //     )
+    // }
+    // if (hint.includes(HINT.PAYMENT.TRANSFER.FACT)) {
+    //     return new PaymentTransferFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.receiver,
+    //         factJson.amount,
+    //     )
+    // }
+    // if (hint.includes(HINT.PAYMENT.WITHDRAW.FACT)) {
+    //     return new PaymentWithdrawFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.PAYMENT.UPDATE_ACCOUNT_SETTING.FACT)) {
+    //     return new PaymentUpdateFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.transfer_limit,
+    //         factJson.start_time,
+    //         factJson.end_time,
+    //         factJson.duration,
+    //     )
+    // }
+    // // ======== POINT ========
+    // if (hint.includes(HINT.POINT.REGISTER_MODEL.FACT)) {
+    //     return new PointRegisterModelFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.symbol,
+    //         factJson.name,
+    //         factJson.decimal,
+    //         factJson.initial_supply,
+    //     )
+    // }
+    // if (hint.includes(HINT.POINT.MINT.FACT)) {
+    //     return new PointMintFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.receiver,
+    //         factJson.amount,
+    //     )
+    // }
+    // if (hint.includes(HINT.POINT.BURN.FACT)) {
+    //     return new PointBurnFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //         factJson.amount,
+    //     )
+    // }
+    // // Check TRANSFER_FROM before TRANSFER (more specific first)
+    // if (hint.includes(HINT.POINT.TRANSFER_FROM.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new PointTransferFromItem(item.contract, item.receiver, item.target, item.amount, item.currency)
+    //     )
+    //     return new PointTransferFromFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.POINT.TRANSFER.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new PointTransferItem(item.contract, item.receiver, item.amount, item.currency)
+    //     )
+    //     return new PointTransferFact(token, factJson.sender, items)
+    // }
+    // if (hint.includes(HINT.POINT.APPROVE.FACT)) {
+    //     const items = (factJson.items as any[]).map(item =>
+    //         new PointApproveItem(item.contract, item.approved, item.amount, item.currency)
+    //     )
+    //     return new PointApproveFact(token, factJson.sender, items)
+    // }
+    // // ======== TIMESTAMP ========
+    // if (hint.includes(HINT.TIMESTAMP.REGISTER_MODEL.FACT)) {
+    //     return new TimestampRegisterModelFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.currency,
+    //     )
+    // }
+    // if (hint.includes(HINT.TIMESTAMP.ISSUE.FACT)) {
+    //     return new TimestampIssueFact(
+    //         token,
+    //         factJson.sender,
+    //         factJson.contract,
+    //         factJson.project_id,
+    //         factJson.request_timestamp,
+    //         factJson.data,
+    //         factJson.currency,
+    //     )
+    // }
+    // ======== DID ========
+    if (hint.includes(HINT.DID.REGISTER_MODEL.FACT)) {
+        return new RegisterModelFact(token, factJson.sender, factJson.contract, factJson.didMethod, factJson.currency);
+    }
+    if (hint.includes(HINT.DID.CREATE_DID.FACT)) {
+        return new CreateFact(token, factJson.sender, factJson.contract, factJson.currency);
+    }
+    if (hint.includes(HINT.DID.UPDATE_DID_DOCUMENT.FACT)) {
+        return new UpdateDocumentFact(token, factJson.sender, factJson.contract, factJson.did, documentFromJson(factJson.document), factJson.currency);
+    }
+    throw new Error(`factFromJson: unsupported fact type "${hint}". ` +
+        `Add support for this type in src/utils/factFromJson.ts.`);
+}
+
 const encoder = new TextEncoder();
 class Operation extends Generator {
     constructor(networkID, api, delegateIP) {
@@ -7905,18 +8537,19 @@ class Operation extends Generator {
      * the fee according to its configured fee model.
      *
      * Supported fee types:
-     * - NIL: always returns 0
-     * - FIXED: returns a constant fee
+     * - NIL: always returns total_fee "0"
+     * - FIXED: returns total_fee as a constant fee
      * - FIXED_ITEM:
-     *   - If no items → treated as 1 item → fee = baseFee + itemFee
-     *   - If items exist → fee = baseFee + (itemFee × item count)
+     *   - If no items → treated as 1 item → total_fee = base_fee + item_fee
+     *   - If items exist → total_fee = base_fee + (item_unit_fee × item_count)
+     * - FIXED_DETAILED: total_fee = base_fee + item_fee + data_size_fee
      *
-     * @param {HintedObject | BaseOperation<Fact>} operation - The operation to estimate fee for.
+     * @param {HintedObject | OP<Fact>} operation - The operation to estimate fee for.
      * @param {string | CurrencyID} currencyID - The currency identifier.
-     * @returns {Promise<number>} Estimated fee amount. (in smallest unit of the currency)
+     * @returns {Promise<FeeEstimate>} Detailed fee breakdown. All amounts are in the smallest unit of the currency.
      */
     async estimateFee(operation, currencyID) {
-        CurrencyID.from(currencyID);
+        const cid = CurrencyID.from(currencyID).toString();
         Assert.check(this.api != null, MitumError.detail(ECODE.NO_API, "API is not provided"));
         Assert.check(isOpFact(operation) || isHintedObject(operation), MitumError.detail(ECODE.INVALID_OPERATION, `input is neither in OP<Fact> nor HintedObject format`));
         try {
@@ -7931,19 +8564,56 @@ class Operation extends Generator {
             Assert.check(feeer != null, MitumError.detail(ECODE.CURRENCY.INVALID_CURRENCY_FEEER, "feeer policy not found"));
             const hint = feeer._hint;
             if (hint.includes(HINT.CURRENCY.FEEER.NIL)) {
-                return 0;
+                return { _hint: hint, currency_id: cid, total_fee: "0" };
             }
             if (hint.includes(HINT.CURRENCY.FEEER.FIXED)) {
-                return Number(feeer.amount);
+                return { _hint: hint, currency_id: cid, total_fee: String(feeer.amount) };
             }
-            if (hint.includes(HINT.CURRENCY.FEEER.FIXED_ITEM)) {
-                const opJson = isOpFact(operation)
-                    ? operation.toHintedObject()
-                    : operation;
-                const itemCount = "items" in opJson.fact && Array.isArray(opJson.fact.items)
-                    ? opJson.fact.items.length
-                    : 1; // Default to 1 if items are not present or not an array
-                return Number(feeer.amount) + Number(feeer.item_fee_amount) * itemCount;
+            const opJson = isOpFact(operation) ? operation.toHintedObject() : operation;
+            const itemCount = "items" in opJson.fact && Array.isArray(opJson.fact.items)
+                ? opJson.fact.items.length
+                : 1;
+            if (hint.includes(HINT.CURRENCY.FEEER.FIXED_ITEM) &&
+                !hint.includes(HINT.CURRENCY.FEEER.FIXED_DETAILED)) {
+                const baseFee = BigInt(feeer.amount);
+                const itemUnitFee = BigInt(feeer.item_fee_amount);
+                const itemFee = itemUnitFee * BigInt(itemCount);
+                const totalFee = baseFee + itemFee;
+                return {
+                    _hint: hint,
+                    currency_id: cid,
+                    total_fee: String(totalFee),
+                    base_fee: String(baseFee),
+                    item_unit_fee: String(itemUnitFee),
+                    item_count: itemCount,
+                    item_fee: String(itemFee),
+                };
+            }
+            if (hint.includes(HINT.CURRENCY.FEEER.FIXED_DETAILED)) {
+                const fact = isOpFact(operation)
+                    ? operation.fact
+                    : factFromJson(opJson.fact);
+                const byteLength = fact.toBytes().length;
+                const baseFee = BigInt(feeer.amount);
+                const itemUnitFee = BigInt(feeer.item_fee_amount);
+                const itemFee = itemUnitFee * BigInt(itemCount);
+                const dataSizeUnit = Number(feeer.data_size_unit);
+                const dataSizeUnitFee = BigInt(feeer.data_size_fee_amount);
+                const dataSizeFee = dataSizeUnitFee * BigInt(Math.ceil(byteLength / dataSizeUnit));
+                const totalFee = baseFee + itemFee + dataSizeFee;
+                return {
+                    _hint: hint,
+                    currency_id: cid,
+                    total_fee: String(totalFee),
+                    base_fee: String(baseFee),
+                    item_unit_fee: String(itemUnitFee),
+                    item_count: itemCount,
+                    item_fee: String(itemFee),
+                    data_size_unit_fee: String(dataSizeUnitFee),
+                    data_size_unit: dataSizeUnit,
+                    data_size: byteLength,
+                    data_size_fee: String(dataSizeFee),
+                };
             }
             throw MitumError.detail(ECODE.CURRENCY.INVALID_CURRENCY_FEEER, `Unsupported feeer type: ${hint}`);
         }
@@ -7975,6 +8645,7 @@ class OperationResponse extends Operation {
      * - `reason`: Reason for operation failure,
      * - `in_state`: Boolean indicating whether the operation was successful or not,
      * - `index`: Index of the operation in the block
+     * - `receipt`: Receipt for the operation fee
      *
      * **If `in_state` is `false`, the operation failed, and the `reason` property provides the failure reason.**
      */

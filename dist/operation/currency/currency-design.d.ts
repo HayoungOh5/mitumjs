@@ -46,4 +46,15 @@ export declare class FixedItemFeeer extends Feeer {
     toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
+export declare class FixedDetailedFeeer extends Feeer {
+    readonly receiver: Address;
+    readonly amount: Big;
+    readonly item_fee_amount: Big;
+    readonly data_size_fee_amount: Big;
+    readonly data_size_unit: Big;
+    readonly execution_fee_amount: Big;
+    constructor(receiver: string | Address, amount: string | number | Big, item_fee_amount: string | number | Big, data_size_fee_amount: string | number | Big, data_size_unit: string | number | Big, execution_fee_amount: string | number | Big);
+    toBytes(): Uint8Array;
+    toHintedObject(): HintedObject;
+}
 export {};

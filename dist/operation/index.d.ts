@@ -7,6 +7,19 @@ import { Key, KeyPair, Address } from "../key";
 import { Generator, HintedObject, IP, SuccessResponse, ErrorResponse } from "../types";
 import { CurrencyID } from "../common";
 import * as Base from "./base";
+export interface FeeEstimate {
+    _hint: string;
+    currency_id: string;
+    total_fee: string;
+    base_fee?: string;
+    item_unit_fee?: string;
+    item_count?: number;
+    item_fee?: string;
+    data_size_unit_fee?: string;
+    data_size_unit?: number;
+    data_size?: number;
+    data_size_fee?: string;
+}
 export declare class Operation extends Generator {
     constructor(networkID: string, api?: string | IP, delegateIP?: string | IP);
     private hasAuthenticationExtension;
@@ -108,17 +121,18 @@ export declare class Operation extends Generator {
      * the fee according to its configured fee model.
      *
      * Supported fee types:
-     * - NIL: always returns 0
-     * - FIXED: returns a constant fee
+     * - NIL: always returns total_fee "0"
+     * - FIXED: returns total_fee as a constant fee
      * - FIXED_ITEM:
-     *   - If no items → treated as 1 item → fee = baseFee + itemFee
-     *   - If items exist → fee = baseFee + (itemFee × item count)
+     *   - If no items → treated as 1 item → total_fee = base_fee + item_fee
+     *   - If items exist → total_fee = base_fee + (item_unit_fee × item_count)
+     * - FIXED_DETAILED: total_fee = base_fee + item_fee + data_size_fee
      *
-     * @param {HintedObject | BaseOperation<Fact>} operation - The operation to estimate fee for.
+     * @param {HintedObject | OP<Fact>} operation - The operation to estimate fee for.
      * @param {string | CurrencyID} currencyID - The currency identifier.
-     * @returns {Promise<number>} Estimated fee amount. (in smallest unit of the currency)
+     * @returns {Promise<FeeEstimate>} Detailed fee breakdown. All amounts are in the smallest unit of the currency.
      */
-    estimateFee(operation: HintedObject | OP<Fact>, currencyID: string | CurrencyID): Promise<number>;
+    estimateFee(operation: HintedObject | OP<Fact>, currencyID: string | CurrencyID): Promise<FeeEstimate>;
 }
 export declare class OperationResponse extends Operation {
     readonly response: any;
@@ -141,6 +155,7 @@ export declare class OperationResponse extends Operation {
      * - `reason`: Reason for operation failure,
      * - `in_state`: Boolean indicating whether the operation was successful or not,
      * - `index`: Index of the operation in the block
+     * - `receipt`: Receipt for the operation fee
      *
      * **If `in_state` is `false`, the operation failed, and the `reason` property provides the failure reason.**
      */
