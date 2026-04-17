@@ -1,17 +1,17 @@
 import { NFTItem } from "./item";
-import { OperationFact } from "../base";
+import { ItemOperationFact } from "../base";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, HintedObject } from "../../types";
 export declare class TransferItem extends NFTItem {
     readonly receiver: Address;
     readonly nftIdx: Big;
-    constructor(contract: string | Address, receiver: string | Address, nftIdx: string | number | Big, currency: string | CurrencyID);
+    constructor(contract: string | Address, receiver: string | Address, nftIdx: string | number | Big);
     toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }
-export declare class TransferFact extends OperationFact<TransferItem> {
-    constructor(token: string, sender: string | Address, items: TransferItem[]);
+export declare class TransferFact extends ItemOperationFact<TransferItem> {
+    constructor(token: string, sender: string | Address, items: TransferItem[], currency: string | CurrencyID);
     get operationHint(): string;
 }

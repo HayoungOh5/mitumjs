@@ -8,6 +8,7 @@ declare const _default: {
         NIL: string;
         FIXED: string;
         FIXED_ITEM: string;
+        FIXED_DETAILED: string;
     };
     CREATE_ACCOUNT: {
         ITEM: string;

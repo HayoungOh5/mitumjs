@@ -1,6 +1,6 @@
 import { CurrencyItem } from "./item";
-import { OperationFact } from "../base";
-import { Amount } from "../../common";
+import { ItemOperationFact } from "../base";
+import { Amount, CurrencyID } from "../../common";
 import { HintedObject } from "../../types";
 import { Address } from "../../key/address";
 import { Keys } from "../../key/pub";
@@ -11,7 +11,7 @@ export declare class CreateContractAccountItem extends CurrencyItem {
     toHintedObject(): HintedObject;
     toString(): string;
 }
-export declare class CreateContractAccountFact extends OperationFact<CreateContractAccountItem> {
-    constructor(token: string, sender: string | Address, items: CreateContractAccountItem[]);
+export declare class CreateContractAccountFact extends ItemOperationFact<CreateContractAccountItem> {
+    constructor(token: string, sender: string | Address, items: CreateContractAccountItem[], currency: string | CurrencyID);
     get operationHint(): string;
 }

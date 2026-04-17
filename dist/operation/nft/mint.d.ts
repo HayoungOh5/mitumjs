@@ -1,6 +1,6 @@
 import { NFTItem } from "./item";
 import { Signers } from "./signer";
-import { OperationFact } from "../base";
+import { ItemOperationFact } from "../base";
 import { Address } from "../../key/address";
 import type { CurrencyID } from "../../common";
 import type { HintedObject } from "../../types";
@@ -10,11 +10,11 @@ export declare class MintItem extends NFTItem {
     readonly hash: LongString;
     readonly uri: LongString;
     readonly creators: Signers;
-    constructor(contract: string | Address, receiver: string | Address, hash: string | LongString, uri: string | LongString, creators: Signers, currency: string | CurrencyID);
+    constructor(contract: string | Address, receiver: string | Address, hash: string | LongString, uri: string | LongString, creators: Signers);
     toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
 }
-export declare class MintFact extends OperationFact<MintItem> {
-    constructor(token: string, sender: string | Address, items: MintItem[]);
+export declare class MintFact extends ItemOperationFact<MintItem> {
+    constructor(token: string, sender: string | Address, items: MintItem[], currency: string | CurrencyID);
     get operationHint(): string;
 }

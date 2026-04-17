@@ -2,18 +2,17 @@ import { Address } from "../../key/address";
 import type { HintedObject } from "../../types";
 import { LongString, URIString } from "../../types";
 import { CurrencyID } from "../../common";
-import { Item, OperationFact } from "../base";
+import { Item, ItemOperationFact } from "../base";
 export declare class CreateDataItem extends Item {
     readonly contract: Address;
-    readonly currency: CurrencyID;
     readonly dataKey: URIString;
     readonly dataValue: LongString;
-    constructor(contract: string | Address, currency: string | CurrencyID, dataKey: string, dataValue: string | LongString);
+    constructor(contract: string | Address, dataKey: string, dataValue: string | LongString);
     toBytes(): Uint8Array;
     toHintedObject(): HintedObject;
     toString(): string;
 }
-export declare class CreateDataFact extends OperationFact<CreateDataItem> {
-    constructor(token: string, sender: string | Address, items: CreateDataItem[]);
+export declare class CreateDataFact extends ItemOperationFact<CreateDataItem> {
+    constructor(token: string, sender: string | Address, items: CreateDataItem[], currency: string | CurrencyID);
     get operationHint(): string;
 }

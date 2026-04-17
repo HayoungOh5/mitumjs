@@ -22,6 +22,14 @@ export declare abstract class OperationFact<T extends Item> extends Fact {
     toBytes(): Uint8Array;
     toHintedObject(): FactJson;
 }
+export declare abstract class ItemOperationFact<T extends Item> extends Fact {
+    readonly sender: Address;
+    readonly items: T[];
+    readonly currency: CurrencyID;
+    protected constructor(hint: string, token: string, sender: string | Address, items: T[], currency: string | CurrencyID);
+    toBytes(): Uint8Array;
+    toHintedObject(): FactJson;
+}
 export declare abstract class ContractFact extends Fact {
     readonly sender: Address;
     readonly contract: Address;

@@ -71,13 +71,23 @@ export declare class BrowserProvider {
      */
     getAccounts(): Promise<string[]>;
     /**
-     * Requests the wallet to sign and broadcast a transaction to the Mitum network.
+     * Requests the wallet to sign and broadcast a transaction to the ImFACT network.
      * This will trigger a signing confirmation prompt from the wallet.
-     * @param {object} transactionObject A transaction object created by the Mitum SDK.
+     * @param {object} transactionObject A transaction object created by the ImFACT SDK.
      * @returns {Promise<string>} A promise that resolves to the transaction hash upon successful broadcast.
      * @throws {Error} If the transactionObject is null or undefined.
      */
     sendTransaction(transactionObject: object): Promise<string>;
+    /**
+     * Requests the wallet to sign a personal message with the selected account.
+     * This will trigger a signing confirmation prompt from the wallet.
+     * @param personalMsg - Message to sign (non-empty string).
+     * @returns Promise resolving to the signature string.
+     * @throws {Error} If the message is empty or signing fails/rejected.
+     * @example
+     * const sig = await provider.signMessage("Hello, ImFact!");
+     */
+    signMessage(personalMsg: string): Promise<string>;
     /**
      * Requests the chain ID of the network the wallet is currently connected to.
      * @returns {Promise<string>} A promise that resolves to the chain ID string.

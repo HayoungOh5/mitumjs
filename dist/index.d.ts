@@ -2,7 +2,7 @@ import { Generator } from "./types";
 import type { IP } from "./types";
 import { Block, Node } from "./node";
 import { Utils } from "./utils/transformUnit";
-import { Account, Currency, Contract, NFT, DAO, Credential, TimeStamp, Token, Storage, Payment, Signer } from "./operation";
+import { Account, Currency, Contract, NFT, DAO, TimeStamp, Token, Storage, Payment, Signer } from "./operation";
 import { Operation } from "./operation/api";
 import { BrowserProvider } from "./providers";
 export declare class Mitum extends Generator {
@@ -14,7 +14,6 @@ export declare class Mitum extends Generator {
     private _operation;
     private _signer;
     private _nft;
-    private _credential;
     private _timestamp;
     private _dao;
     private _token;
@@ -34,7 +33,6 @@ export declare class Mitum extends Generator {
     get signer(): Signer;
     get contract(): Contract;
     get nft(): NFT;
-    get credential(): Credential;
     get timestamp(): TimeStamp;
     get dao(): DAO;
     get token(): Token;
@@ -72,5 +70,6 @@ export declare class Mitum extends Generator {
 }
 export { BrowserProvider };
 export type { Item, Fact, BaseOperation, Authentication, ProxyPayer, Settlement } from "./operation/base";
+export type { FeeEstimate } from "./operation/api";
 export type { Account, HDAccount, defaultPath } from "./key/types";
 export { isOpFact, isHintedObject, isHintedObjectFromUserOp } from "./utils/typeGuard";
