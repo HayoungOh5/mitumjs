@@ -80,14 +80,19 @@ export declare class BrowserProvider {
     sendTransaction(transactionObject: object): Promise<string>;
     /**
      * Requests the wallet to sign a personal message with the selected account.
-     * This will trigger a signing confirmation prompt from the wallet.
      * @param personalMsg - Message to sign (non-empty string).
-     * @returns Promise resolving to the signature string.
+     * @returns Promise resolving to the signed message and signer info.
      * @throws {Error} If the message is empty or signing fails/rejected.
      * @example
-     * const sig = await provider.signMessage("Hello, ImFact!");
+     * const { signedMsg, signer } = await provider.signMessage("Hello, ImFact!");
      */
-    signMessage(personalMsg: string): Promise<string>;
+    signMessage(personalMsg: string): Promise<{
+        signedMsg: string;
+        signer: {
+            address: string;
+            publickey: string;
+        };
+    }>;
     /**
      * Requests the chain ID of the network the wallet is currently connected to.
      * @returns {Promise<string>} A promise that resolves to the chain ID string.

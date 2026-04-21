@@ -10890,12 +10890,11 @@ class BrowserProvider {
     }
     /**
      * Requests the wallet to sign a personal message with the selected account.
-     * This will trigger a signing confirmation prompt from the wallet.
      * @param personalMsg - Message to sign (non-empty string).
-     * @returns Promise resolving to the signature string.
+     * @returns Promise resolving to the signed message and signer info.
      * @throws {Error} If the message is empty or signing fails/rejected.
      * @example
-     * const sig = await provider.signMessage("Hello, ImFact!");
+     * const { signedMsg, signer } = await provider.signMessage("Hello, ImFact!");
      */
     async signMessage(personalMsg) {
         if (!personalMsg) {
