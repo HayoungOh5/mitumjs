@@ -9,6 +9,7 @@ import token from "./token"
 import point from "./point"
 import storage from "./storage"
 import payment from "./payment"
+import program from "./program"
 
 export default {
     currency,
@@ -22,6 +23,7 @@ export default {
         token,
         point,
         storage,
-        payment
+        payment,
+        program,
     },
 }

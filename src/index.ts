@@ -3,12 +3,13 @@ import type { IP} from "./types"
 import { ECODE, DCODE, PCODE } from "./error"
 import { Block, Node, NetworkID } from "./node"
 import { Utils } from "./utils/transformUnit"
-import { 
-    Account, Currency, Contract, 
+import {
+    Account, Currency, Contract,
     NFT,
     DAO, KYC, STO,
     TimeStamp, Credential,
     Token, Point, Storage, Payment,
+    Program,
     Signer
 } from "./operation"
 import { Operation } from "./operation/api"
@@ -34,6 +35,7 @@ export class Mitum extends Generator {
     private _point: Point
     private _storage: Storage
     private _payment: Payment
+    private _program: Program
 
     public ECODE: Object
     public PCODE: Object
@@ -62,6 +64,7 @@ export class Mitum extends Generator {
         this._point = new Point(this.networkID, this.api, this.delegateIP)
         this._storage = new Storage(this.networkID, this.api, this.delegateIP)
         this._payment = new Payment(this.networkID, this.api, this.delegateIP)
+        this._program = new Program(this.networkID, this.api, this.delegateIP)
 
         this.ECODE = ECODE;
         this.PCODE = PCODE;
@@ -89,6 +92,7 @@ export class Mitum extends Generator {
         this._point = new Point(this.networkID, this.api, this.delegateIP)
         this._storage = new Storage(this.networkID, this.api, this.delegateIP)
         this._payment = new Payment(this.networkID, this.api, this.delegateIP)
+        this._program = new Program(this.networkID, this.api, this.delegateIP)
 
         this._utils = new Utils();
     }
@@ -159,6 +163,10 @@ export class Mitum extends Generator {
 
     get payment(): Payment {
         return this._payment
+    }
+
+    get program(): Program {
+        return this._program
     }
 
     get utils(): Utils {

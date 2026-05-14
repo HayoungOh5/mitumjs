@@ -9,6 +9,7 @@ import { Token } from "./token"
 import { Point } from "./point"
 import { Storage } from "./storage"
 import { Payment } from "./payment"
+import { Program } from "./program"
 import { Signer } from "./signer"
 
 import * as Base from "./base"
@@ -25,6 +26,7 @@ export {
 	Point,
 	Storage,
 	Payment,
+	Program,
 	Signer,
 	Base,
 }
