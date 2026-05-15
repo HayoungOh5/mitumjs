@@ -4,12 +4,12 @@ import { ContractFact, FactJson } from "../base"
 import type { Address } from "../../key/address"
 import type { CurrencyID } from "../../common"
 import { LongString } from "../../types"
-import { CallData, callDataToHash } from "./register"
+import { Data, dataToHash } from "./register"
 import { Assert, ECODE, MitumError } from "../../error"
 import { Config } from "../../node"
 
 export class CallFact extends ContractFact {
-    readonly callData: CallData
+    readonly callData: Data
 
     constructor(
         token: string,
@@ -56,7 +56,7 @@ export class CallFact extends ContractFact {
     toBuffer(): Buffer {
         return Buffer.concat([
             super.toBuffer(),
-            callDataToHash(this.callData),
+            dataToHash(this.callData),
             this.currency.toBuffer(),
         ])
     }

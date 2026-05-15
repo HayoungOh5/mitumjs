@@ -8,11 +8,11 @@ import { sha3 } from "../../utils"
 import { Assert, ECODE, MitumError } from "../../error"
 import { Config } from "../../node"
 
-export type CallData = Record<string, string>
+export type Data = Record<string, string>
 
-export function callDataToHash(callData: CallData): Buffer {
-    const sortedKeys = Object.keys(callData).sort()
-    const json = JSON.stringify(callData, sortedKeys)
+export function dataToHash(data: Data): Buffer {
+    const sortedKeys = Object.keys(data).sort()
+    const json = JSON.stringify(data, sortedKeys)
         .replace(/&/g, "\\u0026")
         .replace(/</g, "\\u003c")
         .replace(/>/g, "\\u003e")
@@ -23,21 +23,21 @@ export function callDataToHash(callData: CallData): Buffer {
 
 export class RegisterFact extends ContractFact {
     readonly code: LongString
-    readonly callData: CallData
+    readonly initData: Data
 
     constructor(
         token: string,
         sender: string | Address,
         contract: string | Address,
         code: string | LongString,
-        callData: Record<string, string | LongString> | undefined,
+        initData: Record<string, string | LongString> | undefined,
         currency: string | CurrencyID,
     ) {
         super(HINT.PROGRAM.REGISTER.FACT, token, sender, contract, currency)
         this.code = LongString.from(code)
-        this.callData = {}
-        if (callData !== undefined) {
-            const entries = Object.entries(callData)
+        this.initData = {}
+        if (initData !== undefined) {
+            const entries = Object.entries(initData)
             Assert.check(
                 entries.length <= Config.CALLDATA_ENTRIES.max,
                 MitumError.detail(
@@ -45,10 +45,10 @@ export class RegisterFact extends ContractFact {
                     `register callData cannot exceed ${Config.CALLDATA_ENTRIES.max} entries`,
                 ),
             )
-            for (const key of Object.keys(callData).sort()) {
-                const value = callData[key]
+            for (const key of Object.keys(initData).sort()) {
+                const value = initData[key]
 
-                this.callData[key] =
+                this.initData[key] =
                     value === ""
                         ? ""
                         : LongString.from(value).toString()
@@ -62,7 +62,7 @@ export class RegisterFact extends ContractFact {
         return Buffer.concat([
             super.toBuffer(),
             this.code.toBuffer(),
-            callDataToHash(this.callData),
+            dataToHash(this.initData),
             this.currency.toBuffer(),
         ])
     }
@@ -71,7 +71,7 @@ export class RegisterFact extends ContractFact {
         return {
             ...super.toHintedObject(),
             code: this.code.toString(),
-            call_data: this.callData,
+            init_data: this.initData,
         }
     }
 

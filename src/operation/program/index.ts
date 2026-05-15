@@ -61,7 +61,7 @@ export class Program extends ContractGenerator {
      * use {@link registerByCodeFile} to load it from a `.go`
      * file on disk instead.
      *
-     * `callData` is an optional initialization payload passed to
+     * `initData` is an optional initialization payload passed to
      * the smart contract during registration. It consists of
      * arbitrary key-value pairs and may vary depending on the
      * contract implementation.
@@ -80,7 +80,7 @@ export class Program extends ContractGenerator {
      * @param {string | Address} sender - The sender address that executes the operation.
      * @param {string | LongString} code - The smart contract code string (Go source).
      * @param {string | CurrencyID} currency - The fee currency ID.
-     * @param {Record<string, string | LongString>} [callData] - Optional initialization payload as key-value pairs. A maximum of 100 entries is allowed in `callData`.
+     * @param {Record<string, string | LongString>} [initData] - Optional initialization payload as key-value pairs. A maximum of 100 entries is allowed in `callData`.
      * @returns `register` operation.
      */
     register(
@@ -88,7 +88,7 @@ export class Program extends ContractGenerator {
         sender: string | Address,
         code: string | LongString,
         currency: string | CurrencyID,
-        callData?: Record<string, string | LongString>,
+        initData?: Record<string, string | LongString>,
     ) {
         return new BaseOperation(
             this.networkID,
@@ -97,7 +97,7 @@ export class Program extends ContractGenerator {
                 sender,
                 contract,
                 code,
-                callData,
+                initData,
                 currency,
             )
         )
@@ -110,7 +110,7 @@ export class Program extends ContractGenerator {
      * as the `code` argument passed to {@link register}. This is a Node.js-only convenience;
      * it is not available in browser environments.
      * 
-     * `callData` is an optional initialization payload passed to
+     * `initData` is an optional initialization payload passed to
      * the smart contract during registration. It consists of
      * arbitrary key-value pairs and may vary depending on the
      * contract implementation.
@@ -128,7 +128,7 @@ export class Program extends ContractGenerator {
      * @param {string | Address} [sender] - The sender's address that executes the operation.
      * @param {string} [codePath] - Filesystem path to the `.go` source file containing the smart contract code.
      * @param {string | CurrencyID} [currency] - The fee currency ID.
-     * @param {Record<string, string | LongString>} [callData] - Optional initialization payload as key-value pairs. A maximum of 100 entries is allowed in `callData`.
+     * @param {Record<string, string | LongString>} [initData] - Optional initialization payload as key-value pairs. A maximum of 100 entries is allowed in `callData`.
      * @returns `register` operation.
      */
     registerByCodeFile(
@@ -136,9 +136,9 @@ export class Program extends ContractGenerator {
         sender: string | Address,
         codePath: string,
         currency: string | CurrencyID,
-        callData?: Record<string, string | LongString>,
+        initData?: Record<string, string | LongString>,
     ) {
-        return this.register(contract, sender, readGoCodeFile(codePath), currency, callData)
+        return this.register(contract, sender, readGoCodeFile(codePath), currency, initData)
     }
 
     /**
@@ -184,4 +184,4 @@ export class Program extends ContractGenerator {
     }
 }
 
-export type { CallData } from "./register"
+export type { Data } from "./register"
