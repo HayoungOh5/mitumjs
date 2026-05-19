@@ -60,7 +60,7 @@ export const Config = {
 	KEYS_IN_ACCOUNT: getRangeConfig(1, 100),
 	AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
 	ITEMS_IN_FACT: getRangeConfig(1, 100),
-	CALLDATA_ENTRIES: getRangeConfig(1, 100),
+	CALLDATA_ENTRIES: getRangeConfig(1, 64),
 	OP_SIZE: getRangeConfig(1, 262144),
 	FACT_HASHES: getRangeConfig(1, 40),
 	KEY: {

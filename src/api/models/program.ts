@@ -1,22 +1,23 @@
 import axios from "axios"
 import { Address } from "../../key/address"
-import { delegateUri } from "../../utils"
-
 const url = (
     api: string | undefined,
     contract: string | Address,
 ) => `${api}/contract/${Address.from(contract).toString()}`
 
-async function getData(
-    api: string | undefined,
+async function query(
+    api: string | undefined, 
     contract: string | Address,
+    data: Record<string, string>, 
     delegateIP: string | undefined,
-    key: string
+    config?: { [i: string]: any }
 ) {
-    const apiPath = `${url(api, contract)}/data/${key}`
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath))
+    const apiPath = `${url(api, contract)}/query`;
+    return !delegateIP 
+    ? await axios.post(apiPath, JSON.stringify(data)) 
+    : await axios.post(delegateIP.toString(), { ...Object(data), uri: apiPath }, config)
 }
 
 export default {
-    getData,
+    query,
 }

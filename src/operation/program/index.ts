@@ -9,6 +9,7 @@ import { contractApi } from "../../api"
 import { getAPIData } from "../../api/getAPIData"
 import { IP, LongString, TimeStamp as TS } from "../../types"
 import { Assert, MitumError, ECODE } from "../../error"
+import { Config } from "../../node"
 
 // Hidden from bundler static analysis so the browser build does not try to
 // resolve Node built-ins. `registerByCodeFile` is Node-only by design.
@@ -171,16 +172,57 @@ export class Program extends ContractGenerator {
     }
 
     /**
-     * Get stored data of a deployed smart contract by key.
+     * Executes a read-only query on a deployed smart contract.
+     *
      * @async
-     * @param {string | Address} [contract] - The contract account's address.
-     * @param {string} [key] - The key of the data to look up.
-     * @returns `data` of `SuccessResponse` is the value stored by the deployed contract under the given key.
+     * @param {string | Address} contract - The contract account address.
+     * @param {string | LongString} func - The exported contract query function name.
+     * @param {Record<string, string | LongString>} [params={}] - Query arguments.
+     * @returns The query result returned by the smart contract.
      */
-    async getData(contract: string | Address, key: string) {
-        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"))
+    async query(
+        contract: string | Address,
+        func: string | LongString,
+        params: Record<string, string | LongString> = {},
+    ) {
+        Assert.check(
+            this.api !== undefined && this.api !== null,
+            MitumError.detail(ECODE.NO_API, "API is not provided"),
+        )
+
         Address.from(contract)
-        return await getAPIData(() => contractApi.program.getData(this.api, contract, this.delegateIP, key))
+
+        const data: Record<string, string> = {
+            function: LongString.from(func).toString(),
+        }
+
+        const entries = Object.entries(params)
+
+        Assert.check(
+            entries.length <= Config.CALLDATA_ENTRIES.max,
+            MitumError.detail(
+                ECODE.INVALID_FACT,
+                `query params cannot exceed ${Config.CALLDATA_ENTRIES.max} entries`,
+            ),
+        )
+
+        for (const key of Object.keys(params).sort()) {
+            const value = params[key]
+
+            data[key] =
+                value === ""
+                    ? ""
+                    : LongString.from(value).toString()
+        }
+
+        return await getAPIData(() =>
+            contractApi.program.query(
+                this.api,
+                contract,
+                data,
+                this.delegateIP,
+            ),
+        )
     }
 }
 
