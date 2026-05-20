@@ -148,7 +148,7 @@ export class Program extends ContractGenerator {
      * @param {string | Address} [sender] - The sender's address that executes the operation.
      * @param {string | CurrencyID} [currency] - The fee currency ID.
      * @param {string | LongString} [func] - The function name to invoke on the contract.
-     * @param {Record<string, string | LongString>} [callData] - arguments of function to call as key-value pairs. A maximum of 100 entries is allowed in `callData`.
+     * @param {Record<string, string | LongString> | undefined} [callData] - arguments of function to call as key-value pairs. A maximum of 100 entries is allowed in `callData`.
      * @returns `call` operation.
      */
     call(
@@ -156,7 +156,7 @@ export class Program extends ContractGenerator {
         sender: string | Address,
         currency: string | CurrencyID,
         func: string | LongString,
-        callData: Record<string, string | LongString>,
+        callData?: Record<string, string | LongString> | undefined,
     ) {
         return new BaseOperation(
             this.networkID,

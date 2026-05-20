@@ -16,7 +16,7 @@ export class CallFact extends ContractFact {
         sender: string | Address,
         contract: string | Address,
         func: string | LongString,
-        callData: Record<string, string | LongString>,
+        callData: Record<string, string | LongString> | undefined,
         currency: string | CurrencyID,
     ) {
         super(HINT.PROGRAM.CALL.FACT, token, sender, contract, currency)
