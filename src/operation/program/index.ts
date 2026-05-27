@@ -15,6 +15,7 @@ import { Config } from "../../node"
 // resolve Node built-ins. `registerByCodeFile` is Node-only by design.
 function readGoCodeFile(codePath: string): string {
     let req: NodeRequire
+
     try {
         req = eval("require") as NodeRequire
     } catch {
@@ -23,6 +24,7 @@ function readGoCodeFile(codePath: string): string {
             "registerByCodeFile requires a Node.js environment",
         )
     }
+
     const fs = req("fs") as typeof import("fs")
     const path = req("path") as typeof import("path")
 
@@ -35,7 +37,17 @@ function readGoCodeFile(codePath: string): string {
     )
 
     try {
-        return fs.readFileSync(codePath, "utf-8")
+        const resolvedPath = path.resolve(codePath)
+
+        Assert.check(
+            fs.existsSync(resolvedPath),
+            MitumError.detail(
+                ECODE.INVALID_FACT,
+                `contract code file not found: '${resolvedPath}'`,
+            ),
+        )
+
+        return fs.readFileSync(resolvedPath, "utf-8")
     } catch (e) {
         throw MitumError.detail(
             ECODE.UNKNOWN,
