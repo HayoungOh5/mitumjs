@@ -16,6 +16,14 @@ This package automatically provides the correct bundle for your environment (Nod
 $ npm install @imfact/sdk
 ```
 
+> **📦 Package Consolidation Notice**
+>
+> Previously the SDK was distributed as two separate packages, `@imfact/sdk` and `@imfact/account-abstraction`. These have now been **merged into a single `@imfact/sdk` package**.
+>
+> Going forward, **`@imfact/sdk` is the single source of truth** for the latest releases. Please install and update against `@imfact/sdk` only.
+>
+> As a result of this consolidation, the **DID contract model** and **Account Abstraction** features are now available directly from `@imfact/sdk`.
+
 </br> 
 
 ## 2. Usage
