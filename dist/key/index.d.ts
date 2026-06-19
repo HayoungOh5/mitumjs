@@ -1,5 +1,7 @@
 import type { Account, HDAccount } from "./types";
-import { Key, PubKey } from "./pub";
+import { Keys, Key, PubKey } from "./pub";
+import { KeyPair } from "./keypair";
+import { Address } from "./address";
 import { Big, Generator, IP } from "../types";
 type keysType = ({
     key: string | Key | PubKey;
@@ -91,4 +93,4 @@ export declare class KeyG extends Generator {
      */
     addressForMultiSig(keys: keysType, threshold: string | number | Big): string;
 }
-export {};
+export { Address, Key, Keys, PubKey, KeyPair };

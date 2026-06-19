@@ -1,5 +1,5 @@
 import { TokenFact } from "./fact";
-import type { FactJson } from "../base";
+import type { HintedFactObject } from "../base";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { Big, LongString } from "../../types";
@@ -10,6 +10,6 @@ export declare class RegisterModelFact extends TokenFact {
     readonly initialSupply: Big;
     constructor(token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID, symbol: string | CurrencyID, name: string | LongString, decimal: string | number | Big, initialSupply: string | number | Big);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
     get operationHint(): string;
 }

@@ -103,8 +103,8 @@ const ECODE = {
         INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY",
         INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN",
     },
-    // AUTH_DID Errors
-    AUTH_DID: {
+    // DID Errors
+    DID: {
         INVALID_DID: "EC_INVALID_DID",
         INVALID_DOCUMENT: "EC_INVALID_DOCUMENT",
         INVALID_AUTHENTICATION: "EC_INVALID_AUTHENTICATION"
@@ -259,11 +259,17 @@ const DCODE = {
         description: "Duplicate account addresses provided in an invalid manner. (sender=receiver, sender=contract, etc.)",
         subject: ""
     },
+    IV_AA_EXTENSION: {
+        code: "D107",
+        keyword: ["auth and settlement must be present together"],
+        description: "Account abstraction operation extension is malformed: authentication and settlement must both be present.",
+        subject: ""
+    },
     // Related to signature
     IV_SIGN: {
         code: "D201",
         keyword: ["Invalid signing", "BaseNodeSign"],
-        description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold",
+        description: "Signature verification failed. Possible causes: private key does not match the address, node sign required, multiSig signatures below threshold, or network ID mismatch.",
         subject: ""
     },
     IV_ALTERSIGN: {
@@ -545,7 +551,7 @@ class ArrayAssert {
     }
 }
 
-const encoder$e = new TextEncoder();
+const encoder$h = new TextEncoder();
 class LongString {
     constructor(s) {
         Assert.check(typeof (s) === "string", MitumError.detail(ECODE.INVALID_TYPE, `${s} is not in string type`));
@@ -556,7 +562,7 @@ class LongString {
         return s instanceof LongString ? s : new LongString(s);
     }
     toBytes() {
-        return encoder$e.encode(this.s);
+        return encoder$h.encode(this.s);
     }
     toString() {
         return this.s;
@@ -588,7 +594,7 @@ class URIString {
         this.s = s;
     }
     toBytes() {
-        return encoder$e.encode(this.s);
+        return encoder$h.encode(this.s);
     }
     toString() {
         return this.s;
@@ -904,6 +910,7 @@ const Config = {
         NODE: getRangeConfig(4, Number.MAX_SAFE_INTEGER),
     },
     CONTRACT_HANDLERS: getRangeConfig(0, 20),
+    CONTRACT_RECIPIENTS: getRangeConfig(0, 20),
     KEYS_IN_ACCOUNT: getRangeConfig(1, 100),
     AMOUNTS_IN_ITEM: getRangeConfig(1, 10),
     ITEMS_IN_FACT: getRangeConfig(1, 100),
@@ -1003,6 +1010,10 @@ var CURRENCY = {
     UPDATE_HANDLER: {
         FACT: "mitum-extension-update-handler-operation-fact",
         OPERATION: "mitum-extension-update-handler-operation",
+    },
+    UPDATE_RECIPIENT: {
+        FACT: "mitum-extension-update-recipient-operation-fact",
+        OPERATION: "mitum-extension-update-recipient-operation",
     },
     EXTENSION: {
         AUTHENTICATION: "mitum-extension-base-authentication",
@@ -1300,6 +1311,24 @@ var PAYMENT = {
     }
 };
 
+var DID = {
+    REGISTER_MODEL: {
+        FACT: "mitum-did-register-model-operation-fact",
+        OPERATION: "mitum-did-register-model-operation",
+    },
+    CREATE_DID: {
+        FACT: "mitum-did-create-did-operation-fact",
+        OPERATION: "mitum-did-create-did-operation",
+    },
+    UPDATE_DID_DOCUMENT: {
+        FACT: "mitum-did-update-did-document-operation-fact",
+        OPERATION: "mitum-did-update-did-document-operation",
+    },
+    DOCUMENT: "mitum-did-document",
+    AUTHENTICATION: "mitum-did-verification-method",
+    VERIFICATION_METHOD: "mitum-did-verification-method-authentication"
+};
+
 var HINT = {
     FACT_SIGN: "base-fact-sign",
     CURRENCY,
@@ -1312,7 +1341,8 @@ var HINT = {
     TOKEN,
     POINT,
     STORAGE,
-    PAYMENT
+    PAYMENT,
+    DID
 };
 
 const KEY = {
@@ -1338,6 +1368,17 @@ class Hint {
     toString() {
         return `${this.s}-${Version.get()}`;
     }
+    static hasVersion(s) {
+        const suffix = `-${Version.get()}`;
+        return s.endsWith(suffix);
+    }
+    static fromString(s) {
+        if (!Hint.hasVersion(s)) {
+            throw new Error(`Invalid hinted string (missing version): ${s}`);
+        }
+        const suffix = `-${Version.get()}`;
+        return new Hint(s.slice(0, -suffix.length));
+    }
 }
 
 function bytesToBase64(bytes) {
@@ -1350,8 +1391,19 @@ function bytesToBase64(bytes) {
     }
     return btoa(binary);
 }
+const base64ToBytes = (b64) => {
+    if (typeof atob !== "undefined") {
+        return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    }
+    else {
+        return Uint8Array.from(Buffer.from(b64, "base64"));
+    }
+};
+const bytesToUtf8 = (bytes) => {
+    return new TextDecoder().decode(bytes);
+};
 
-const encoder$d = new TextEncoder();
+const encoder$g = new TextEncoder();
 let Token$1 = class Token {
     constructor(s) {
         Assert.check(s !== "", MitumError.detail(ECODE.INVALID_TOKEN, "empty token"));
@@ -1361,14 +1413,14 @@ let Token$1 = class Token {
         return s instanceof Token ? s : new Token(s);
     }
     toBytes() {
-        return encoder$d.encode(this.s);
+        return encoder$g.encode(this.s);
     }
     toString() {
         return bytesToBase64(this.toBytes());
     }
 };
 
-const encoder$c = new TextEncoder();
+const encoder$f = new TextEncoder();
 class ID {
     constructor(s) {
         this.s = s;
@@ -1377,7 +1429,7 @@ class ID {
         return this.toString() === id.toString();
     }
     toBytes() {
-        return encoder$c.encode(this.s);
+        return encoder$f.encode(this.s);
     }
     toString() {
         return this.s;
@@ -1776,9 +1828,9 @@ class SHA256 extends SHA2 {
  */
 const sha256$1 = /* @__PURE__ */ wrapConstructor(() => new SHA256());
 
-const encoder$b = new TextEncoder();
+const encoder$e = new TextEncoder();
 function toBytes(msg) {
-    return typeof msg === "string" ? encoder$b.encode(msg) : msg;
+    return typeof msg === "string" ? encoder$e.encode(msg) : msg;
 }
 const sha256 = (msg) => {
     return sha256$1(toBytes(msg));
@@ -1791,7 +1843,7 @@ const keccak256 = (msg) => {
 };
 const getChecksum = (hex) => {
     const hexLower = hex.toLowerCase();
-    const hashBytes = keccak256(encoder$b.encode(hexLower));
+    const hashBytes = keccak256(encoder$e.encode(hexLower));
     let hashHex = "";
     for (const b of hashBytes) {
         hashHex += b.toString(16).padStart(2, "0");
@@ -1805,7 +1857,7 @@ const getChecksum = (hex) => {
     return checksum;
 };
 
-const encoder$a = new TextEncoder();
+const encoder$d = new TextEncoder();
 class BaseAddress {
     constructor(s, type) {
         this.s = s;
@@ -1826,7 +1878,7 @@ class BaseAddress {
         }
     }
     toBytes() {
-        return encoder$a.encode(this.s);
+        return encoder$d.encode(this.s);
     }
     toString() {
         return this.s;
@@ -1880,7 +1932,7 @@ class ZeroAddress extends BaseAddress {
     }
 }
 
-const encoder$9 = new TextEncoder();
+const encoder$c = new TextEncoder();
 class Key {
     constructor(s) {
         StringAssert.with(s, MitumError.detail(ECODE.INVALID_KEY, "invalid key"))
@@ -1909,7 +1961,7 @@ class Key {
         return this.key;
     }
     toBytes() {
-        return encoder$9.encode(this.toString());
+        return encoder$c.encode(this.toString());
     }
     toString() {
         return this.key + this.suffix;
@@ -1971,7 +2023,7 @@ class Keys {
         for (const b of raw) {
             hex += b.toString(16).padStart(2, "0");
         }
-        const hash = keccak256(encoder$9.encode(hex));
+        const hash = keccak256(encoder$c.encode(hex));
         const hashHex = Array.from(hash)
             .map(b => b.toString(16).padStart(2, "0"))
             .join("");
@@ -2128,6 +2180,26 @@ const convertToArray = (contracts, length) => {
     }
 };
 
+/**
+ * Cross-bundle-safe `instanceof Hint`.
+ *
+ * When the core (`@imfact/sdk`) and account-abstraction (`@imfact/sdk/account-abstraction`)
+ * bundles are loaded together, each ships its own copy of the `Hint` class, so a `Hint`
+ * created in one bundle is NOT an `instanceof` the `Hint` of the other bundle. A fact built
+ * with the core `Mitum` and then wrapped by `MitumAA` would therefore fail an `instanceof`
+ * check even though it is structurally a valid Hint.
+ *
+ * We accept either a genuine `instanceof` match (fast path, same bundle) or a structural
+ * match by constructor name (cross-bundle). Class names are preserved by the bundler.
+ */
+const isHintLike = (value) => {
+    if (value instanceof Hint)
+        return true;
+    return (typeof value === "object" &&
+        value !== null &&
+        typeof value.toString === "function" &&
+        value.constructor?.name === "Hint");
+};
 const isOpFact = (operation) => {
     if (typeof operation !== "object" || operation === null)
         return false;
@@ -2140,13 +2212,13 @@ const isOpFact = (operation) => {
         return false;
     const isIdValid = typeof operation.id === "string";
     const isHintValid = typeof operation.hint === "object" &&
-        operation.hint instanceof Hint;
+        isHintLike(operation.hint);
     const isFactValid = typeof operation.fact === "object" &&
         operation.fact !== null &&
         'hint' in operation.fact &&
         'token' in operation.fact &&
         '_hash' in operation.fact &&
-        operation.fact.hint instanceof Hint;
+        isHintLike(operation.fact.hint);
     const isFactSignsValid = Array.isArray(operation._factSigns);
     const isHashValid = operation._hash instanceof Uint8Array;
     return (isIdValid &&
@@ -2210,6 +2282,21 @@ const isHintedObjectFromUserOp = (object) => {
     }
     return false;
 };
+// Duck-typed to avoid a circular import on UserOperation (mirrors isOpFact):
+// a UserOperation is an operation that additionally carries the AA extension
+// fields (auth / settlement).
+const isUserOp = (userOperation) => {
+    return isOpFact(userOperation) &&
+        "auth" in userOperation &&
+        "settlement" in userOperation;
+};
+const isHintedFactObject = (obj) => {
+    return (typeof obj === "object" &&
+        obj !== null &&
+        "_hint" in obj &&
+        "token" in obj &&
+        "hash" in obj);
+};
 const isErrorResponse = (response) => {
     return 'error_code' in response;
 };
@@ -2222,6 +2309,33 @@ const isBase58Encoded = (value) => {
     }
     const base58Chars = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
     return base58Chars.test(value);
+};
+const invalidDid = (value, reason) => {
+    throw MitumError.detail(ECODE.DID.INVALID_DID, `Invalid DID: "${value}" (${reason})`);
+};
+const validateDID = (did, id) => {
+    if (typeof did !== "string" || did.length === 0) {
+        invalidDid(String(did), "value must be a non-empty string");
+    }
+    const parts = did.split(":");
+    if (parts.length !== 3) {
+        invalidDid(did, `expected format "did:<method>:<identifier>"`);
+    }
+    if (parts[0] !== "did") {
+        invalidDid(did, `must start with "did:"`);
+    }
+    if (id) {
+        const hashCount = (did.match(/#/g) || []).length;
+        if (hashCount !== 1) {
+            invalidDid(did, `authentication id (or service id) must contain exactly one "#" (did#key)`);
+        }
+        const subparts = parts[2].split("#");
+        if (subparts.length !== 2 || !subparts[0] || !subparts[1]) {
+            invalidDid(did, `invalid authentication (or service id) id format, expected "<did>#<key-id>"`);
+        }
+        return Address.from(subparts[0]);
+    }
+    return Address.from(parts[2]);
 };
 
 async function getAccount(api, address, delegateIP) {
@@ -2306,91 +2420,91 @@ async function getCurrency(api, currency, delegateIP) {
     const apiPath = `${api}/currency/${CurrencyID.from(currency).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var currency = {
+var currency$1 = {
     getCurrencies,
     getCurrency,
 };
 
-const url$8 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
+const url$9 = (api, contract) => `${api}/nft/${Address.from(contract).toString()}`;
 async function getNFT(api, contract, nftIdx, delegateIP) {
-    const apiPath = `${url$8(api, contract)}/nftidx/${nftIdx}`;
+    const apiPath = `${url$9(api, contract)}/nftidx/${nftIdx}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getNFTs(api, contract, delegateIP, factHash, limit, offset, reverse) {
-    const apiPath = apiPathWithHashParams(`${url$8(api, contract)}/nfts`, factHash, limit, offset, reverse);
+    const apiPath = apiPathWithHashParams(`${url$9(api, contract)}/nfts`, factHash, limit, offset, reverse);
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getModel$7(api, contract, delegateIP) {
-    const apiPath = `${url$8(api, contract)}`;
+async function getModel$8(api, contract, delegateIP) {
+    const apiPath = `${url$9(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAccountOperators(api, contract, account, delegateIP) {
-    const apiPath = `${url$8(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
+    const apiPath = `${url$9(api, contract)}/account/${Address.from(account).toString()}/allapproved`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var nft = {
+var nft$1 = {
     getNFT,
     getNFTs,
-    getModel: getModel$7,
+    getModel: getModel$8,
     getAccountOperators,
 };
 
-const url$7 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
-async function getModel$6(api, contract, delegateIP) {
-    const apiPath = `${url$7(api, contract)}`;
+const url$8 = (api, contract) => `${api}/did/${Address.from(contract).toString()}`;
+async function getModel$7(api, contract, delegateIP) {
+    const apiPath = `${url$8(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredential(api, contract, templateID, credentialID, delegateIP) {
     new URIString(templateID, 'templateID');
     new URIString(credentialID, 'credentialID');
-    const apiPath = `${url$7(api, contract)}/template/${templateID.toString()}/credential/${credentialID}`;
+    const apiPath = `${url$8(api, contract)}/template/${templateID.toString()}/credential/${credentialID}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getTemplate(api, contract, templateID, delegateIP) {
     new URIString(templateID, 'templateID');
-    const apiPath = `${url$7(api, contract)}/template/${templateID}`;
+    const apiPath = `${url$8(api, contract)}/template/${templateID}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredentials(api, contract, templateID, delegateIP) {
     new URIString(templateID, 'templateID');
-    const apiPath = `${url$7(api, contract)}/template/${templateID}/credentials`;
+    const apiPath = `${url$8(api, contract)}/template/${templateID}/credentials`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getCredentialByHolder(api, contract, holder, delegateIP) {
-    const apiPath = `${url$7(api, contract)}/holder/${Address.from(holder).toString()}`;
+    const apiPath = `${url$8(api, contract)}/holder/${Address.from(holder).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var credential = {
-    getModel: getModel$6,
+var credential$1 = {
+    getModel: getModel$7,
     getCredential,
     getTemplate,
     getCredentials,
     getCredentialByHolder,
 };
 
-const url$6 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
-async function getModel$5(api, contract, delegateIP) {
-    const apiPath = `${url$6(api, contract)}`;
+const url$7 = (api, contract) => `${api}/dao/${Address.from(contract).toString()}`;
+async function getModel$6(api, contract, delegateIP) {
+    const apiPath = `${url$7(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getProposal(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/proposal/${proposalID}`;
+    const apiPath = `${url$7(api, contract)}/proposal/${proposalID}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getApproved(api, contract, proposalID, registrant, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
+    const apiPath = `${url$7(api, contract)}/proposal/${proposalID}/registrant/${Address.from(registrant).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getVoters(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/proposal/${proposalID}/voter`;
+    const apiPath = `${url$7(api, contract)}/proposal/${proposalID}/voter`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getVotingStatus(api, contract, proposalID, delegateIP) {
-    const apiPath = `${url$6(api, contract)}/proposal/${proposalID}/votingpower`;
+    const apiPath = `${url$7(api, contract)}/proposal/${proposalID}/votingpower`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var dao = {
-    getModel: getModel$5,
+var dao$1 = {
+    getModel: getModel$6,
     getProposal,
     getApproved,
     getVoters,
@@ -2399,30 +2513,30 @@ var dao = {
 
 var kyc = {};
 
-const url$5 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
+const url$6 = (api, contract) => `${api}/sto/${Address.from(contract).toString()}`;
 async function getService(api, contract, delegateIP) {
-    const apiPath = `${url$5(api, contract)}`;
+    const apiPath = `${url$6(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitions(api, contract, holder, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
+    const apiPath = `${url$6(api, contract)}/holder/${Address.from(holder).toString()}/partitions`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getBalanceByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
+    const apiPath = `${url$6(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/balance`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getOperatorsByHolder(api, contract, holder, partition, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
+    const apiPath = `${url$6(api, contract)}/holder/${Address.from(holder).toString()}/partition/${partition}/operators`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getPartitionBalance(api, contract, partition, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/p
+    const apiPath = `${url$6(api, contract)}/p
     artition/${partition}/balance`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getAuthorized(api, contract, operator, delegateIP) {
-    const apiPath = `${url$5(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
+    const apiPath = `${url$6(api, contract)}/operator/${Address.from(operator).toString()}/holders`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 var sto = {
@@ -2434,104 +2548,553 @@ var sto = {
     getAuthorized,
 };
 
-const url$4 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
+const url$5 = (api, contract) => `${api}/timestamp/${Address.from(contract).toString()}`;
+async function getModel$5(api, contract, delegateIP) {
+    const apiPath = `${url$5(api, contract)}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
+    const apiPath = `${url$5(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var timestamp$1 = {
+    getModel: getModel$5,
+    getTimeStamp,
+};
+
+const url$4 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
 async function getModel$4(api, contract, delegateIP) {
     const apiPath = `${url$4(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getTimeStamp(api, contract, projectID, timestampIdx, delegateIP) {
-    const apiPath = `${url$4(api, contract)}/project/${projectID}/idx/${Big.from(timestampIdx).toString()}`;
+async function getTokenBalance(api, contract, account, delegateIP) {
+    const apiPath = `${url$4(api, contract)}/account/${Address.from(account).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var timestamp = {
+var token$1 = {
     getModel: getModel$4,
-    getTimeStamp,
+    getTokenBalance,
 };
 
-const url$3 = (api, contract) => `${api}/token/${Address.from(contract).toString()}`;
+const url$3 = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
 async function getModel$3(api, contract, delegateIP) {
     const apiPath = `${url$3(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getTokenBalance(api, contract, account, delegateIP) {
+async function getPointBalance(api, contract, account, delegateIP) {
     const apiPath = `${url$3(api, contract)}/account/${Address.from(account).toString()}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var token = {
+var point$1 = {
     getModel: getModel$3,
-    getTokenBalance,
+    getPointBalance,
 };
 
-const url$2 = (api, contract) => `${api}/point/${Address.from(contract).toString()}`;
+const url$2 = (api, contract) => `${api}/storage/${Address.from(contract).toString()}`;
 async function getModel$2(api, contract, delegateIP) {
     const apiPath = `${url$2(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getPointBalance(api, contract, account, delegateIP) {
-    const apiPath = `${url$2(api, contract)}/account/${Address.from(account).toString()}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
-var point = {
-    getModel: getModel$2,
-    getPointBalance,
-};
-
-const url$1 = (api, contract) => `${api}/storage/${Address.from(contract).toString()}`;
-async function getModel$1(api, contract, delegateIP) {
-    const apiPath = `${url$1(api, contract)}`;
-    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
-}
 async function getData(api, contract, dataKey, delegateIP) {
-    const apiPath = `${url$1(api, contract)}/datakey/${dataKey}`;
+    const apiPath = `${url$2(api, contract)}/datakey/${dataKey}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getDataHistory(api, contract, dataKey, delegateIP, limit, offset, reverse) {
-    const apiPath = apiPathWithParams(`${url$1(api, contract)}/datakey/${dataKey}/history`, limit, offset, reverse);
+    const apiPath = apiPathWithParams(`${url$2(api, contract)}/datakey/${dataKey}/history`, limit, offset, reverse);
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
 async function getDataCount(api, contract, delegateIP, deleted) {
-    const apiPath = `${url$1(api, contract)}/datacount?deleted=${deleted ? 1 : 0}`;
+    const apiPath = `${url$2(api, contract)}/datacount?deleted=${deleted ? 1 : 0}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var storage = {
-    getModel: getModel$1,
+var storage$1 = {
+    getModel: getModel$2,
     getData,
     getDataHistory,
     getDataCount
 };
 
-const url = (api, contract) => `${api}/payment/${Address.from(contract).toString()}`;
+const url$1 = (api, contract) => `${api}/payment/${Address.from(contract).toString()}`;
+async function getModel$1(api, contract, delegateIP) {
+    const apiPath = `${url$1(api, contract)}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+async function getAccountInfo(api, contract, address, delegateIP) {
+    const apiPath = `${url$1(api, contract)}/account/${Address.from(address).toString()}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var payment$1 = {
+    getAccountInfo,
+    getModel: getModel$1,
+};
+
+// HMAC (RFC 2104)
+class HMAC extends Hash {
+    constructor(hash$1, _key) {
+        super();
+        this.finished = false;
+        this.destroyed = false;
+        hash(hash$1);
+        const key = toBytes$1(_key);
+        this.iHash = hash$1.create();
+        if (typeof this.iHash.update !== 'function')
+            throw new Error('Expected instance of class which extends utils.Hash');
+        this.blockLen = this.iHash.blockLen;
+        this.outputLen = this.iHash.outputLen;
+        const blockLen = this.blockLen;
+        const pad = new Uint8Array(blockLen);
+        // blockLen can be bigger than outputLen
+        pad.set(key.length > blockLen ? hash$1.create().update(key).digest() : key);
+        for (let i = 0; i < pad.length; i++)
+            pad[i] ^= 0x36;
+        this.iHash.update(pad);
+        // By doing update (processing of first block) of outer hash here we can re-use it between multiple calls via clone
+        this.oHash = hash$1.create();
+        // Undo internal XOR && apply outer XOR
+        for (let i = 0; i < pad.length; i++)
+            pad[i] ^= 0x36 ^ 0x5c;
+        this.oHash.update(pad);
+        pad.fill(0);
+    }
+    update(buf) {
+        exists(this);
+        this.iHash.update(buf);
+        return this;
+    }
+    digestInto(out) {
+        exists(this);
+        bytes(out, this.outputLen);
+        this.finished = true;
+        this.iHash.digestInto(out);
+        this.oHash.update(out);
+        this.oHash.digestInto(out);
+        this.destroy();
+    }
+    digest() {
+        const out = new Uint8Array(this.oHash.outputLen);
+        this.digestInto(out);
+        return out;
+    }
+    _cloneInto(to) {
+        // Create new instance without calling constructor since key already in state and we don't know it.
+        to || (to = Object.create(Object.getPrototypeOf(this), {}));
+        const { oHash, iHash, finished, destroyed, blockLen, outputLen } = this;
+        to = to;
+        to.finished = finished;
+        to.destroyed = destroyed;
+        to.blockLen = blockLen;
+        to.outputLen = outputLen;
+        to.oHash = oHash._cloneInto(to.oHash);
+        to.iHash = iHash._cloneInto(to.iHash);
+        return to;
+    }
+    destroy() {
+        this.destroyed = true;
+        this.oHash.destroy();
+        this.iHash.destroy();
+    }
+}
+/**
+ * HMAC: RFC2104 message authentication code.
+ * @param hash - function that would be used e.g. sha256
+ * @param key - message key
+ * @param message - message data
+ */
+const hmac = (hash, key, message) => new HMAC(hash, key).update(message).digest();
+hmac.create = (hash, key) => new HMAC(hash, key);
+
+const defaultPath = "m/44'/815'/0'/0/0";
+
+function hexToBytes(hex) {
+    if (hex.startsWith("0x"))
+        hex = hex.slice(2);
+    if (hex.length % 2 !== 0)
+        throw new Error("Invalid hex length");
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+}
+const privateKeyToPublicKey = (privateKey) => {
+    let privateBytes;
+    if (typeof privateKey === "string") {
+        privateBytes = hexToBytes(privateKey);
+    }
+    else if (privateKey instanceof Uint8Array) {
+        privateBytes = privateKey;
+    }
+    else {
+        throw MitumError.detail(ECODE.INVALID_TYPE, "Expected Uint8Array or hex string");
+    }
+    return secp256k1.getPublicKey(privateBytes, false);
+};
+const compress = (publicKey) => {
+    const x = publicKey.slice(1, 33);
+    const y = publicKey.slice(33);
+    const prefix = 0x02 + (y[y.length - 1] % 2);
+    const compressed = new Uint8Array(33);
+    compressed[0] = prefix;
+    compressed.set(x, 1);
+    let hex = "";
+    for (const b of compressed) {
+        hex += b.toString(16).padStart(2, "0");
+    }
+    return hex;
+};
+
+class BaseKeyPair {
+    constructor(privateKey) {
+        this.privateKey = privateKey;
+        this.signer = this.getSigner();
+        this.publicKey = this.getPub();
+        secp256k1__namespace.utils.hmacSha256Sync = (key, ...msgs) => hmac(sha256$1, key, secp256k1__namespace.utils.concatBytes(...msgs));
+        secp256k1__namespace.utils.sha256Sync = (...msgs) => sha256$1(secp256k1__namespace.utils.concatBytes(...msgs));
+    }
+    static random(option) {
+        return this.generator.random(option);
+    }
+    static fromSeed(seed, option) {
+        return this.generator.fromSeed(seed, option);
+    }
+    static fromPrivateKey(key) {
+        const s = key.toString();
+        StringAssert.with(s, MitumError.detail(ECODE.INVALID_PRIVATE_KEY, "invalid private key"))
+            .chainAnd(s.endsWith(SUFFIX.KEY.MITUM.PRIVATE))
+            .excute();
+        return this.generator.fromPrivateKey(key);
+    }
+    static hdRandom(option) {
+        return this.generator.hdRandom(option);
+    }
+    static fromPhrase(phrase, path, option) {
+        return this.generator.fromPhrase(phrase, path, option);
+    }
+    async ethSign(msg) {
+        const msgBytes = typeof msg === "string" ? utf8ToBytes(msg) : msg;
+        const msgHash = sha256$1(msgBytes);
+        // 64 bytes (r || s)
+        const sig = await secp256k1__namespace.sign(msgHash, this.signer, { der: false });
+        const r = sig.slice(0, 32);
+        const s = sig.slice(32);
+        const trim = (b) => {
+            let i = 0;
+            while (i < b.length - 1 && b[i] === 0)
+                i++;
+            return b.slice(i);
+        };
+        const rTrim = trim(r);
+        const sTrim = trim(s);
+        const out = new Uint8Array(4 + rTrim.length + sTrim.length);
+        new DataView(out.buffer).setUint32(0, rTrim.length, true);
+        out.set(rTrim, 4);
+        out.set(sTrim, 4 + rTrim.length);
+        return out;
+    }
+    ethVerify(sig, msg) {
+        let sigBytes = typeof sig === "string" ? base58.decode(sig) : sig;
+        const rlen = new DataView(sigBytes.buffer, sigBytes.byteOffset, 4).getUint32(0, true);
+        const r = sigBytes.slice(4, 4 + rlen);
+        const s = sigBytes.slice(4 + rlen);
+        const der = concatBytes([
+            new Uint8Array([48, sigBytes.length, 2]),
+            new Uint8Array([r.length]),
+            r,
+            new Uint8Array([2, s.length]),
+            s,
+        ]);
+        const msgBytes = typeof msg === "string" ? utf8ToBytes(msg) : msg;
+        return secp256k1__namespace.verify(der, sha256(msgBytes), secp256k1__namespace.getPublicKey(this.signer, true));
+    }
+    static K(seed) {
+        const seedBytes = typeof seed === "string" ? utf8ToBytes(seed) : seed;
+        let hashed = sha3(seedBytes);
+        let encoded = base58.encode(hashed);
+        let bytes = utf8ToBytes(encoded);
+        Assert.check(40 <= bytes.length, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"));
+        bytes = bytes.slice(0, 40);
+        const N = secp256k1__namespace.CURVE.n - BigInt(1);
+        let k = new Big(bytes).big;
+        k %= N;
+        k += BigInt(1);
+        return k;
+    }
+}
+class KeyPair extends BaseKeyPair {
+    constructor(privateKey) {
+        super(Key.from(privateKey));
+    }
+    getSigner() {
+        return toBytes$2(this.privateKey.noSuffix);
+    }
+    getPub() {
+        const pub = privateKeyToPublicKey("0x" + this.privateKey.noSuffix);
+        return new Key(compress(pub) + SUFFIX.KEY.MITUM.PUBLIC);
+    }
+    async sign(msg) {
+        return await this.ethSign(msg);
+    }
+    verify(sig, msg) {
+        return this.ethVerify(sig, msg);
+    }
+}
+KeyPair.generator = {
+    fillHDAccount(kp, wallet) {
+        return {
+            privatekey: kp.privateKey.toString(),
+            publickey: kp.publicKey.toString(),
+            address: "",
+            phrase: wallet.mnemonic?.phrase,
+            path: wallet.path,
+        };
+    },
+    random() {
+        return new KeyPair(ethers.Wallet.createRandom().privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
+    },
+    fromSeed(seed) {
+        StringAssert.with(seed, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"))
+            .satisfyConfig(Config.SEED)
+            .excute();
+        return new KeyPair(BaseKeyPair.K(seed).toString(16) + SUFFIX.KEY.MITUM.PRIVATE);
+    },
+    fromPrivateKey(key) {
+        return new KeyPair(key);
+    },
+    hdRandom() {
+        try {
+            const wallet = ethers.HDNodeWallet.createRandom("", defaultPath);
+            const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
+            return this.fillHDAccount(kp, wallet);
+        }
+        catch (error) {
+            Assert.check(false, MitumError.detail(ECODE.UNKNOWN, `unknown error occur during HDNodeWallet.createRandom(), ${error.shortMessage}`));
+            throw error;
+        }
+    },
+    fromPhrase(phrase, path) {
+        try {
+            const wallet = ethers.HDNodeWallet.fromPhrase(phrase, "", path ? path : defaultPath);
+            const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
+            return this.fillHDAccount(kp, wallet);
+        }
+        catch (error) {
+            if (error.argument === 'mnemonic') {
+                Assert.check(false, MitumError.detail(ECODE.HDWALLET.INVALID_PHRASE, `invalid phrase, ${error.shortMessage}`));
+            }
+            else {
+                Assert.check(false, MitumError.detail(ECODE.HDWALLET.INVALID_PATH, `invalid path, ${error.shortMessage} with value ${error.value}`));
+            }
+            throw error;
+        }
+    },
+};
+
+function getRandomN(n, f) {
+    Assert.check(Config.KEYS_IN_ACCOUNT.satisfy(n), MitumError.detail(ECODE.INVALID_KEYS, `${n} is out of range`));
+    n = Math.floor(n);
+    let weight = Math.floor(Config.THRESHOLD.max / n);
+    if (Config.THRESHOLD.max % n) {
+        weight += 1;
+    }
+    const ks = [];
+    const kps = [];
+    for (let i = 0; i < n; i++) {
+        kps.push(f());
+        ks.push(new PubKey(kps[i].publicKey, weight));
+    }
+    return {
+        keys: new Keys(ks, Config.THRESHOLD.max),
+        keypairs: kps,
+    };
+}
+const randomN = (n, option) => {
+    return getRandomN(n, () => KeyPair.random(option));
+};
+
+class KeyG extends Generator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    fillHDwallet(hdwallet) {
+        return {
+            privatekey: hdwallet.privatekey,
+            publickey: hdwallet.publickey,
+            address: this.address(hdwallet.publickey),
+            phrase: hdwallet.phrase,
+            path: hdwallet.path,
+        };
+    }
+    /**
+     * Generate a key pair randomly or from the given string seed. Avoid using seed ​​that are easy to predict.
+     * @param {string} [seed] - (Optional) The random string seed for deterministic key generation. If not provided, a random key pair will be generated.
+     * @returns An `Account` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     */
+    key(seed) {
+        if (!seed) {
+            const kp = KeyPair.random("mitum");
+            return {
+                privatekey: kp.privateKey.toString(),
+                publickey: kp.publicKey.toString(),
+                address: this.address(kp.publicKey),
+            };
+        }
+        const kp = KeyPair.fromSeed(seed, "mitum");
+        return {
+            privatekey: kp.privateKey.toString(),
+            publickey: kp.publicKey.toString(),
+            address: this.address(kp.publicKey),
+        };
+    }
+    /**
+     * Generate `n` length of array with randomly generated key pairs.
+     * @param {number} [n] - The number of accounts to generate.
+     * @returns An array of `Account` objects.
+     * Properties of `Account`:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     */
+    keys(n) {
+        return randomN(n, "mitum").keypairs.map(kp => {
+            return {
+                privatekey: kp.privateKey.toString(),
+                publickey: kp.publicKey.toString(),
+                address: this.address(kp.publicKey),
+            };
+        });
+    }
+    /**
+     * Generate a key randomly using the HD wallet method. (BIP-32 standard)
+     * @returns An `HDAccount` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address,
+     * - `phrase`: phrases made up of 12 mnemonic words,
+     * - `path`: derivation path for HD wallet. Default set to "m/44'/815'/0'/0/0". 815 is a coin type for imFact.
+     */
+    hdKey() {
+        const hdwallet = KeyPair.hdRandom("mitum");
+        return this.fillHDwallet(hdwallet);
+    }
+    /**
+     * Generate a key pair from the given private key.
+     * @param {string | Key} [key] - The private key.
+     * @returns An `Account` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     */
+    fromPrivateKey(key) {
+        const kp = KeyPair.fromPrivateKey(key);
+        return {
+            privatekey: kp.privateKey.toString(),
+            publickey: kp.publicKey.toString(),
+            address: this.address(kp.publicKey),
+        };
+    }
+    /**
+     * Generate a key pair from given mnemonic phrase using the HD wallet method.
+     * @param {string} [phrase] - The Mnemonic phrase obtained when executed `hdKey()` method.
+     * @param {string} [path] - (Optional) The derivation path for HD wallet.
+     * @returns An `HDAccount` object with following properties:
+     * - `privatekey`: private key,
+     * - `publickey`: public key,
+     * - `address`: address
+     * - `phrase`: phrases made up of 12 mnemonic words,
+     * - `path`: derivation path for HD wallet, default set to "m/44'/815'/0'/0/0". 815 is a coin type for imFact.
+     */
+    fromPhrase(phrase, path) {
+        const hdwallet = KeyPair.fromPhrase(phrase, path);
+        return this.fillHDwallet(hdwallet);
+    }
+    /**
+     * Generate an address derived the given public key.
+     * @param {string | Key} [key] - The public key.
+     * @returns The address derived from public key
+     */
+    address(key) {
+        const suffix = key.toString().slice(-3);
+        Assert.check(suffix === "fpu", MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid pubkey format"));
+        return new Keys([new PubKey(key, 100)], 100).checksum.toString();
+    }
+    /**
+     * Returns a checksummed address for given address string. For invalid address, an error is returned.
+     * @param {string} [address] - An address.
+     * @returns A checksummed address.
+     */
+    checksummedAddress(address) {
+        try {
+            const valid_address = new Address(address);
+            return valid_address.toString();
+        }
+        catch (error) {
+            if (error.code === 'EC_INVALID_ADDRESS_CHECKSUM') {
+                return '0x' + getChecksum(address.slice(2, 42)) + SUFFIX.ADDRESS.MITUM;
+            }
+            else {
+                throw error;
+            }
+        }
+    }
+    /**
+     * Generate a multi-signature address from the given keys.
+     * @param {keysType} [keys] - An array of object {`key`: publickey, `weight`: weight for the key}
+     * @param {string | number | Big} [threshold] - The threshold for the multi-signature.
+     * @returns The multi-signature address.
+     * @example
+     * const pubkey01 = {
+     *     key: "02cb1d73c49d638d98092e35603414b575f3f5b5ce01162cdd80ab68ab77e50e14fpu",
+     *     weight: 50
+     * };
+     * const pubkey02 = {
+     *     key: "0377241675aabafca6b1a49f3bc08a581beb0daa330a4ac2008464d63ed7635a22fpu",
+     *     weight: 50
+     * };
+     * const mutiSigAddress = mitum.account.addressForMultiSig([pubkey01, pubkey02], 100);
+     */
+    addressForMultiSig(keys, threshold) {
+        return new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold).checksum.toString();
+    }
+}
+
+const url = (api, contract) => `${api}/did-registry/${Address.from(contract).toString()}`;
 async function getModel(api, contract, delegateIP) {
     const apiPath = `${url(api, contract)}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-async function getAccountInfo(api, contract, address, delegateIP) {
-    const apiPath = `${url(api, contract)}/account/${Address.from(address).toString()}`;
+async function getByAccount(api, contract, account, delegateIP) {
+    const apiPath = `${url(api, contract)}/did/${account}`;
     return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
 }
-var payment = {
-    getAccountInfo,
+async function getByDID(api, contract, did, delegateIP) {
+    const apiPath = `${url(api, contract)}/document?did=${did}`;
+    return !delegateIP ? await axios.get(apiPath) : await axios.get(delegateUri(delegateIP) + encodeURIComponent(apiPath));
+}
+var did$1 = {
     getModel,
+    getByAccount,
+    getByDID
 };
 
 var models = {
-    currency,
+    currency: currency$1,
     contract: {
-        nft,
-        credential,
-        dao,
+        nft: nft$1,
+        credential: credential$1,
+        dao: dao$1,
         kyc,
         sto,
-        timestamp,
-        token,
-        point,
-        storage,
-        payment
+        timestamp: timestamp$1,
+        token: token$1,
+        point: point$1,
+        storage: storage$1,
+        payment: payment$1,
+        did: did$1
     },
 };
-
-const currencyApi = models.currency;
-const contractApi = models.contract;
 
 async function getAPIData(f, _links) {
     try {
@@ -2574,6 +3137,9 @@ async function getAPIData(f, _links) {
         }
     }
 }
+
+const currencyApi = models.currency;
+const contractApi = models.contract;
 
 class Node extends Generator {
     constructor(api, delegateIP) {
@@ -2839,268 +3405,7 @@ class NodeFactSign extends FactSign {
     }
 }
 
-// HMAC (RFC 2104)
-class HMAC extends Hash {
-    constructor(hash$1, _key) {
-        super();
-        this.finished = false;
-        this.destroyed = false;
-        hash(hash$1);
-        const key = toBytes$1(_key);
-        this.iHash = hash$1.create();
-        if (typeof this.iHash.update !== 'function')
-            throw new Error('Expected instance of class which extends utils.Hash');
-        this.blockLen = this.iHash.blockLen;
-        this.outputLen = this.iHash.outputLen;
-        const blockLen = this.blockLen;
-        const pad = new Uint8Array(blockLen);
-        // blockLen can be bigger than outputLen
-        pad.set(key.length > blockLen ? hash$1.create().update(key).digest() : key);
-        for (let i = 0; i < pad.length; i++)
-            pad[i] ^= 0x36;
-        this.iHash.update(pad);
-        // By doing update (processing of first block) of outer hash here we can re-use it between multiple calls via clone
-        this.oHash = hash$1.create();
-        // Undo internal XOR && apply outer XOR
-        for (let i = 0; i < pad.length; i++)
-            pad[i] ^= 0x36 ^ 0x5c;
-        this.oHash.update(pad);
-        pad.fill(0);
-    }
-    update(buf) {
-        exists(this);
-        this.iHash.update(buf);
-        return this;
-    }
-    digestInto(out) {
-        exists(this);
-        bytes(out, this.outputLen);
-        this.finished = true;
-        this.iHash.digestInto(out);
-        this.oHash.update(out);
-        this.oHash.digestInto(out);
-        this.destroy();
-    }
-    digest() {
-        const out = new Uint8Array(this.oHash.outputLen);
-        this.digestInto(out);
-        return out;
-    }
-    _cloneInto(to) {
-        // Create new instance without calling constructor since key already in state and we don't know it.
-        to || (to = Object.create(Object.getPrototypeOf(this), {}));
-        const { oHash, iHash, finished, destroyed, blockLen, outputLen } = this;
-        to = to;
-        to.finished = finished;
-        to.destroyed = destroyed;
-        to.blockLen = blockLen;
-        to.outputLen = outputLen;
-        to.oHash = oHash._cloneInto(to.oHash);
-        to.iHash = iHash._cloneInto(to.iHash);
-        return to;
-    }
-    destroy() {
-        this.destroyed = true;
-        this.oHash.destroy();
-        this.iHash.destroy();
-    }
-}
-/**
- * HMAC: RFC2104 message authentication code.
- * @param hash - function that would be used e.g. sha256
- * @param key - message key
- * @param message - message data
- */
-const hmac = (hash, key, message) => new HMAC(hash, key).update(message).digest();
-hmac.create = (hash, key) => new HMAC(hash, key);
-
-const defaultPath = "m/44'/815'/0'/0/0";
-
-function hexToBytes(hex) {
-    if (hex.startsWith("0x"))
-        hex = hex.slice(2);
-    if (hex.length % 2 !== 0)
-        throw new Error("Invalid hex length");
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-    }
-    return bytes;
-}
-const privateKeyToPublicKey = (privateKey) => {
-    let privateBytes;
-    if (typeof privateKey === "string") {
-        privateBytes = hexToBytes(privateKey);
-    }
-    else if (privateKey instanceof Uint8Array) {
-        privateBytes = privateKey;
-    }
-    else {
-        throw MitumError.detail(ECODE.INVALID_TYPE, "Expected Uint8Array or hex string");
-    }
-    return secp256k1.getPublicKey(privateBytes, false);
-};
-const compress = (publicKey) => {
-    const x = publicKey.slice(1, 33);
-    const y = publicKey.slice(33);
-    const prefix = 0x02 + (y[y.length - 1] % 2);
-    const compressed = new Uint8Array(33);
-    compressed[0] = prefix;
-    compressed.set(x, 1);
-    let hex = "";
-    for (const b of compressed) {
-        hex += b.toString(16).padStart(2, "0");
-    }
-    return hex;
-};
-
-class BaseKeyPair {
-    constructor(privateKey) {
-        this.privateKey = privateKey;
-        this.signer = this.getSigner();
-        this.publicKey = this.getPub();
-        secp256k1__namespace.utils.hmacSha256Sync = (key, ...msgs) => hmac(sha256$1, key, secp256k1__namespace.utils.concatBytes(...msgs));
-        secp256k1__namespace.utils.sha256Sync = (...msgs) => sha256$1(secp256k1__namespace.utils.concatBytes(...msgs));
-    }
-    static random(option) {
-        return this.generator.random(option);
-    }
-    static fromSeed(seed, option) {
-        return this.generator.fromSeed(seed, option);
-    }
-    static fromPrivateKey(key) {
-        const s = key.toString();
-        StringAssert.with(s, MitumError.detail(ECODE.INVALID_PRIVATE_KEY, "invalid private key"))
-            .chainAnd(s.endsWith(SUFFIX.KEY.MITUM.PRIVATE))
-            .excute();
-        return this.generator.fromPrivateKey(key);
-    }
-    static hdRandom(option) {
-        return this.generator.hdRandom(option);
-    }
-    static fromPhrase(phrase, path, option) {
-        return this.generator.fromPhrase(phrase, path, option);
-    }
-    async ethSign(msg) {
-        const msgBytes = typeof msg === "string" ? utf8ToBytes(msg) : msg;
-        const msgHash = sha256$1(msgBytes);
-        // 64 bytes (r || s)
-        const sig = await secp256k1__namespace.sign(msgHash, this.signer, { der: false });
-        const r = sig.slice(0, 32);
-        const s = sig.slice(32);
-        const trim = (b) => {
-            let i = 0;
-            while (i < b.length - 1 && b[i] === 0)
-                i++;
-            return b.slice(i);
-        };
-        const rTrim = trim(r);
-        const sTrim = trim(s);
-        const out = new Uint8Array(4 + rTrim.length + sTrim.length);
-        new DataView(out.buffer).setUint32(0, rTrim.length, true);
-        out.set(rTrim, 4);
-        out.set(sTrim, 4 + rTrim.length);
-        return out;
-    }
-    ethVerify(sig, msg) {
-        let sigBytes = typeof sig === "string" ? base58.decode(sig) : sig;
-        const rlen = new DataView(sigBytes.buffer, sigBytes.byteOffset, 4).getUint32(0, true);
-        const r = sigBytes.slice(4, 4 + rlen);
-        const s = sigBytes.slice(4 + rlen);
-        const der = concatBytes([
-            new Uint8Array([48, sigBytes.length, 2]),
-            new Uint8Array([r.length]),
-            r,
-            new Uint8Array([2, s.length]),
-            s,
-        ]);
-        const msgBytes = typeof msg === "string" ? utf8ToBytes(msg) : msg;
-        return secp256k1__namespace.verify(der, sha256(msgBytes), secp256k1__namespace.getPublicKey(this.signer, true));
-    }
-    static K(seed) {
-        const seedBytes = typeof seed === "string" ? utf8ToBytes(seed) : seed;
-        let hashed = sha3(seedBytes);
-        let encoded = base58.encode(hashed);
-        let bytes = utf8ToBytes(encoded);
-        Assert.check(40 <= bytes.length, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"));
-        bytes = bytes.slice(0, 40);
-        const N = secp256k1__namespace.CURVE.n - BigInt(1);
-        let k = new Big(bytes).big;
-        k %= N;
-        k += BigInt(1);
-        return k;
-    }
-}
-class KeyPair extends BaseKeyPair {
-    constructor(privateKey) {
-        super(Key.from(privateKey));
-    }
-    getSigner() {
-        return toBytes$2(this.privateKey.noSuffix);
-    }
-    getPub() {
-        const pub = privateKeyToPublicKey("0x" + this.privateKey.noSuffix);
-        return new Key(compress(pub) + SUFFIX.KEY.MITUM.PUBLIC);
-    }
-    async sign(msg) {
-        return await this.ethSign(msg);
-    }
-    verify(sig, msg) {
-        return this.ethVerify(sig, msg);
-    }
-}
-KeyPair.generator = {
-    fillHDAccount(kp, wallet) {
-        return {
-            privatekey: kp.privateKey.toString(),
-            publickey: kp.publicKey.toString(),
-            address: "",
-            phrase: wallet.mnemonic?.phrase,
-            path: wallet.path,
-        };
-    },
-    random() {
-        return new KeyPair(ethers.Wallet.createRandom().privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
-    },
-    fromSeed(seed) {
-        StringAssert.with(seed, MitumError.detail(ECODE.INVALID_SEED, "seed length out of range"))
-            .satisfyConfig(Config.SEED)
-            .excute();
-        return new KeyPair(BaseKeyPair.K(seed).toString(16) + SUFFIX.KEY.MITUM.PRIVATE);
-    },
-    fromPrivateKey(key) {
-        return new KeyPair(key);
-    },
-    hdRandom() {
-        try {
-            const wallet = ethers.HDNodeWallet.createRandom("", defaultPath);
-            const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
-            return this.fillHDAccount(kp, wallet);
-        }
-        catch (error) {
-            Assert.check(false, MitumError.detail(ECODE.UNKNOWN, `unknown error occur during HDNodeWallet.createRandom(), ${error.shortMessage}`));
-            throw error;
-        }
-    },
-    fromPhrase(phrase, path) {
-        try {
-            const wallet = ethers.HDNodeWallet.fromPhrase(phrase, "", path ? path : defaultPath);
-            const kp = new KeyPair(wallet.privateKey.substring(2) + SUFFIX.KEY.MITUM.PRIVATE);
-            return this.fillHDAccount(kp, wallet);
-        }
-        catch (error) {
-            if (error.argument === 'mnemonic') {
-                Assert.check(false, MitumError.detail(ECODE.HDWALLET.INVALID_PHRASE, `invalid phrase, ${error.shortMessage}`));
-            }
-            else {
-                Assert.check(false, MitumError.detail(ECODE.HDWALLET.INVALID_PATH, `invalid path, ${error.shortMessage} with value ${error.value}`));
-            }
-            throw error;
-        }
-    },
-};
-
-const encoder$8 = new TextEncoder();
+const encoder$b = new TextEncoder();
 class BaseOperation {
     constructor(networkID, fact) {
         this.id = networkID;
@@ -3167,10 +3472,10 @@ class BaseOperation {
         const now = TimeStamp$1.new();
         if (sigType === "NodeFactSign" || (!sigType && node)) {
             Assert.check(node !== undefined, MitumError.detail(ECODE.FAIL_SIGN, "no node address"));
-            const sig = await keypair.sign(concatBytes([encoder$8.encode(this.id), node.toBytes(), this.fact.hash, now.toBytes()]));
+            const sig = await keypair.sign(concatBytes([encoder$b.encode(this.id), node.toBytes(), this.fact.hash, now.toBytes()]));
             return new NodeFactSign(node.toString(), keypair.publicKey, sig, now.toString());
         }
-        const sig = await keypair.sign(concatBytes([encoder$8.encode(this.id), this.fact.hash, now.toBytes()]));
+        const sig = await keypair.sign(concatBytes([encoder$b.encode(this.id), this.fact.hash, now.toBytes()]));
         return new GeneralFactSign(keypair.publicKey, sig, now.toString());
     }
     toBytes() {
@@ -3194,57 +3499,6 @@ class BaseOperation {
             ...operation,
             signs: factSigns.map(fs => fs.toHintedObject())
         };
-    }
-}
-
-//type FactSign = GeneralFactSign | NodeFactSign
-class Authentication {
-    constructor(contract, authenticationId, proofData) {
-        this.hint = new Hint(HINT.CURRENCY.EXTENSION.AUTHENTICATION);
-        this.contract = Address.from(contract);
-        this.authenticationId = authenticationId;
-        if (proofData) {
-            Assert.check(isBase58Encoded(proofData), MitumError.detail(ECODE.INVALID_USER_OPERATION, `proof_data must in base58 encoded`));
-        }
-        this.proofData = proofData ? proofData : "";
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            contract: this.contract.toString(),
-            authentication_id: this.authenticationId,
-            proof_data: this.proofData,
-        };
-    }
-}
-class ProxyPayer {
-    constructor(proxyPayer) {
-        this.hint = new Hint(HINT.CURRENCY.EXTENSION.PROXY_PAYER);
-        this.proxyPayer = Address.from(proxyPayer);
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            proxy_payer: this.proxyPayer.toString(),
-        };
-    }
-}
-class Settlement {
-    constructor(opSender) {
-        this.hint = new Hint(HINT.CURRENCY.EXTENSION.SETTLEMENT);
-        this.opSender = opSender ? Address.from(opSender) : "";
-    }
-    toHintedObject() {
-        return {
-            _hint: this.hint.toString(),
-            op_sender: this.opSender.toString(),
-        };
-    }
-}
-
-class ContractGenerator extends Generator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
     }
 }
 
@@ -3354,6 +3608,266 @@ class ContractFact extends Fact {
 class NodeFact extends Fact {
     constructor(hint, token) {
         super(hint, token);
+    }
+}
+
+const encoder$a = new TextEncoder();
+let Authentication$1 = class Authentication {
+    constructor(contract, authenticationId, proofData) {
+        this.hint = new Hint(HINT.CURRENCY.EXTENSION.AUTHENTICATION);
+        this.contract = Address.from(contract);
+        this.authenticationId = authenticationId;
+        if (proofData) {
+            Assert.check(isBase58Encoded(proofData), MitumError.detail(ECODE.INVALID_USER_OPERATION, `proof_data must in base58 encoded`));
+        }
+        this.proofData = proofData ? proofData : "";
+    }
+    toHintedObject() {
+        return {
+            _hint: this.hint.toString(),
+            contract: this.contract.toString(),
+            authentication_id: this.authenticationId,
+            proof_data: this.proofData,
+        };
+    }
+};
+class ProxyPayer {
+    constructor(proxyPayer) {
+        this.hint = new Hint(HINT.CURRENCY.EXTENSION.PROXY_PAYER);
+        this.proxyPayer = Address.from(proxyPayer);
+    }
+    toHintedObject() {
+        return {
+            _hint: this.hint.toString(),
+            proxy_payer: this.proxyPayer.toString(),
+        };
+    }
+}
+class Settlement {
+    constructor(opSender) {
+        this.hint = new Hint(HINT.CURRENCY.EXTENSION.SETTLEMENT);
+        this.opSender = opSender ? Address.from(opSender) : "";
+    }
+    toHintedObject() {
+        return {
+            _hint: this.hint.toString(),
+            op_sender: this.opSender.toString(),
+        };
+    }
+}
+class RestoredFact extends Fact {
+    constructor(factJson) {
+        const token_seed = bytesToUtf8(base64ToBytes(factJson.token));
+        const parts = factJson._hint.split('-');
+        super(parts.slice(0, parts.length - 1).join('-'), token_seed);
+        this.factJson = factJson;
+        this.sender = new Address(factJson.sender);
+        this._hash = factJson.hash ? this.hashing() : new Uint8Array();
+    }
+    get operationHint() {
+        const parts = this.factJson._hint.split('-');
+        return parts.slice(0, parts.length - 2).join('-');
+    }
+    toHintedObject() {
+        return this.factJson;
+    }
+    hashing() {
+        return this.factJson.hash ? base58.decode(this.factJson.hash) : new Uint8Array();
+    }
+}
+class UserOperation extends BaseOperation {
+    constructor(networkID, fact, auth, proxyPayer, settlement) {
+        super(networkID, (!isHintedFactObject(fact) ? fact : UserOperation.restoreFactFromJson(fact)));
+        this.id = networkID;
+        this.fact = (!isHintedFactObject(fact) ? fact : UserOperation.restoreFactFromJson(fact));
+        if ("sender" in fact) {
+            this.isSenderDidOwner(fact.sender, auth.authenticationId, true);
+        }
+        this.auth = auth;
+        this.proxyPayer = proxyPayer;
+        this.settlement = settlement;
+        this.hint = new Hint(this.fact.operationHint);
+        this._factSigns = [];
+        this._hash = this.hashing();
+    }
+    static restoreFactFromJson(factJson) {
+        const fact = new RestoredFact(factJson);
+        return fact;
+    }
+    get hash() {
+        return this._hash;
+    }
+    toBytes() {
+        if (!this._factSigns) {
+            return this.fact.hash;
+        }
+        this._factSigns = this._factSigns.sort(SortFunc);
+        return concatBytes([
+            encoder$a.encode(JSON.stringify(this.toHintedExtension())),
+            this.fact.hash,
+            concatBytes(this._factSigns.map((fs) => fs.toBytes())),
+        ]);
+    }
+    toHintedObject() {
+        const operation = {
+            _hint: this.hint.toString(),
+            fact: this.fact.toHintedObject(),
+            extension: this.proxyPayer ?
+                {
+                    authentication: this.auth.toHintedObject(),
+                    proxy_payer: this.proxyPayer.toHintedObject(),
+                    settlement: this.settlement.toHintedObject(),
+                } :
+                {
+                    authentication: this.auth.toHintedObject(),
+                    settlement: this.settlement.toHintedObject(),
+                },
+            hash: this._hash.length === 0 ? "" : base58.encode(this._hash)
+        };
+        const factSigns = this._factSigns.length === 0 ? [] : this._factSigns.sort(SortFunc);
+        return {
+            ...operation,
+            signs: factSigns.map(fs => fs.toHintedObject())
+        };
+    }
+    toHintedExtension() {
+        return this.proxyPayer ?
+            {
+                authentication: this.auth.toHintedObject(),
+                proxy_payer: this.proxyPayer.toHintedObject(),
+                settlement: this.settlement.toHintedObject(),
+            } :
+            {
+                authentication: this.auth.toHintedObject(),
+                settlement: this.settlement.toHintedObject(),
+            };
+    }
+    isSenderDidOwner(sender, did, id) {
+        Assert.check(sender.toString() === validateDID(did.toString(), id).toString(), MitumError.detail(ECODE.DID.INVALID_DID, `The owner of did must match the sender(${sender.toString()}). check the did (${did.toString()})`));
+    }
+    /**
+     * Adds an alternative signature to the user operation.
+     * This fills the `proof_data` field of the `authentication` object using the provided private key.
+     *
+     * @param {string | Key} privateKey - The private key used to generate the alternative signature.
+     * @returns {Promise<void>} Resolves when the alternative signature has been generated and applied.
+     */
+    async addAlterSign(privateKey) {
+        privateKey = Key.from(privateKey);
+        const keypair = KeyPair.fromPrivateKey(privateKey);
+        const alterSign = await keypair.sign(this.fact.hash);
+        this.auth = new Authentication$1(this.auth.contract, this.auth.authenticationId, base58.encode(alterSign)); // base58 인코딩 후 저장
+    }
+    /**
+     * Sets settlement information for the userOperation.
+     * `op_sender` is the account address that will **sign this UserOperation**.
+     * When signatures are added later, the operation **must be signed using the private key of `op_sender`**.
+     * If no `proxyPayer` is specified, `op_sender` will also act as the **fee payer** for this UserOperation.
+     * @param {string | Address} opSender - The account address that acts as the signer .
+     * @returns void.
+     **/
+    setSettlement(opSender) {
+        Address.from(opSender);
+        this.settlement = new Settlement(opSender);
+    }
+    /**
+     * Sets a proxy payer for the UserOperation.
+     *
+     * `proxyPayer` is an address of a **CA (Contract Account)** that pays the transaction fee
+     * from its own balance when this userOperation is executed.
+     * The proxy payer **must be preconfigured** to allow this operation:
+     * the `sender` of the UserOperation's Fact must be registered as a
+     * permitted recipient in the proxy payer contract.
+     *
+     * This setting is optional. If not set, the fee will be paid by `settlement.op_sender`.
+     * @param {string | Address} proxyPayer - The CA address that will pay the transaction fee.
+     * @returns void.
+     **/
+    setProxyPayer(proxyPayer) {
+        Address.from(proxyPayer);
+        this.proxyPayer = new ProxyPayer(proxyPayer);
+    }
+    /**
+     * Signs the user operation using the provided private key.
+     *
+     * This method validates required fields, generates a signature, and updates the internal
+     * factSigns and operation hash. The signing process is asynchronous and must be awaited.
+     *
+     * @param {string | Key} privatekey - The private key used for signing the operation.
+     * @returns {Promise<void>} Resolves when the operation has been successfully signed.
+     */
+    async sign(privatekey) {
+        const userOperationFields = {
+            contract: this.auth.contract.toString(),
+            authentication_id: this.auth.authenticationId,
+            proof_data: this.auth.proofData,
+            op_sender: this.settlement.opSender.toString(),
+        };
+        Object.entries(userOperationFields).forEach(([key, value]) => {
+            if (!value) {
+                if (key === "proof_data") {
+                    throw MitumError.detail(ECODE.INVALID_USER_OPERATION, "Cannot sign the user operation: proof_data is empty. Did you forget to 'await' addAlterSign()?");
+                }
+                throw MitumError.detail(ECODE.INVALID_USER_OPERATION, `Cannot sign the user operation: ${key} must not be empty.`);
+            }
+        });
+        const keypair = KeyPair.fromPrivateKey(privatekey);
+        const now = TimeStamp$1.new();
+        const factSign = new GeneralFactSign(keypair.publicKey, await keypair.sign(concatBytes([encoder$a.encode(this.id), this.fact.hash, now.toBytes()])), now.toString());
+        const idx = this._factSigns
+            .map((fs) => fs.signer.toString())
+            .indexOf(keypair.publicKey.toString());
+        if (idx < 0) {
+            this._factSigns.push(factSign);
+        }
+        else {
+            this._factSigns[idx] = factSign;
+        }
+        this._hash = this.hashing();
+    }
+}
+
+class ContractGenerator extends Generator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+}
+
+const encoder$9 = new TextEncoder();
+class AllowedOperation {
+    constructor(operationHint, contract, requireContract = false) {
+        this.operationHint =
+            Hint.hasVersion(operationHint)
+                ? Hint.fromString(operationHint)
+                : new Hint(operationHint);
+        if (requireContract && !contract) {
+            throw MitumError.detail(ECODE.INVALID_ADDRESS, "Contract address is required for this operation.");
+        }
+        this.contract = contract
+            ? contract instanceof Address
+                ? contract
+                : new Address(contract)
+            : undefined;
+    }
+    toBytes() {
+        if (!this.contract) {
+            return encoder$9.encode(this.operationHint.toString());
+        }
+        return concatBytes([
+            this.contract.toBytes(),
+            encoder$9.encode(this.operationHint.toString())
+        ]);
+    }
+    toHintedObject() {
+        if (!this.contract) {
+            return {
+                operation: this.operationHint.toString()
+            };
+        }
+        return {
+            contract: this.contract.toString(),
+            operation: this.operationHint.toString()
+        };
     }
 }
 
@@ -3577,6 +4091,41 @@ class UpdateHandlerFact extends Fact {
     }
 }
 
+class UpdateRecipientFact extends Fact {
+    constructor(token, sender, contract, currency, recipients) {
+        super(HINT.CURRENCY.UPDATE_RECIPIENT.FACT, token);
+        this.sender = Address.from(sender);
+        this.contract = Address.from(contract);
+        this.currency = CurrencyID.from(currency);
+        this.recipients = recipients.map(a => Address.from(a));
+        this._hash = this.hashing();
+        ArrayAssert.check(recipients, "recipients")
+            .rangeLength(Config.CONTRACT_RECIPIENTS)
+            .noDuplicates();
+    }
+    toBytes() {
+        return concatBytes([
+            super.toBytes(),
+            this.sender.toBytes(),
+            this.contract.toBytes(),
+            this.currency.toBytes(),
+            concatBytes(this.recipients.sort(SortFunc).map(a => a.toBytes())),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            sender: this.sender.toString(),
+            contract: this.contract.toString(),
+            currency: this.currency.toString(),
+            recipients: this.recipients.sort(SortFunc).map((w) => w.toString()),
+        };
+    }
+    get operationHint() {
+        return HINT.CURRENCY.UPDATE_RECIPIENT.OPERATION;
+    }
+}
+
 class RegisterCurrencyFact extends NodeFact {
     constructor(token, design) {
         super(HINT.CURRENCY.REGISTER_CURRENCY.FACT, token);
@@ -3788,7 +4337,7 @@ class TokenFact extends ContractFact {
     }
 }
 
-let RegisterModelFact$7 = class RegisterModelFact extends TokenFact {
+let RegisterModelFact$8 = class RegisterModelFact extends TokenFact {
     constructor(token, sender, contract, currency, symbol, name, decimal, initialSupply) {
         super(HINT.TOKEN.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.symbol = CurrencyID.from(symbol);
@@ -4022,7 +4571,7 @@ let TransferFromFact$1 = class TransferFromFact extends ItemOperationFact {
     }
 };
 
-let RegisterModelFact$6 = class RegisterModelFact extends ContractFact {
+let RegisterModelFact$7 = class RegisterModelFact extends ContractFact {
     constructor(token, sender, contract, project, currency) {
         super(HINT.STORAGE.REGISTER_MODEL.FACT, token, sender, contract, currency);
         Assert.check(Config.STORAGE.PROJECT.satisfy(project.toString().length), MitumError.detail(ECODE.INVALID_FACT, `project length out of range, should be between ${Config.STORAGE.PROJECT.min} to ${Config.STORAGE.PROJECT.max}`));
@@ -4172,7 +4721,7 @@ class DeleteDataFact extends StorageFact {
     }
 }
 
-let RegisterModelFact$5 = class RegisterModelFact extends ContractFact {
+let RegisterModelFact$6 = class RegisterModelFact extends ContractFact {
     constructor(token, sender, contract, currency) {
         super(HINT.CREDENTIAL.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this._hash = this.hashing();
@@ -4188,7 +4737,7 @@ let RegisterModelFact$5 = class RegisterModelFact extends ContractFact {
     }
 };
 
-const encoder$7 = new TextEncoder();
+const encoder$8 = new TextEncoder();
 class AddTemplateFact extends ContractFact {
     constructor(token, sender, contract, templateID, templateName, serviceDate, expirationDate, templateShare, multiAudit, displayName, subjectKey, description, creator, currency) {
         super(HINT.CREDENTIAL.ADD_TEMPLATE.FACT, token, sender, contract, currency);
@@ -4216,14 +4765,14 @@ class AddTemplateFact extends ContractFact {
         return concatBytes([
             super.toBytes(),
             this.templateID.toBytes(),
-            encoder$7.encode(this.templateName),
+            encoder$8.encode(this.templateName),
             this.serviceDate.toBytes(),
             this.expirationDate.toBytes(),
             this.templateShare.toBytes(),
             this.multiAudit.toBytes(),
-            encoder$7.encode(this.displayName),
-            encoder$7.encode(this.subjectKey),
-            encoder$7.encode(this.description),
+            encoder$8.encode(this.displayName),
+            encoder$8.encode(this.subjectKey),
+            encoder$8.encode(this.description),
             this.creator.toBytes(),
             this.currency.toBytes(),
         ]);
@@ -4283,7 +4832,7 @@ class CredentialItem extends Item {
     }
 }
 
-const encoder$6 = new TextEncoder();
+const encoder$7 = new TextEncoder();
 class IssueItem extends CredentialItem {
     constructor(contract, holder, templateID, credentialID, value, validFrom, validUntil, did, currency) {
         super(HINT.CREDENTIAL.ISSUE.ITEM, contract, holder, templateID, credentialID, currency);
@@ -4297,10 +4846,10 @@ class IssueItem extends CredentialItem {
     toBytes() {
         return concatBytes([
             super.toBytes(),
-            encoder$6.encode(this.value),
+            encoder$7.encode(this.value),
             this.validFrom.toBytes(),
             this.validUntil.toBytes(),
-            encoder$6.encode(this.did),
+            encoder$7.encode(this.did),
             this.currency.toBytes(),
         ]);
     }
@@ -4357,8 +4906,8 @@ class RevokeFact extends OperationFact {
     }
 }
 
-const encoder$5 = new TextEncoder();
-let RegisterModelFact$4 = class RegisterModelFact extends ContractFact {
+const encoder$6 = new TextEncoder();
+let RegisterModelFact$5 = class RegisterModelFact extends ContractFact {
     constructor(votingPowerToken, sender, contract, option, policy, currency) {
         super(HINT.DAO.REGISTER_MODEL.FACT, votingPowerToken, sender, contract, currency);
         this.option = option;
@@ -4369,7 +4918,7 @@ let RegisterModelFact$4 = class RegisterModelFact extends ContractFact {
     toBytes() {
         return concatBytes([
             super.toBytes(),
-            encoder$5.encode(this.option),
+            encoder$6.encode(this.option),
             this.policy.toBytes(),
             this.currency.toBytes(),
         ]);
@@ -4387,7 +4936,7 @@ let RegisterModelFact$4 = class RegisterModelFact extends ContractFact {
     }
 };
 
-const encoder$4 = new TextEncoder();
+const encoder$5 = new TextEncoder();
 let UpdateModelConfigFact$1 = class UpdateModelConfigFact extends ContractFact {
     constructor(token, sender, contract, option, policy, currency) {
         super(HINT.DAO.UPDATE_MODEL_CONFIG.FACT, token, sender, contract, currency);
@@ -4399,7 +4948,7 @@ let UpdateModelConfigFact$1 = class UpdateModelConfigFact extends ContractFact {
     toBytes() {
         return concatBytes([
             super.toBytes(),
-            encoder$4.encode(this.option),
+            encoder$5.encode(this.option),
             this.policy.toBytes(),
             this.currency.toBytes(),
         ]);
@@ -4772,7 +5321,7 @@ class BizProposal extends Proposal {
     }
 }
 
-let RegisterModelFact$3 = class RegisterModelFact extends ContractFact {
+let RegisterModelFact$4 = class RegisterModelFact extends ContractFact {
     constructor(token, sender, contract, name, royalty, uri, minterWhitelist, currency) {
         super(HINT.NFT.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.name = LongString.from(name);
@@ -4912,7 +5461,7 @@ let MintFact$1 = class MintFact extends ItemOperationFact {
     }
 };
 
-const encoder$3 = new TextEncoder();
+const encoder$4 = new TextEncoder();
 class ApproveAllItem extends NFTItem {
     constructor(contract, approved, mode) {
         super(HINT.NFT.APPROVE_ALL.ITEM, contract);
@@ -4923,7 +5472,7 @@ class ApproveAllItem extends NFTItem {
         return concatBytes([
             super.toBytes(),
             this.approved.toBytes(),
-            encoder$3.encode(this.mode),
+            encoder$4.encode(this.mode),
         ]);
     }
     toHintedObject() {
@@ -5118,7 +5667,7 @@ class PaymentFact extends ContractFact {
     }
 }
 
-let RegisterModelFact$2 = class RegisterModelFact extends PaymentFact {
+let RegisterModelFact$3 = class RegisterModelFact extends PaymentFact {
     constructor(token, sender, contract, currency) {
         super(HINT.PAYMENT.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this._hash = this.hashing();
@@ -5268,7 +5817,7 @@ class PointFact extends ContractFact {
     }
 }
 
-let RegisterModelFact$1 = class RegisterModelFact extends PointFact {
+let RegisterModelFact$2 = class RegisterModelFact extends PointFact {
     constructor(token, sender, contract, currency, symbol, name, decimal, initialSupply) {
         super(HINT.POINT.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this.symbol = CurrencyID.from(symbol);
@@ -5529,7 +6078,7 @@ class TimeStampFact extends ContractFact {
     }
 }
 
-class RegisterModelFact extends TimeStampFact {
+let RegisterModelFact$1 = class RegisterModelFact extends TimeStampFact {
     constructor(token, sender, contract, currency) {
         super(HINT.TIMESTAMP.REGISTER_MODEL.FACT, token, sender, contract, currency);
         this._hash = this.hashing();
@@ -5542,9 +6091,9 @@ class RegisterModelFact extends TimeStampFact {
     get operationHint() {
         return HINT.TIMESTAMP.REGISTER_MODEL.OPERATION;
     }
-}
+};
 
-const encoder$2 = new TextEncoder();
+const encoder$3 = new TextEncoder();
 class IssueFact extends ContractFact {
     constructor(token, sender, contract, projectID, requestTimeStamp, data, currency) {
         super(HINT.TIMESTAMP.ISSUE.FACT, token, sender, contract, currency);
@@ -5558,9 +6107,9 @@ class IssueFact extends ContractFact {
     toBytes() {
         return concatBytes([
             super.toBytes(),
-            encoder$2.encode(this.projectID),
+            encoder$3.encode(this.projectID),
             this.requestTimeStamp.toBytes("fill"),
-            encoder$2.encode(this.data),
+            encoder$3.encode(this.data),
             this.currency.toBytes(),
         ]);
     }
@@ -5574,6 +6123,267 @@ class IssueFact extends ContractFact {
     }
     get operationHint() {
         return HINT.TIMESTAMP.ISSUE.OPERATION;
+    }
+}
+
+class RegisterModelFact extends ContractFact {
+    constructor(token, sender, contract, didMethod, currency) {
+        super(HINT.DID.REGISTER_MODEL.FACT, token, sender, contract, currency);
+        this.didMethod = LongString.from(didMethod);
+        this._hash = this.hashing();
+    }
+    toBytes() {
+        return concatBytes([
+            super.toBytes(),
+            this.didMethod.toBytes(),
+            this.currency.toBytes(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            didMethod: this.didMethod.toString(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.REGISTER_MODEL.OPERATION;
+    }
+}
+
+class CreateFact extends ContractFact {
+    constructor(token, sender, contract, currency) {
+        super(HINT.DID.CREATE_DID.FACT, token, sender, contract, currency);
+        this._hash = this.hashing();
+    }
+    toBytes() {
+        return concatBytes([
+            super.toBytes(),
+            this.currency.toBytes(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.CREATE_DID.OPERATION;
+    }
+}
+
+class UpdateDocumentFact extends ContractFact {
+    constructor(token, sender, contract, did, document, currency) {
+        super(HINT.DID.UPDATE_DID_DOCUMENT.FACT, token, sender, contract, currency);
+        this.did = LongString.from(did);
+        this.document = document;
+        this._hash = this.hashing();
+    }
+    toBytes() {
+        return concatBytes([
+            super.toBytes(),
+            this.did.toBytes(),
+            this.document.toBytes(),
+            this.currency.toBytes(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            did: this.did.toString(),
+            document: this.document.toHintedObject(),
+        };
+    }
+    get operationHint() {
+        return HINT.DID.UPDATE_DID_DOCUMENT.OPERATION;
+    }
+}
+
+const SECP256K1_PUB_PREFIX = new Uint8Array([0xe7, 0x01]);
+const encoder$2 = new TextEncoder();
+class Authentication {
+    constructor(hint) {
+        this.hint = new Hint(hint);
+    }
+    toBytes() {
+        return new Uint8Array();
+    }
+    toHintedObject() {
+        return {
+            _hint: this.hint.toString(),
+        };
+    }
+}
+class AsymKeyAuth extends Authentication {
+    constructor(id, type, controller, publicKey) {
+        super(HINT.DID.AUTHENTICATION);
+        this.id = LongString.from(id);
+        validateDID(this.id.toString(), true);
+        this.type = type;
+        this.controller = LongString.from(controller);
+        this.publicKey = new PubKey(publicKey, 100);
+        this.publicKeyMultibase = this.type == "EcdsaSecp256k1VerificationKey2019" ? this.setPublicKeyMultibase(this.publicKey.toString()) : undefined;
+    }
+    setPublicKeyMultibase(pubKey) {
+        const hex = Key.from(pubKey).noSuffix;
+        let compressed;
+        try {
+            compressed = hexToBytes$1(hex);
+        }
+        catch {
+            throw MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid hex public key");
+        }
+        if (compressed.length !== 33) {
+            throw MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid compressed secp256k1 public key length");
+        }
+        let normalizedCompressed;
+        try {
+            const point = secp256k1__namespace.Point.fromHex(compressed);
+            normalizedCompressed = point.toRawBytes(true); // compressed
+        }
+        catch {
+            throw MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid secp256k1 public key");
+        }
+        const data = new Uint8Array(SECP256K1_PUB_PREFIX.length + normalizedCompressed.length);
+        data.set(SECP256K1_PUB_PREFIX, 0);
+        data.set(normalizedCompressed, SECP256K1_PUB_PREFIX.length);
+        return "z" + base58.encode(data);
+    }
+    toBytes() {
+        return concatBytes([
+            super.toBytes(),
+            this.id.toBytes(),
+            encoder$2.encode(this.type),
+            this.controller.toBytes(),
+            ...(this.publicKeyMultibase
+                ? [encoder$2.encode(this.publicKeyMultibase)]
+                : []),
+            encoder$2.encode(this.publicKey.toString()),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            id: this.id.toString(),
+            controller: this.controller.toString(),
+            type: this.type.toString(),
+            ...(this.publicKeyMultibase
+                ? { publicKeyMultibase: this.publicKeyMultibase }
+                : {}),
+            publicKeyImFact: this.publicKey.toString(),
+        };
+    }
+    toString() {
+        return this.id.toString();
+    }
+}
+class LinkedAuth extends Authentication {
+    constructor(id, controller, targetId, allowed) {
+        super(HINT.DID.AUTHENTICATION);
+        this.id = LongString.from(id);
+        validateDID(this.id.toString(), true);
+        this.type = "LinkedVerificationMethod";
+        this.controller = LongString.from(controller);
+        this.targetId = LongString.from(targetId);
+        validateDID(this.id.toString(), true);
+        this.allowed = allowed.map((el, idx) => {
+            if (el instanceof AllowedOperation) {
+                return el;
+            }
+            try {
+                return new AllowedOperation(el.operation, el.contract);
+            }
+            catch (e) {
+                throw MitumError.detail(ECODE.INVALID_TYPE, `allowed[${idx}] cannot be converted to AllowedOperation: ${JSON.stringify(el)}`);
+            }
+        });
+    }
+    toBytes() {
+        return concatBytes([
+            super.toBytes(),
+            this.id.toBytes(),
+            encoder$2.encode(this.type),
+            this.controller.toBytes(),
+            this.targetId.toBytes(),
+            concatBytes(this.allowed.map((a) => a.toBytes())),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            ...super.toHintedObject(),
+            id: this.id.toString(),
+            controller: this.controller.toString(),
+            type: this.type,
+            targetId: this.targetId.toString(),
+            allowed: this.allowed.map((a) => a.toHintedObject()),
+        };
+    }
+    toString() {
+        return this.id.toString();
+    }
+}
+class Service {
+    constructor(id, type, service_end_point) {
+        this.id = LongString.from(id);
+        this.type = LongString.from(type);
+        this.service_end_point = LongString.from(service_end_point);
+    }
+    toBytes() {
+        return concatBytes([
+            this.id.toBytes(),
+            this.type.toBytes(),
+            this.service_end_point.toBytes(),
+        ]);
+    }
+    toHintedObject() {
+        return {
+            id: this.id.toString(),
+            type: this.type.toString(),
+            service_end_point: this.service_end_point.toString(),
+        };
+    }
+}
+class Document {
+    constructor(context, id, authentication, verificationMethod, service) {
+        this.hint = new Hint(HINT.DID.DOCUMENT);
+        const contexts = Array.isArray(context) ? context : [context];
+        this.context = contexts.map(ctx => LongString.from(ctx));
+        this.id = LongString.from(id);
+        validateDID(this.id.toString());
+        Assert.check(new Set(authentication.map(i => i.toString())).size === authentication.length, MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "duplicate authentication id found in authentication"));
+        this.authentication = authentication;
+        Assert.check(new Set(verificationMethod.map(i => i.toString())).size === verificationMethod.length, MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "duplicate authentication id found in verificationMethod"));
+        this.verificationMethod = verificationMethod;
+        if (service !== undefined) {
+            Assert.check(Array.isArray(service) && service.every(s => s instanceof Service), MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "service must be an array of Service"));
+            this.service = service;
+        }
+    }
+    toBytes() {
+        return concatBytes([
+            concatBytes(this.context.map(ctx => ctx.toBytes())),
+            this.id.toBytes(),
+            concatBytes(this.authentication.map(el => concatBytes([el.toBytes(), Uint8Array.from([1])]))),
+            concatBytes(this.verificationMethod.map(el => el.toBytes())),
+            ...(this.service
+                ? [concatBytes(this.service.map(s => s.toBytes()))]
+                : []),
+        ]);
+    }
+    toHintedObject() {
+        const obj = {
+            _hint: this.hint.toString(),
+            "@context": this.context.map(ctx => ctx.toString()),
+            id: this.id.toString(),
+            authentication: this.authentication.map(el => el.toHintedObject()),
+            verificationMethod: this.verificationMethod.map(el => el.toHintedObject()),
+        };
+        if (this.service) {
+            obj.service = this.service.map(s => s.toHintedObject());
+        }
+        else {
+            obj.service = [];
+        }
+        return obj;
     }
 }
 
@@ -5627,6 +6437,20 @@ function proposalFromJson(json) {
     // BizProposal
     return new BizProposal(json.proposer, json.start_time, json.url, json.hash, json.options);
 }
+/** Reconstruct a DID authentication entry (AsymKeyAuth or LinkedAuth) from its JSON. */
+function didAuthFromJson(json) {
+    if (json.type === "LinkedVerificationMethod") {
+        return new LinkedAuth(json.id, json.controller, json.targetId, json.allowed.map(a => new AllowedOperation(a.operation, a.contract)));
+    }
+    // AsymKeyAuth: type is one of the verification key types; publicKey comes from publicKeyImFact
+    return new AsymKeyAuth(json.id, json.type, json.controller, json.publicKeyImFact);
+}
+/** Reconstruct a DID Document from its toHintedObject() JSON. */
+function documentFromJson(json) {
+    return new Document(json["@context"], json.id, json.authentication.map(didAuthFromJson), json.verificationMethod.map(didAuthFromJson), json.service && json.service.length > 0
+        ? json.service.map(s => new Service(s.id, s.type, s.service_end_point))
+        : undefined);
+}
 /**
  * Reconstructs a Fact instance from its JSON representation (the output of
  * BaseOperation.toHintedObject().fact). This lets you call fact.toBytes() when
@@ -5669,9 +6493,12 @@ function factFromJson(factJson) {
     if (hint.includes(HINT.CURRENCY.UPDATE_HANDLER.FACT)) {
         return new UpdateHandlerFact(token, factJson.sender, factJson.contract, factJson.currency, factJson.handlers);
     }
+    if (hint.includes(HINT.CURRENCY.UPDATE_RECIPIENT.FACT)) {
+        return new UpdateRecipientFact(token, factJson.sender, factJson.contract, factJson.currency, factJson.recipients);
+    }
     // ======== TOKEN ========
     if (hint.includes(HINT.TOKEN.REGISTER_MODEL.FACT)) {
-        return new RegisterModelFact$7(token, factJson.sender, factJson.contract, factJson.currency, factJson.symbol, factJson.name, factJson.decimal, factJson.initial_supply);
+        return new RegisterModelFact$8(token, factJson.sender, factJson.contract, factJson.currency, factJson.symbol, factJson.name, factJson.decimal, factJson.initial_supply);
     }
     if (hint.includes(HINT.TOKEN.MINT.FACT)) {
         return new MintFact$2(token, factJson.sender, factJson.contract, factJson.currency, factJson.receiver, factJson.amount);
@@ -5694,7 +6521,7 @@ function factFromJson(factJson) {
     }
     // ======== STORAGE ========
     if (hint.includes(HINT.STORAGE.REGISTER_MODEL.FACT)) {
-        return new RegisterModelFact$6(token, factJson.sender, factJson.contract, factJson.project, factJson.currency);
+        return new RegisterModelFact$7(token, factJson.sender, factJson.contract, factJson.project, factJson.currency);
     }
     if (hint.includes(HINT.STORAGE.CREATE_DATA.FACT)) {
         const items = factJson.items.map(item => new CreateDataItem(item.contract, item.dataKey, item.dataValue));
@@ -5709,7 +6536,7 @@ function factFromJson(factJson) {
     }
     // ======== CREDENTIAL ========
     if (hint.includes(HINT.CREDENTIAL.REGISTER_MODEL.FACT)) {
-        return new RegisterModelFact$5(token, factJson.sender, factJson.contract, factJson.currency);
+        return new RegisterModelFact$6(token, factJson.sender, factJson.contract, factJson.currency);
     }
     if (hint.includes(HINT.CREDENTIAL.ADD_TEMPLATE.FACT)) {
         return new AddTemplateFact(token, factJson.sender, factJson.contract, factJson.template_id, factJson.template_name, factJson.service_date, factJson.expiration_date, factJson.template_share, factJson.multi_audit, factJson.display_name, factJson.subject_key, factJson.description, factJson.creator, factJson.currency);
@@ -5725,7 +6552,7 @@ function factFromJson(factJson) {
     // ======== DAO ========
     // RegisterModel and UpdateModelConfig spread policy fields into the fact JSON directly.
     if (hint.includes(HINT.DAO.REGISTER_MODEL.FACT)) {
-        return new RegisterModelFact$4(token, factJson.sender, factJson.contract, factJson.option, daoPolicyFromJson(factJson), factJson.currency);
+        return new RegisterModelFact$5(token, factJson.sender, factJson.contract, factJson.option, daoPolicyFromJson(factJson), factJson.currency);
     }
     if (hint.includes(HINT.DAO.UPDATE_MODEL_CONFIG.FACT)) {
         return new UpdateModelConfigFact$1(token, factJson.sender, factJson.contract, factJson.option, daoPolicyFromJson(factJson), factJson.currency);
@@ -5753,7 +6580,7 @@ function factFromJson(factJson) {
     }
     // ======== NFT ========
     if (hint.includes(HINT.NFT.REGISTER_MODEL.FACT)) {
-        return new RegisterModelFact$3(token, factJson.sender, factJson.contract, factJson.name, factJson.royalty, factJson.uri, factJson.minter_whitelist ?? [], factJson.currency);
+        return new RegisterModelFact$4(token, factJson.sender, factJson.contract, factJson.name, factJson.royalty, factJson.uri, factJson.minter_whitelist ?? [], factJson.currency);
     }
     if (hint.includes(HINT.NFT.UPDATE_MODEL_CONFIG.FACT)) {
         return new UpdateModelConfigFact(token, factJson.sender, factJson.contract, factJson.name, factJson.royalty, factJson.uri, factJson.minter_whitelist ?? [], factJson.currency);
@@ -5780,7 +6607,7 @@ function factFromJson(factJson) {
     }
     // ======== PAYMENT ========
     if (hint.includes(HINT.PAYMENT.REGISTER_MODEL.FACT)) {
-        return new RegisterModelFact$2(token, factJson.sender, factJson.contract, factJson.currency);
+        return new RegisterModelFact$3(token, factJson.sender, factJson.contract, factJson.currency);
     }
     if (hint.includes(HINT.PAYMENT.DEPOSIT.FACT)) {
         return new DepositFact(token, factJson.sender, factJson.contract, factJson.currency, factJson.amount, factJson.transfer_limit, factJson.start_time, factJson.end_time, factJson.duration);
@@ -5796,7 +6623,7 @@ function factFromJson(factJson) {
     }
     // ======== POINT ========
     if (hint.includes(HINT.POINT.REGISTER_MODEL.FACT)) {
-        return new RegisterModelFact$1(token, factJson.sender, factJson.contract, factJson.currency, factJson.symbol, factJson.name, factJson.decimal, factJson.initial_supply);
+        return new RegisterModelFact$2(token, factJson.sender, factJson.contract, factJson.currency, factJson.symbol, factJson.name, factJson.decimal, factJson.initial_supply);
     }
     if (hint.includes(HINT.POINT.MINT.FACT)) {
         return new MintFact(token, factJson.sender, factJson.contract, factJson.currency, factJson.receiver, factJson.amount);
@@ -5819,10 +6646,20 @@ function factFromJson(factJson) {
     }
     // ======== TIMESTAMP ========
     if (hint.includes(HINT.TIMESTAMP.REGISTER_MODEL.FACT)) {
-        return new RegisterModelFact(token, factJson.sender, factJson.contract, factJson.currency);
+        return new RegisterModelFact$1(token, factJson.sender, factJson.contract, factJson.currency);
     }
     if (hint.includes(HINT.TIMESTAMP.ISSUE.FACT)) {
         return new IssueFact(token, factJson.sender, factJson.contract, factJson.project_id, factJson.request_timestamp, factJson.data, factJson.currency);
+    }
+    // ======== DID ========
+    if (hint.includes(HINT.DID.REGISTER_MODEL.FACT)) {
+        return new RegisterModelFact(token, factJson.sender, factJson.contract, factJson.didMethod, factJson.currency);
+    }
+    if (hint.includes(HINT.DID.CREATE_DID.FACT)) {
+        return new CreateFact(token, factJson.sender, factJson.contract, factJson.currency);
+    }
+    if (hint.includes(HINT.DID.UPDATE_DID_DOCUMENT.FACT)) {
+        return new UpdateDocumentFact(token, factJson.sender, factJson.contract, factJson.did, documentFromJson(factJson.document), factJson.currency);
     }
     throw new Error(`factFromJson: unsupported fact type "${hint}". ` +
         `Add support for this type in src/utils/factFromJson.ts.`);
@@ -6127,177 +6964,6 @@ class OperationResponse extends Operation {
             await new Promise(resolve => setTimeout(resolve, timeoutInterval));
         }
         Assert.check(stop, MitumError.detail(ECODE.TIME_OUT, `timeout reached (${maxTimeout / 1000} seconds).`));
-    }
-}
-
-function getRandomN(n, f) {
-    Assert.check(Config.KEYS_IN_ACCOUNT.satisfy(n), MitumError.detail(ECODE.INVALID_KEYS, `${n} is out of range`));
-    n = Math.floor(n);
-    let weight = Math.floor(Config.THRESHOLD.max / n);
-    if (Config.THRESHOLD.max % n) {
-        weight += 1;
-    }
-    const ks = [];
-    const kps = [];
-    for (let i = 0; i < n; i++) {
-        kps.push(f());
-        ks.push(new PubKey(kps[i].publicKey, weight));
-    }
-    return {
-        keys: new Keys(ks, Config.THRESHOLD.max),
-        keypairs: kps,
-    };
-}
-const randomN = (n, option) => {
-    return getRandomN(n, () => KeyPair.random(option));
-};
-
-class KeyG extends Generator {
-    constructor(networkID, api, delegateIP) {
-        super(networkID, api, delegateIP);
-    }
-    fillHDwallet(hdwallet) {
-        return {
-            privatekey: hdwallet.privatekey,
-            publickey: hdwallet.publickey,
-            address: this.address(hdwallet.publickey),
-            phrase: hdwallet.phrase,
-            path: hdwallet.path,
-        };
-    }
-    /**
-     * Generate a key pair randomly or from the given string seed. Avoid using seed ​​that are easy to predict.
-     * @param {string} [seed] - (Optional) The random string seed for deterministic key generation. If not provided, a random key pair will be generated.
-     * @returns An `Account` object with following properties:
-     * - `privatekey`: private key,
-     * - `publickey`: public key,
-     * - `address`: address
-     */
-    key(seed) {
-        if (!seed) {
-            const kp = KeyPair.random("mitum");
-            return {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: this.address(kp.publicKey),
-            };
-        }
-        const kp = KeyPair.fromSeed(seed, "mitum");
-        return {
-            privatekey: kp.privateKey.toString(),
-            publickey: kp.publicKey.toString(),
-            address: this.address(kp.publicKey),
-        };
-    }
-    /**
-     * Generate `n` length of array with randomly generated key pairs.
-     * @param {number} [n] - The number of accounts to generate.
-     * @returns An array of `Account` objects.
-     * Properties of `Account`:
-     * - `privatekey`: private key,
-     * - `publickey`: public key,
-     * - `address`: address
-     */
-    keys(n) {
-        return randomN(n, "mitum").keypairs.map(kp => {
-            return {
-                privatekey: kp.privateKey.toString(),
-                publickey: kp.publicKey.toString(),
-                address: this.address(kp.publicKey),
-            };
-        });
-    }
-    /**
-     * Generate a key randomly using the HD wallet method. (BIP-32 standard)
-     * @returns An `HDAccount` object with following properties:
-     * - `privatekey`: private key,
-     * - `publickey`: public key,
-     * - `address`: address,
-     * - `phrase`: phrases made up of 12 mnemonic words,
-     * - `path`: derivation path for HD wallet. Default set to "m/44'/815'/0'/0/0". 815 is a coin type for imFact.
-     */
-    hdKey() {
-        const hdwallet = KeyPair.hdRandom("mitum");
-        return this.fillHDwallet(hdwallet);
-    }
-    /**
-     * Generate a key pair from the given private key.
-     * @param {string | Key} [key] - The private key.
-     * @returns An `Account` object with following properties:
-     * - `privatekey`: private key,
-     * - `publickey`: public key,
-     * - `address`: address
-     */
-    fromPrivateKey(key) {
-        const kp = KeyPair.fromPrivateKey(key);
-        return {
-            privatekey: kp.privateKey.toString(),
-            publickey: kp.publicKey.toString(),
-            address: this.address(kp.publicKey),
-        };
-    }
-    /**
-     * Generate a key pair from given mnemonic phrase using the HD wallet method.
-     * @param {string} [phrase] - The Mnemonic phrase obtained when executed `hdKey()` method.
-     * @param {string} [path] - (Optional) The derivation path for HD wallet.
-     * @returns An `HDAccount` object with following properties:
-     * - `privatekey`: private key,
-     * - `publickey`: public key,
-     * - `address`: address
-     * - `phrase`: phrases made up of 12 mnemonic words,
-     * - `path`: derivation path for HD wallet, default set to "m/44'/815'/0'/0/0". 815 is a coin type for imFact.
-     */
-    fromPhrase(phrase, path) {
-        const hdwallet = KeyPair.fromPhrase(phrase, path);
-        return this.fillHDwallet(hdwallet);
-    }
-    /**
-     * Generate an address derived the given public key.
-     * @param {string | Key} [key] - The public key.
-     * @returns The address derived from public key
-     */
-    address(key) {
-        const suffix = key.toString().slice(-3);
-        Assert.check(suffix === "fpu", MitumError.detail(ECODE.INVALID_PUBLIC_KEY, "invalid pubkey format"));
-        return new Keys([new PubKey(key, 100)], 100).checksum.toString();
-    }
-    /**
-     * Returns a checksummed address for given address string. For invalid address, an error is returned.
-     * @param {string} [address] - An address.
-     * @returns A checksummed address.
-     */
-    checksummedAddress(address) {
-        try {
-            const valid_address = new Address(address);
-            return valid_address.toString();
-        }
-        catch (error) {
-            if (error.code === 'EC_INVALID_ADDRESS_CHECKSUM') {
-                return '0x' + getChecksum(address.slice(2, 42)) + SUFFIX.ADDRESS.MITUM;
-            }
-            else {
-                throw error;
-            }
-        }
-    }
-    /**
-     * Generate a multi-signature address from the given keys.
-     * @param {keysType} [keys] - An array of object {`key`: publickey, `weight`: weight for the key}
-     * @param {string | number | Big} [threshold] - The threshold for the multi-signature.
-     * @returns The multi-signature address.
-     * @example
-     * const pubkey01 = {
-     *     key: "02cb1d73c49d638d98092e35603414b575f3f5b5ce01162cdd80ab68ab77e50e14fpu",
-     *     weight: 50
-     * };
-     * const pubkey02 = {
-     *     key: "0377241675aabafca6b1a49f3bc08a581beb0daa330a4ac2008464d63ed7635a22fpu",
-     *     weight: 50
-     * };
-     * const mutiSigAddress = mitum.account.addressForMultiSig([pubkey01, pubkey02], 100);
-     */
-    addressForMultiSig(keys, threshold) {
-        return new Keys(keys.map(k => k instanceof PubKey ? k : new PubKey(k.key, k.weight)), threshold).checksum.toString();
     }
 }
 
@@ -6775,6 +7441,17 @@ class Contract extends KeyG {
         return new BaseOperation(this.networkID, new UpdateHandlerFact(TimeStamp$1.new().UTC(), sender, contract, currency, handlers));
     }
     /**
+     * Generate an `update-recipient` operation to update recipients of contract to given accounts.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | Address} [contract] - The contract account address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @param {(string | Address)[]} [recipients] - The array of addresses to be updated as recipients.
+     * @returns `update-recipient` operation.
+     */
+    updateRecipient(sender, contract, currency, recipients) {
+        return new BaseOperation(this.networkID, new UpdateRecipientFact(TimeStamp$1.new().UTC(), sender, contract, currency, recipients));
+    }
+    /**
      * Sign and send the `create-contract-account` operation to blockchain network.
      * @async
      * @param {string | Key} [privatekey] - The private key used for signing.
@@ -6826,7 +7503,7 @@ class NFT extends ContractGenerator {
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the collectionData structure`));
         });
-        return new BaseOperation(this.networkID, new RegisterModelFact$3(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.minterWhitelist, currency));
+        return new BaseOperation(this.networkID, new RegisterModelFact$4(TimeStamp$1.new().UTC(), sender, contract, data.name, data.royalty, data.uri, data.minterWhitelist, currency));
     }
     /**
      * Generate `update-model-config` operation to update the policy of the nft collection on the contract.
@@ -7180,7 +7857,7 @@ class DAO extends ContractGenerator {
         keysToCheck.forEach((key) => {
             Assert.check(data[key] !== undefined, MitumError.detail(ECODE.INVALID_DATA_STRUCTURE, `${key} is undefined, check the daoData structure`));
         });
-        return new BaseOperation(this.networkID, new RegisterModelFact$4(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
+        return new BaseOperation(this.networkID, new RegisterModelFact$5(TimeStamp$1.new().UTC(), sender, contract, data.option, new DAOPolicy(data.votingPowerToken, data.threshold, new Fee(currency, data.proposalFee), new Whitelist(true, data.proposerWhitelist.map(a => Address.from(a))), data.proposalReviewPeriod, data.registrationPeriod, data.preSnapshotPeriod, data.votingPeriod, data.postSnapshotPeriod, data.executionDelayPeriod, data.turnout, data.quorum), currency));
     }
     /**
      * Generate `update-model-config` operation for updating the DAO policy on the contract.
@@ -7448,7 +8125,7 @@ class TimeStamp extends ContractGenerator {
      * @returns `register-model` operation.
      */
     registerModel(contract, sender, currency) {
-        return new BaseOperation(this.networkID, new RegisterModelFact(TimeStamp$1.new().UTC(), sender, contract, currency));
+        return new BaseOperation(this.networkID, new RegisterModelFact$1(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     /**
      * Generate `issue` operation to issue new timestamp to the project on the timestamp model.
@@ -7516,7 +8193,7 @@ class Token extends ContractGenerator {
      * @returns `register-model` operation.
      */
     registerModel(contract, sender, currency, name, symbol, decimal, initialSupply) {
-        return new BaseOperation(this.networkID, new RegisterModelFact$7(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
+        return new BaseOperation(this.networkID, new RegisterModelFact$8(TimeStamp$1.new().UTC(), sender, contract, currency, symbol, name, decimal ?? 0, initialSupply ?? 0));
     }
     /**
      * Generate a `mint` operation for minting tokens and allocating them to a receiver.
@@ -7694,7 +8371,7 @@ class Storage extends ContractGenerator {
      * @returns `register-model` operation.
      */
     registerModel(contract, sender, project, currency) {
-        return new BaseOperation(this.networkID, new RegisterModelFact$6(TimeStamp$1.new().UTC(), sender, contract, project, currency));
+        return new BaseOperation(this.networkID, new RegisterModelFact$7(TimeStamp$1.new().UTC(), sender, contract, project, currency));
     }
     /**
      * Generate `create-data` operation to create data with new data key on the storage model.
@@ -7857,7 +8534,7 @@ class Payment extends ContractGenerator {
      * @returns `register-model` operation.
      */
     registerModel(contract, sender, currency) {
-        return new BaseOperation(this.networkID, new RegisterModelFact$2(TimeStamp$1.new().UTC(), sender, contract, currency));
+        return new BaseOperation(this.networkID, new RegisterModelFact$3(TimeStamp$1.new().UTC(), sender, contract, currency));
     }
     /**
      * Generate `deposit` operation to deposit currency to a payment model with configurable transfer settings.
@@ -8093,7 +8770,7 @@ class Signer extends Generator {
         const { authentication, settlement, proxy_payer } = extension;
         this.validateUserOpFields({ ...authentication, ...settlement, ...proxy_payer });
         const hintedExtension = (() => {
-            const auth = new Authentication(authentication.contract, authentication.authentication_id, authentication.proof_data).toHintedObject();
+            const auth = new Authentication$1(authentication.contract, authentication.authentication_id, authentication.proof_data).toHintedObject();
             const settlementObj = new Settlement(settlement.op_sender).toHintedObject();
             if (proxy_payer) {
                 const proxyPayerObj = new ProxyPayer(proxy_payer.proxy_payer).toHintedObject();
@@ -8179,6 +8856,594 @@ class Signer extends Generator {
         catch {
             return false;
         }
+    }
+}
+
+const ASYMKEY_TYPE_MAP = {
+    SECP256K1_2019: "EcdsaSecp256k1VerificationKey2019",
+    SECP256K1_IMFACT_2025: "EcdsaSecp256k1VerificationKeyImFact2025",
+};
+const isOfType = (obj, keys) => typeof obj === "object" && obj !== null && keys.every((key) => key in obj);
+const validateAuthentication = (auth, index) => {
+    const baseKeys = ["_hint", "id", "type", "controller"];
+    if (!isOfType(auth, baseKeys)) {
+        throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, "Invalid authentication type");
+    }
+    if (auth.type === "Ed25519VerificationKey2020" || auth.type === "EcdsaSecp256k1VerificationKeyImFact2025" || auth.type === "EcdsaSecp256k1VerificationKey2019") {
+        const asymkeyAuthKeys = [...baseKeys, "publicKeyImFact"];
+        if (!isOfType(auth, asymkeyAuthKeys)) {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Asymkey authentication at index ${index} is missing required fields.`);
+        }
+    }
+    else if (auth.type === "LinkedVerificationMethod") {
+        const linkedAuthKeys = [...baseKeys, "targetId", "allowed"];
+        if (!isOfType(auth, linkedAuthKeys)) {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Linked authentication at index ${index} is missing required fields.`);
+        }
+        if (!Array.isArray(auth.allowed)) {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `The 'allowed' field in linked authentication at index ${index} must be an array.`);
+        }
+        if (typeof auth.targetId !== "string" &&
+            !(auth.targetId instanceof LongString)) {
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Invalid 'targetId' in linked authentication at index ${index}.`);
+        }
+    }
+    else {
+        throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Unknown authentication type at index ${index}.`);
+    }
+};
+class Did extends ContractGenerator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    normalizeDocument(doc, sender) {
+        if (doc instanceof Document) {
+            return doc;
+        }
+        this.validateDocument(doc);
+        this.isSenderDidOwner(sender, doc.id);
+        if (doc.service) {
+            doc.service.forEach(service => {
+                this.isSenderDidOwner(sender, service.id, true);
+            });
+        }
+        return new Document(doc["@context"], doc.id, doc.authentication.map(el => this.mapAuthToClass(el, sender)), doc.verificationMethod.map(el => this.mapAuthToClass(el, sender)), doc.service
+            ? doc.service.map(service => new Service(service.id, service.type, service.service_end_point))
+            : undefined);
+    }
+    validateDocument(doc) {
+        if (!doc || typeof doc !== "object") {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, `document must be an object, got ${doc === null ? "null" : typeof doc}`);
+        }
+        const d = doc;
+        if (typeof d._hint !== "string") {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "_hint must be a string");
+        }
+        if (!Array.isArray(d["@context"])) {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "@context must be an array");
+        }
+        if (!d.id) {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "id is required");
+        }
+        if (!Array.isArray(d.authentication)) {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "authentication must be an array");
+        }
+        if (!Array.isArray(d.verificationMethod)) {
+            throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "verificationMethod must be an array");
+        }
+        for (const [i, ctx] of d["@context"].entries()) {
+            if (typeof ctx !== "string" && !(ctx instanceof LongString)) {
+                throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, `@context[${i}] must be string or LongString`);
+            }
+        }
+        d.authentication.forEach((auth, i) => {
+            try {
+                validateAuthentication(auth, i);
+            }
+            catch (e) {
+                throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, `invalid authentication[${i}]: ${e.message}`);
+            }
+        });
+        d.verificationMethod.forEach((vm, i) => {
+            try {
+                validateAuthentication(vm, i);
+            }
+            catch (e) {
+                throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, `invalid verificationMethod[${i}]: ${e.message}`);
+            }
+        });
+        if (d.service !== undefined && d.service !== null) {
+            if (!Array.isArray(d.service)) {
+                throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, "service must be an array if provided");
+            }
+            d.service.forEach((el, i) => {
+                if (!el || typeof el !== "object") {
+                    throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, `service[${i}] must be an object`);
+                }
+                if (!el.id || !el.type || !el.service_end_point) {
+                    throw MitumError.detail(ECODE.DID.INVALID_DOCUMENT, `service[${i}] requires id, type, service_end_point`);
+                }
+            });
+        }
+    }
+    isSenderDidOwner(sender, did, id) {
+        Assert.check(sender.toString() === validateDID(did.toString(), id).toString(), MitumError.detail(ECODE.DID.INVALID_DID, `The owner of did must match the sender(${sender.toString()}). check the did (${did.toString()})`));
+    }
+    mapAuth(auth) {
+        if (auth.type === "LinkedVerificationMethod") {
+            return new LinkedAuth(auth.id, auth.controller, auth.targetId, auth.allowed);
+        }
+        if (auth.type === "Ed25519VerificationKey2020" ||
+            auth.type === "EcdsaSecp256k1VerificationKey2019" ||
+            auth.type === "EcdsaSecp256k1VerificationKeyImFact2025") {
+            return new AsymKeyAuth(auth.id, auth.type, auth.controller, auth.publicKeyImFact);
+        }
+        throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `Unknown authentication type: ${String(auth.type)}`);
+    }
+    mapAuthToClass(el, sender) {
+        this.isSenderDidOwner(sender, el.id, true);
+        this.isSenderDidOwner(sender, el.controller);
+        return this.mapAuth(el);
+    }
+    /**
+     * Creates an AsymKeyAuth object with the provided authentication details.
+     * @param {string} id - The unique identifier for the authentication. <did>#<key-id> format.
+     * @param {"SECP256K1_2019" | "SECP256K1_IMFACT_2025"} option - Short identifier for verification key type.
+     *  - SECP256K1_2019 → EcdsaSecp256k1VerificationKey2019
+     *  - SECP256K1_IMFACT_2025 → EcdsaSecp256k1VerificationKeyImFact2025
+     * @param {string} controller - The controller responsible for the authentication.
+     * @param {string} publicKeyImFact - The public key associated with the authentication.
+     * @returns {AsymKeyAuth} An AsymKeyAuth Instance.
+     */
+    writeAsymkeyAuth(id, option, controller, publicKeyImFact) {
+        const verificationType = ASYMKEY_TYPE_MAP[option];
+        if (!verificationType) {
+            throw MitumError.detail(ECODE.INVALID_TYPE, `Unsupported asym key option: ${option}`);
+        }
+        return new AsymKeyAuth(id, verificationType, controller, publicKeyImFact);
+    }
+    /**
+     * Creates a LinkedAuth object that allows another authentication method
+     * (e.g. OAuth provider, biometric service, custody service)
+     * to act on behalf of the DID subject with restricted operation capabilities.
+     * @param {string} id - The unique identifier of this linked authentication method. <did>#<key-id> format.
+     * @param {string} controller - The DID controller that authorizes this linked authentication.
+     * @param {string} targetId - The identifier of the authentication method that performs verification on behalf of the DID subject.
+     * @param {AllowedOperation[]} allowedOperations - A list of operation capabilities that this linked authentication is permitted to execute on behalf of the DID subject.
+     *   Each allowedOperation must be created using {@link Mitum.allowedOperation}, which provides a safe, typed registry of core-supported operations.
+     *   Example:
+     *   ```ts
+     *   const allowed = [
+     *     Mitum.allowedOperation.currency.transfer(),
+     *     Mitum.allowedOperation.did.create(contract),
+     *   ];
+     *   ```
+     * @returns {LinkedAuth} LinkedAuth instance.
+     */
+    writeLinkedAuth(id, controller, targetId, allowedOperations) {
+        return new LinkedAuth(id, controller, targetId, allowedOperations);
+    }
+    /**
+     * The returned Document can be passed directly to `updateDocument()`.
+     * @param {Array<string | LongString>} didContext - DID document contexts (e.g. DID Core context, service-specific context).
+     * @param {string} didID - DID identifier.
+     * @param {Array<AsymKeyAuth | LinkedAuth>} authentications - Authentication methods for the DID.
+     * @param {Array<AsymKeyAuth | LinkedAuth>} [verificationMethods] - Verification methods for the DID.
+     * @param {Array<Object>} [services] - Optional service definitions.
+     * @param {string} services[].id - Service identifier. <did>#<key-id> format.
+     * @param {string} services[].type - Service type.
+     * @param {string} services[].service_end_point - Service endpoint URL.
+     * @returns {Document} DID Document instance.
+     */
+    writeDocument(didContext, didID, authentications, verificationMethods = [], service) {
+        return new Document(didContext, didID, authentications.map((auth, idx) => {
+            if (auth instanceof AsymKeyAuth || auth instanceof LinkedAuth) {
+                return auth;
+            }
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `authentication[${idx}] must be AsymKeyAuth or LinkedAuth instance`);
+        }), verificationMethods.map((auth, idx) => {
+            if (auth instanceof AsymKeyAuth || auth instanceof LinkedAuth) {
+                return auth;
+            }
+            throw MitumError.detail(ECODE.DID.INVALID_AUTHENTICATION, `verificationMethods[${idx}] must be AsymKeyAuth or LinkedAuth instance`);
+        }), service
+            ? service.map(el => new Service(el.id, el.type, el.service_end_point))
+            : undefined);
+    }
+    /**
+     * Generate a `register-model` operation to register new did registry model on the contract.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | LongString} [didMethod] - The did method
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `register-model` operation.
+     */
+    registerModel(contract, sender, didMethod, currency) {
+        return new BaseOperation(this.networkID, new RegisterModelFact(TimeStamp$1.new().UTC(), sender, contract, didMethod, currency));
+    }
+    /**
+     * Generate `create-did` operation to create new did and did document.
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | Address} [sender] - The sender's address.
+     * @param {string | CurrencyID} [currency] - The currency ID.
+     * @returns `create-did` operation
+     */
+    create(contract, sender, currency) {
+        const fact = new CreateFact(TimeStamp$1.new().UTC(), sender, contract, currency);
+        return new BaseOperation(this.networkID, fact);
+    }
+    /**
+     * Update an Auth DID document using a strongly-typed document object.
+     *
+     * This method expects the `document` parameter to conform to the SDK's
+     * internal `document` type. All authentication entries must already be
+     * validated and structurally correct, and will be converted into
+     * corresponding class instances (`AsymKeyAuth`, `LinkedAuth`, etc.).
+     *
+     * Ownership checks are enforced:
+     * - The sender must be the owner of the document DID.
+     * - The sender must also own any controller or service DID referenced
+     *   in the document
+     * @param contract - The Auth DID contract address.
+     * @param sender - The transaction sender; must be the owner of the document DID.
+     * @param document - A validated document object matching the SDK `document` type.
+     * @param currency - Currency ID used for the operation fee.
+     * @returns An `BaseOperation` instance that can be signed and submitted to the network.
+     */
+    updateDocument(contract, sender, document, currency) {
+        const normalized = this.normalizeDocument(document, sender);
+        const fact = new UpdateDocumentFact(TimeStamp$1.new().UTC(), sender, contract, normalized.id.toString(), normalized, currency);
+        return new BaseOperation(this.networkID, fact);
+    }
+    /**
+     * Update an Auth DID document from a raw JSON object.
+     *
+     * This method accepts an untyped document (e.g. parsed JSON), validates
+     * its structure and authentication entries, and converts it into internal
+     * SDK classes before creating the operation.
+     *
+     * Use this method when the document comes from external or untrusted sources.
+     * @param contract - The Auth DID contract address.
+     * @param sender - The transaction sender; must own the document DID.
+     * @param documentJson - A raw JSON object representing an Auth DID document.
+     * @param currency - Currency ID used for the operation fee.
+     * @returns An `BaseOperation` instance ready to be signed and submitted.
+     */
+    updateDocumentByDocumentJson(contract, sender, documentJson, currency) {
+        const normalized = this.normalizeDocument(documentJson, sender);
+        const fact = new UpdateDocumentFact(TimeStamp$1.new().UTC(), sender, contract, normalized.id.toString(), normalized, currency);
+        return new BaseOperation(this.networkID, fact);
+    }
+    /**
+     * Get information for did-registry model.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @returns `data` of `SuccessResponse` is information of did model:
+     * - `_hint`: hint for did model design,
+     * - `didMethod`: The did method
+     */
+    async getModelInfo(contract) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        return await getAPIData(() => contractApi.did.getModel(this.api, contract, this.delegateIP));
+    }
+    /**
+     * Get did by account address.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [account] - The account address.
+     * @returns `data` of `SuccessResponse` is did:
+     * - `did`: The did value,
+     */
+    async getDID(contract, account) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        Address.from(account);
+        const response = await getAPIData(() => contractApi.did.getByAccount(this.api, contract, account, this.delegateIP));
+        if (isSuccessResponse(response) && response.data) {
+            response.data = response.data.did ? { did: response.data.did } : null;
+        }
+        return response;
+    }
+    /**
+     * Get did document by did.
+     * @async
+     * @param {string | Address} [contract] - The contract's address.
+     * @param {string | LongString} [did] - The did value.
+     * @returns `data` of `SuccessResponse` is did document.
+     */
+    async getDocument(contract, did) {
+        Assert.check(this.api !== undefined && this.api !== null, MitumError.detail(ECODE.NO_API, "API is not provided"));
+        Address.from(contract);
+        validateDID(did);
+        const response = await getAPIData(() => contractApi.did.getByDID(this.api, contract, did, this.delegateIP));
+        return response;
+    }
+}
+
+const currency = {
+    transfer() {
+        return new AllowedOperation(HINT.CURRENCY.TRANSFER.OPERATION);
+    },
+};
+const account = {
+    create() {
+        return new AllowedOperation(HINT.CURRENCY.CREATE_ACCOUNT.OPERATION);
+    },
+    updateKey() {
+        return new AllowedOperation(HINT.CURRENCY.UPDATE_HANDLER.OPERATION);
+    },
+};
+const contract = {
+    create() {
+        return new AllowedOperation(HINT.CURRENCY.CREATE_CONTRACT_ACCOUNT.OPERATION);
+    },
+    withdraw() {
+        return new AllowedOperation(HINT.CURRENCY.WITHDRAW.OPERATION);
+    },
+    updateRecipient() {
+        return new AllowedOperation(HINT.CURRENCY.UPDATE_RECIPIENT.OPERATION);
+    },
+    updateHandler() {
+        return new AllowedOperation(HINT.CURRENCY.UPDATE_HANDLER.OPERATION);
+    },
+};
+const credential = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.CREDENTIAL.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    addTemplate(contract) {
+        return new AllowedOperation(HINT.CREDENTIAL.ADD_TEMPLATE.OPERATION, contract, true);
+    },
+    issue(contract) {
+        return new AllowedOperation(HINT.CREDENTIAL.ISSUE.OPERATION, contract, true);
+    },
+    revoke(contract) {
+        return new AllowedOperation(HINT.CREDENTIAL.REVOKE.OPERATION, contract, true);
+    },
+};
+const dao = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.DAO.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    updateModelConfig(contract) {
+        return new AllowedOperation(HINT.DAO.UPDATE_MODEL_CONFIG.OPERATION, contract, true);
+    },
+    propose(contract) {
+        return new AllowedOperation(HINT.DAO.PROPOSE.OPERATION, contract, true);
+    },
+    cancelProposal(contract) {
+        return new AllowedOperation(HINT.DAO.CANCEL_PROPOSAL.OPERATION, contract, true);
+    },
+    register(contract) {
+        return new AllowedOperation(HINT.DAO.REGISTER.OPERATION, contract, true);
+    },
+    preSnap(contract) {
+        return new AllowedOperation(HINT.DAO.PRE_SNAP.OPERATION, contract, true);
+    },
+    postSnap(contract) {
+        return new AllowedOperation(HINT.DAO.POST_SNAP.OPERATION, contract, true);
+    },
+    vote(contract) {
+        return new AllowedOperation(HINT.DAO.VOTE.OPERATION, contract, true);
+    },
+    execute(contract) {
+        return new AllowedOperation(HINT.DAO.EXECUTE.OPERATION, contract, true);
+    },
+};
+const nft = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.NFT.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    updateModelConfig(contract) {
+        return new AllowedOperation(HINT.NFT.UPDATE_MODEL_CONFIG.OPERATION, contract, true);
+    },
+    mint(contract) {
+        return new AllowedOperation(HINT.NFT.MINT.OPERATION, contract, true);
+    },
+    approveAll(contract) {
+        return new AllowedOperation(HINT.NFT.APPROVE_ALL.OPERATION, contract, true);
+    },
+    approve(contract) {
+        return new AllowedOperation(HINT.NFT.APPROVE.OPERATION, contract, true);
+    },
+    transfer(contract) {
+        return new AllowedOperation(HINT.NFT.TRANSFER.OPERATION, contract, true);
+    },
+    addSignature(contract) {
+        return new AllowedOperation(HINT.NFT.ADD_SIGNATURE.OPERATION, contract, true);
+    },
+};
+const payment = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.PAYMENT.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    deposit(contract) {
+        return new AllowedOperation(HINT.PAYMENT.DEPOSIT.OPERATION, contract, true);
+    },
+    updateAccountSetting(contract) {
+        return new AllowedOperation(HINT.PAYMENT.UPDATE_ACCOUNT_SETTING.OPERATION, contract, true);
+    },
+    withdraw(contract) {
+        return new AllowedOperation(HINT.PAYMENT.WITHDRAW.OPERATION, contract, true);
+    },
+    transfer(contract) {
+        return new AllowedOperation(HINT.PAYMENT.REGISTER_MODEL.OPERATION, contract, true);
+    },
+};
+const point = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.POINT.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    mint(contract) {
+        return new AllowedOperation(HINT.POINT.MINT.OPERATION, contract, true);
+    },
+    transfer(contract) {
+        return new AllowedOperation(HINT.POINT.TRANSFER.OPERATION, contract, true);
+    },
+    approve(contract) {
+        return new AllowedOperation(HINT.POINT.APPROVE.OPERATION, contract, true);
+    },
+    burn(contract) {
+        return new AllowedOperation(HINT.POINT.BURN.OPERATION, contract, true);
+    },
+    transferFrom(contract) {
+        return new AllowedOperation(HINT.POINT.TRANSFER_FROM.OPERATION, contract, true);
+    },
+};
+const storage = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.STORAGE.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    createData(contract) {
+        return new AllowedOperation(HINT.STORAGE.CREATE_DATA.OPERATION, contract, true);
+    },
+    deleteData(contract) {
+        return new AllowedOperation(HINT.STORAGE.DELETE_DATA.OPERATION, contract, true);
+    },
+    updateData(contract) {
+        return new AllowedOperation(HINT.STORAGE.UPDATE_DATA.OPERATION, contract, true);
+    },
+};
+const timestamp = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.TIMESTAMP.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    issue(contract) {
+        return new AllowedOperation(HINT.TIMESTAMP.ISSUE.OPERATION, contract, true);
+    },
+};
+const token = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.TOKEN.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    mint(contract) {
+        return new AllowedOperation(HINT.TOKEN.MINT.OPERATION, contract, true);
+    },
+    transfer(contract) {
+        return new AllowedOperation(HINT.TOKEN.TRANSFER.OPERATION, contract, true);
+    },
+    approve(contract) {
+        return new AllowedOperation(HINT.TOKEN.APPROVE.OPERATION, contract, true);
+    },
+    burn(contract) {
+        return new AllowedOperation(HINT.TOKEN.BURN.OPERATION, contract, true);
+    },
+    transferFrom(contract) {
+        return new AllowedOperation(HINT.TOKEN.TRANSFER_FROM.OPERATION, contract, true);
+    },
+};
+const did = {
+    registerModel(contract) {
+        return new AllowedOperation(HINT.DID.REGISTER_MODEL.OPERATION, contract, true);
+    },
+    create(contract) {
+        return new AllowedOperation(HINT.DID.CREATE_DID.OPERATION, contract, true);
+    },
+    updateDocument(contract) {
+        return new AllowedOperation(HINT.DID.UPDATE_DID_DOCUMENT.OPERATION, contract, true);
+    },
+};
+const allowedOperation = {
+    currency,
+    account,
+    contract,
+    did,
+    credential,
+    dao,
+    nft,
+    payment,
+    point,
+    storage,
+    timestamp,
+    token,
+};
+
+class AccountAbstraction extends Generator {
+    constructor(networkID, api, delegateIP) {
+        super(networkID, api, delegateIP);
+    }
+    /**
+     * Creates a `UserOperation` for account abstraction.
+     * @param {Fact | HintedFactObject} fact - The operation fact or fact property (json) of HintedObject of operation.
+     * @param {string | Address} contract - The did contract address.
+     * @param {string} authentication_id - The authentication ID for the did contract.
+     * @returns {UserOperation<Fact>} The created `UserOperation` instance.
+     */
+    createUserOperation(fact, contract, authentication_id) {
+        return new UserOperation(this.networkID, fact, new Authentication$1(contract, authentication_id, undefined), null, new Settlement(undefined));
+    }
+    /**
+     * Adds an alternative signature to a user operation by filling the `proof_data`
+     * field of the `authentication` object.
+     *
+     * This method accepts either a `UserOperation` instance or a JSON-formatted
+     * hinted object. The operation is normalized internally and returned in
+     * hinted-object (JSON) format after the signature is applied.
+     *
+     * @param {string | Key} privateKey - The private key used to generate the signature.
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update.
+     * @returns {Promise<HintedObject | OperationJson>} A hinted-object representation of the user operation
+     * with the `authentication.proof_data` field populated.
+     */
+    async addAlterSign(privateKey, userOperation) {
+        Assert.check(isUserOp(userOperation) || isHintedObjectFromUserOp(userOperation), MitumError.detail(ECODE.INVALID_USER_OPERATION, `Input must in UserOperation format`));
+        const hintedUserOp = isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
+        privateKey = Key.from(privateKey);
+        const keypair = KeyPair.fromPrivateKey(privateKey);
+        const hashBytes = base58.decode(hintedUserOp.fact.hash);
+        const alterSign = await keypair.sign(hashBytes);
+        hintedUserOp.extension.authentication.proof_data = base58.encode(alterSign);
+        return hintedUserOp;
+    }
+    /**
+     * Updates the settlement details of a userOperation and returns a new hinted object of user operation.
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update settlement.
+     * @param {string | Address} opSender - The operation sender's address (Bundler's address).
+     * @returns {HintedObject} A new hinted object representing the updated user operation.
+     **/
+    setSettlement(userOperation, opSender) {
+        const hintedUserOp = this.getHintedUserOperation(userOperation);
+        const { authentication, proxy_payer } = hintedUserOp.extension;
+        return this.buildHintedObject(hintedUserOp, {
+            authentication: this.createAuthentication(authentication),
+            settlement: new Settlement(opSender).toHintedObject(),
+            ...(proxy_payer && { proxy_payer: new ProxyPayer(proxy_payer.proxy_payer).toHintedObject() })
+        });
+    }
+    /**
+     * Updates the proxy payer details of a userOperation and returns a new hinted object of user operation.
+     * @param {UserOperation<Fact> | HintedObject} userOperation - The user operation to update proxy payer.
+     * @param {string | Address} proxyPayer - The proxy payer's address. (address of CA)
+     * @returns {HintedObject} A new hinted object representing the updated user operation.
+     **/
+    setProxyPayer(userOperation, proxyPayer) {
+        const hintedUserOp = this.getHintedUserOperation(userOperation);
+        const { authentication, settlement } = hintedUserOp.extension;
+        return this.buildHintedObject(hintedUserOp, {
+            authentication: this.createAuthentication(authentication),
+            proxy_payer: new ProxyPayer(proxyPayer).toHintedObject(),
+            settlement: new Settlement(settlement.op_sender).toHintedObject(),
+        });
+    }
+    /** Private method to validate and convert userOperation to HintedObject */
+    getHintedUserOperation(userOperation) {
+        Assert.check(isUserOp(userOperation) || isHintedObjectFromUserOp(userOperation), MitumError.detail(ECODE.INVALID_USER_OPERATION, `Input must be in UserOperation format`));
+        return isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
+    }
+    /** Private method to create an Authentication object */
+    createAuthentication(authentication) {
+        return new Authentication$1(authentication.contract, authentication.authentication_id, authentication.proof_data).toHintedObject();
+    }
+    /** Private method to build a HintedObject with the updated extension */
+    buildHintedObject(hintedUserOp, extension) {
+        return {
+            _hint: hintedUserOp._hint,
+            fact: hintedUserOp.fact,
+            extension,
+            hash: "",
+            signs: []
+        };
     }
 }
 
@@ -8380,6 +9645,7 @@ class Mitum extends Generator {
         this._token = new Token(this.networkID, this.api, this.delegateIP);
         this._storage = new Storage(this.networkID, this.api, this.delegateIP);
         this._payment = new Payment(this.networkID, this.api, this.delegateIP);
+        this._did = new Did(this.networkID, this.api, this.delegateIP);
         this.ECODE = ECODE;
         this.PCODE = PCODE;
         this.DCODE = DCODE;
@@ -8402,6 +9668,8 @@ class Mitum extends Generator {
         this._token = new Token(this.networkID, this.api, this.delegateIP);
         this._storage = new Storage(this.networkID, this.api, this.delegateIP);
         this._payment = new Payment(this.networkID, this.api, this.delegateIP);
+        this._did = new Did(this.networkID, this.api, this.delegateIP);
+        this._aa = undefined;
         this._utils = new Utils();
     }
     get node() {
@@ -8455,8 +9723,21 @@ class Mitum extends Generator {
     get payment() {
         return this._payment;
     }
+    get did() {
+        return this._did;
+    }
     get utils() {
         return this._utils;
+    }
+    /**
+     * Account-abstraction generator. Builds and signs UserOperations.
+     *
+     * Lazily instantiated: callers that never touch `aa` (e.g. wallets that only
+     * use currency/did/nft) never construct an {@link AccountAbstraction}, so it
+     * costs nothing at runtime for them.
+     */
+    get aa() {
+        return (this._aa ?? (this._aa = new AccountAbstraction(this.networkID, this.api, this.delegateIP)));
     }
     /**
      * Set the API URL to interact with Mitum network.
@@ -8502,9 +9783,15 @@ class Mitum extends Generator {
         return this.networkID;
     }
 }
+Mitum.allowedOperation = allowedOperation;
 
+exports.AccountAbstraction = AccountAbstraction;
+exports.Authentication = Authentication$1;
 exports.BrowserProvider = BrowserProvider;
 exports.Mitum = Mitum;
+exports.ProxyPayer = ProxyPayer;
+exports.Settlement = Settlement;
+exports.UserOperation = UserOperation;
 exports.isHintedObject = isHintedObject;
 exports.isHintedObjectFromUserOp = isHintedObjectFromUserOp;
 exports.isOpFact = isOpFact;

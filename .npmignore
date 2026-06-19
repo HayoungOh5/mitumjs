@@ -4,3 +4,7 @@ rollup.config.mjs
 package-lock.json
 **.DS_Store
 tsconfig.json
+dist/operation/credential 
+dist/operation/kyc       
+dist/operation/point 
+dist/operation/prescription 

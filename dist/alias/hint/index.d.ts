@@ -52,6 +52,10 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
+        UPDATE_RECIPIENT: {
+            FACT: string;
+            OPERATION: string;
+        };
         EXTENSION: {
             AUTHENTICATION: string;
             PROXY_PAYER: string;
@@ -336,6 +340,23 @@ declare const _default: {
             FACT: string;
             OPERATION: string;
         };
+    };
+    DID: {
+        REGISTER_MODEL: {
+            FACT: string;
+            OPERATION: string;
+        };
+        CREATE_DID: {
+            FACT: string;
+            OPERATION: string;
+        };
+        UPDATE_DID_DOCUMENT: {
+            FACT: string;
+            OPERATION: string;
+        };
+        DOCUMENT: string;
+        AUTHENTICATION: string;
+        VERIFICATION_METHOD: string;
     };
 };
 export default _default;

@@ -1,4 +1,4 @@
-import { ContractFact, FactJson } from "../base";
+import { ContractFact, HintedFactObject } from "../base";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { DAOPolicy } from "./policy";
@@ -7,6 +7,6 @@ export declare class RegisterModelFact extends ContractFact {
     readonly policy: DAOPolicy;
     constructor(votingPowerToken: string, sender: string | Address, contract: string | Address, option: "crypto" | "biz", policy: DAOPolicy, currency: string | CurrencyID);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
     get operationHint(): string;
 }

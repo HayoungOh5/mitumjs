@@ -1,5 +1,5 @@
 import { DAOFact } from "./fact";
-import { FactJson } from "../base";
+import { HintedFactObject } from "../base";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 import { BizProposal, CryptoProposal } from "./proposal";
@@ -7,6 +7,6 @@ export declare class ProposeFact extends DAOFact {
     readonly proposal: CryptoProposal | BizProposal;
     constructor(token: string, sender: string | Address, contract: string | Address, proposalID: string, proposal: CryptoProposal | BizProposal, currency: string | CurrencyID);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
     get operationHint(): string;
 }

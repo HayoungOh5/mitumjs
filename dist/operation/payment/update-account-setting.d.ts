@@ -1,4 +1,4 @@
-import { FactJson } from "../base";
+import { HintedFactObject } from "../base";
 import { PaymentFact } from "./fact";
 import { Big } from "../../types";
 import { Address } from "../../key/address";
@@ -10,6 +10,6 @@ export declare class UpdateFact extends PaymentFact {
     readonly duration: Big;
     constructor(token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID, transfer_limit: string | number, start_time: string | number, end_time: string | number, duration: string | number);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
     get operationHint(): string;
 }

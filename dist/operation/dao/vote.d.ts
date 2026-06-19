@@ -1,5 +1,5 @@
 import { DAOFact } from "./fact";
-import { FactJson } from "../base";
+import { HintedFactObject } from "../base";
 import { Big } from "../../types";
 import type { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
@@ -7,6 +7,6 @@ export declare class VoteFact extends DAOFact {
     readonly vote: Big;
     constructor(token: string, sender: string | Address, contract: string | Address, proposalID: string, vote: string | number | Big, currency: string | CurrencyID);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
     get operationHint(): string;
 }

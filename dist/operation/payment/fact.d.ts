@@ -1,8 +1,8 @@
-import { ContractFact, FactJson } from "../base";
+import { ContractFact, HintedFactObject } from "../base";
 import { Address } from "../../key/address";
 import { CurrencyID } from "../../common";
 export declare abstract class PaymentFact extends ContractFact {
     protected constructor(hint: string, token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
 }

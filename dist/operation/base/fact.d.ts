@@ -1,5 +1,5 @@
 import { Item } from "./item";
-import { FactJson } from "./types";
+import { HintedFactObject } from "./types";
 import { Address } from "../../key/address";
 import { IBytes, IHintedObject } from "../../types";
 import { CurrencyID, Token } from "../../common";
@@ -12,7 +12,7 @@ export declare abstract class Fact implements IBytes, IHintedObject {
     get hash(): Uint8Array;
     hashing(): Uint8Array;
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
     abstract get operationHint(): string;
 }
 export declare abstract class OperationFact<T extends Item> extends Fact {
@@ -20,7 +20,7 @@ export declare abstract class OperationFact<T extends Item> extends Fact {
     readonly items: T[];
     protected constructor(hint: string, token: string, sender: string | Address, items: T[]);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
 }
 export declare abstract class ItemOperationFact<T extends Item> extends Fact {
     readonly sender: Address;
@@ -28,7 +28,7 @@ export declare abstract class ItemOperationFact<T extends Item> extends Fact {
     readonly currency: CurrencyID;
     protected constructor(hint: string, token: string, sender: string | Address, items: T[], currency: string | CurrencyID);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
 }
 export declare abstract class ContractFact extends Fact {
     readonly sender: Address;
@@ -36,7 +36,7 @@ export declare abstract class ContractFact extends Fact {
     readonly currency: CurrencyID;
     protected constructor(hint: string, token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
 }
 export declare abstract class NodeFact extends Fact {
     protected constructor(hint: string, token: string);

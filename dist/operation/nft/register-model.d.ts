@@ -1,4 +1,4 @@
-import { ContractFact, FactJson } from "../base";
+import { ContractFact, HintedFactObject } from "../base";
 import { Address } from "../../key/address";
 import type { CurrencyID } from "../../common";
 import { Big, LongString } from "../../types";
@@ -9,6 +9,6 @@ export declare class RegisterModelFact extends ContractFact {
     readonly minterWhitelist: Address[];
     constructor(token: string, sender: string | Address, contract: string | Address, name: string | LongString, royalty: string | number | Big, uri: string | LongString, minterWhitelist: (string | Address)[], currency: string | CurrencyID);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
     get operationHint(): string;
 }

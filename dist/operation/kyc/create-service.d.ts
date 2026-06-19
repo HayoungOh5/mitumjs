@@ -1,8 +1,0 @@
-import { ContractFact } from "../base";
-import { Address } from "../../key/address";
-import { CurrencyID } from "../../common";
-export declare class CreateServiceFact extends ContractFact {
-    constructor(token: string, sender: string | Address, contract: string | Address, currency: string | CurrencyID);
-    toBytes(): Uint8Array;
-    get operationHint(): string;
-}

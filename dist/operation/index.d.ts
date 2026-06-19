@@ -10,5 +10,7 @@ import { Point } from "./point";
 import { Storage } from "./storage";
 import { Payment } from "./payment";
 import { Signer } from "./signer";
+import { Did } from "./did";
 import * as Base from "./base";
-export { Currency, Account, Contract, NFT, Credential, DAO, STO, KYC, TimeStamp, Token, Point, Storage, Payment, Signer, Base, };
+import { allowedOperation } from "./allowed";
+export { Currency, Account, Contract, NFT, Credential, DAO, STO, KYC, TimeStamp, Token, Point, Storage, Payment, Signer, Did, Base, allowedOperation, };

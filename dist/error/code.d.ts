@@ -1,4 +1,4 @@
-export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.HDWALLET[keyof typeof ECODE.HDWALLET] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.NFT[keyof typeof ECODE.NFT] | typeof ECODE.STO[keyof typeof ECODE.STO] | typeof ECODE.DAO[keyof typeof ECODE.DAO]);
+export type ErrorCode = (typeof ECODE[keyof typeof ECODE] | typeof ECODE.HDWALLET[keyof typeof ECODE.HDWALLET] | typeof ECODE.CURRENCY[keyof typeof ECODE.CURRENCY] | typeof ECODE.NFT[keyof typeof ECODE.NFT] | typeof ECODE.STO[keyof typeof ECODE.STO] | typeof ECODE.DAO[keyof typeof ECODE.DAO] | typeof ECODE.DID[keyof typeof ECODE.DID]);
 export declare const ECODE: {
     readonly NO_API: "EC_NO_API";
     readonly UNKNOWN: "EC_UNKNOWN";
@@ -60,7 +60,7 @@ export declare const ECODE: {
         readonly INVALID_CURRENCY_POLICY: "EC_INVALID_CURRENCY_POLICY";
         readonly INVALID_CURRENCY_DESIGN: "EC_INVALID_CURRENCY_DESIGN";
     };
-    readonly AUTH_DID: {
+    readonly DID: {
         readonly INVALID_DID: "EC_INVALID_DID";
         readonly INVALID_DOCUMENT: "EC_INVALID_DOCUMENT";
         readonly INVALID_AUTHENTICATION: "EC_INVALID_AUTHENTICATION";
@@ -209,10 +209,16 @@ export declare const DCODE: {
         readonly description: "Duplicate account addresses provided in an invalid manner. (sender=receiver, sender=contract, etc.)";
         readonly subject: "";
     };
+    readonly IV_AA_EXTENSION: {
+        readonly code: "D107";
+        readonly keyword: readonly ["auth and settlement must be present together"];
+        readonly description: "Account abstraction operation extension is malformed: authentication and settlement must both be present.";
+        readonly subject: "";
+    };
     readonly IV_SIGN: {
         readonly code: "D201";
         readonly keyword: readonly ["Invalid signing", "BaseNodeSign"];
-        readonly description: "The private key does not match the address or node sign required or the signatures for the multiSig account do not meet the threshold";
+        readonly description: "Signature verification failed. Possible causes: private key does not match the address, node sign required, multiSig signatures below threshold, or network ID mismatch.";
         readonly subject: "";
     };
     readonly IV_ALTERSIGN: {

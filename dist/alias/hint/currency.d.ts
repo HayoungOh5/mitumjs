@@ -50,6 +50,10 @@ declare const _default: {
         FACT: string;
         OPERATION: string;
     };
+    UPDATE_RECIPIENT: {
+        FACT: string;
+        OPERATION: string;
+    };
     EXTENSION: {
         AUTHENTICATION: string;
         PROXY_PAYER: string;

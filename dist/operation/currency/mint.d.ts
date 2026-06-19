@@ -1,4 +1,4 @@
-import { NodeFact, FactJson } from "../base";
+import { NodeFact, HintedFactObject } from "../base";
 import { Address } from "../../key/address";
 import type { Amount } from "../../common";
 export declare class MintFact extends NodeFact {
@@ -6,7 +6,7 @@ export declare class MintFact extends NodeFact {
     readonly receiver: Address;
     constructor(token: string, receiver: string | Address, amount: Amount);
     toBytes(): Uint8Array;
-    toHintedObject(): FactJson;
+    toHintedObject(): HintedFactObject;
     toString(): string;
     get operationHint(): string;
 }
