@@ -3,6 +3,12 @@ export type Setting<T> = {
     set: (val: T) => T;
 };
 export declare const Version: Setting<string>;
+/**
+ * The default network ID (chain) used when a Mitum instance is created without
+ * an explicit `networkID`. This is an immutable constant so that constructing a
+ * Mitum instance never depends on mutable global state.
+ */
+export declare const DEFAULT_NETWORK_ID = "mitum";
 export declare const NetworkID: Setting<string>;
 export type RangeConfig = {
     value?: number;

@@ -2638,16 +2638,12 @@ const Version = (() => {
         }
     };
 })();
-const NetworkID = (() => {
-    let v = "mitum";
-    return {
-        get: () => v,
-        set: (val) => {
-            v = val;
-            return v;
-        }
-    };
-})();
+/**
+ * The default network ID (chain) used when a Mitum instance is created without
+ * an explicit `networkID`. This is an immutable constant so that constructing a
+ * Mitum instance never depends on mutable global state.
+ */
+const DEFAULT_NETWORK_ID = "mitum";
 const getRangeConfig = (min, max) => {
     return {
         value: min == (max ?? min) ? min : undefined,
@@ -12196,8 +12192,41 @@ class BrowserProvider {
 _BrowserProvider_injectedProvider = new WeakMap();
 
 class Mitum extends Generator {
-    constructor(api, delegateIP) {
-        super(NetworkID.get(), api, delegateIP);
+    /**
+     * Create a Mitum instance — the entry point for interacting with a Mitum network.
+     *
+     * @param {string} [api] - Base URL of the Mitum digest API to connect to
+     * (e.g. `"https://devnet.imfact.im/"`). Can be changed later with {@link Mitum.setAPI}.
+     * @param {string | object} [options] - Optional connection settings. For backward
+     * compatibility, a plain string is accepted and treated as `delegateIP`.
+     * @param {string} [options.networkID] - The network ID (a.k.a. chain ID) of the
+     * target network. Defaults to `"mitum"` when omitted. This value is signed into
+     * every operation, so it **must** match the chain ID of the network at `api`;
+     * otherwise the node rejects the operation on signature verification. When you point
+     * `api` at a network with a different chain ID, pass its `networkID` here (or update it
+     * later with {@link Mitum.setNetworkID}).
+     * @param {string} [options.delegateIP] - Optional delegate (proxy) server address for
+     * fee delegation. Leave unset if you are not using a delegate.
+     *
+     * @example
+     * // Connect to a network whose chain ID is the default "mitum"
+     * const mitum = new Mitum("https://devnet.imfact.im/");
+     *
+     * @example
+     * // Connect to a network with a different chain ID
+     * const mitum = new Mitum("https://devnet.imfact.im/", { networkID: "devnet" });
+     *
+     * @example
+     * // With a delegate server
+     * const mitum = new Mitum(api, { networkID: "devnet", delegateIP: "https://.../delegate" });
+     *
+     * @example
+     * // Deprecated (still supported): passing delegateIP as a positional string
+     * const mitum = new Mitum(api, "https://.../delegate");
+     */
+    constructor(api, options) {
+        const opts = typeof options === "string" ? { delegateIP: options } : options;
+        super(opts?.networkID ?? DEFAULT_NETWORK_ID, api, opts?.delegateIP);
         this._node = new Node(this.api, this.delegateIP);
         this._account = new Account(this.networkID, this.api, this.delegateIP);
         this._currency = new Currency(this.networkID, this.api, this.delegateIP);
@@ -12227,6 +12256,7 @@ class Mitum extends Generator {
         this._currency = new Currency(this.networkID, this.api, this.delegateIP);
         this._block = new Block(this.api, this.delegateIP);
         this._operation = new Operation(this.networkID, this.api, this.delegateIP);
+        this._signer = new Signer(this.networkID, this.api);
         this._contract = new Contract(this.networkID, this.api, this.delegateIP);
         this._nft = new NFT(this.networkID, this.api, this.delegateIP);
         this._timestamp = new TimeStamp(this.networkID, this.api, this.delegateIP);
@@ -12240,7 +12270,8 @@ class Mitum extends Generator {
         this._payment = new Payment(this.networkID, this.api, this.delegateIP);
         this._did = new Did(this.networkID, this.api, this.delegateIP);
         this._aa = undefined;
-        this._utils = new Utils();
+        // `_utils` is kept: it does not depend on the API or network ID, and
+        // recreating it would reset a decimal set with `utils.setDecimal()`.
     }
     get node() {
         return this._node;
@@ -12310,8 +12341,21 @@ class Mitum extends Generator {
         return (this._aa ?? (this._aa = new AccountAbstraction(this.networkID, this.api, this.delegateIP)));
     }
     /**
-     * Set the API URL to interact with Mitum network.
-     * @param {string | IP} [api] - The API URL to set
+     * Set the API URL used to interact with the Mitum network.
+     *
+     * ⚠️ Switching to a network with a different chain ID? Changing the API alone is
+     * not enough — the network ID is **not** updated automatically. Verify the target
+     * network's chain ID and update it together with {@link Mitum.setNetworkID}.
+     * The network ID is signed into every operation, so a mismatch causes the node to
+     * reject the operation on signature verification.
+     *
+     * The decimal set with `utils.setDecimal()` is kept. If the new network's base
+     * currency uses a different decimal, set it again.
+     *
+     * @param {string | IP} [api] - The API URL to set.
+     * @example
+     * mitum.setAPI("https://devnet.imfact.im/");
+     * mitum.setNetworkID("devnet"); // required when the chain ID differs
      */
     setAPI(api) {
         super.setAPI(api);
@@ -12326,8 +12370,18 @@ class Mitum extends Generator {
         this.refresh();
     }
     /**
-     * Set the blockchain network ID (chain). The default value is configured to 'mitum'.
-     * @param {string} [networkID] - The network ID to set.
+     * Set the blockchain network ID (a.k.a. chain ID). The default value is `"mitum"`.
+     *
+     * ⚠️ The network ID must match the chain ID of the network at the current API URL.
+     * It is signed into every operation, so an incorrect value causes the node to reject
+     * the operation on signature verification. When switching to another chain, always
+     * change the API and the network ID together — verify the target network's chain ID
+     * first, then update both (see {@link Mitum.setAPI}).
+     *
+     * @param {string} [networkID] - The network ID (chain ID) to set.
+     * @example
+     * mitum.setAPI("https://devnet.imfact.im/");
+     * mitum.setNetworkID("devnet");
      */
     setNetworkID(networkID) {
         super.setNetworkID(networkID);

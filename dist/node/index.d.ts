@@ -1,6 +1,6 @@
-import { Version, NetworkID, Config, RangeConfig } from "./config";
+import { Version, NetworkID, DEFAULT_NETWORK_ID, Config, RangeConfig } from "./config";
 import { Generator, IP } from "../types";
-export { Version, NetworkID, Config, RangeConfig, };
+export { Version, NetworkID, DEFAULT_NETWORK_ID, Config, RangeConfig, };
 export declare class Node extends Generator {
     constructor(api?: string | IP, delegateIP?: string | IP);
     /**
