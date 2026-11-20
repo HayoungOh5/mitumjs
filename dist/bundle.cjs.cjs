@@ -9387,8 +9387,12 @@ class AccountAbstraction extends Generator {
         const hintedUserOp = isUserOp(userOperation) ? userOperation.toHintedObject() : userOperation;
         privateKey = Key.from(privateKey);
         const keypair = KeyPair.fromPrivateKey(privateKey);
+        const networkIDBytes = new TextEncoder().encode(this.networkID);
         const hashBytes = base58.decode(hintedUserOp.fact.hash);
-        const alterSign = await keypair.sign(hashBytes);
+        const message = new Uint8Array(networkIDBytes.length + hashBytes.length);
+        message.set(networkIDBytes, 0);
+        message.set(hashBytes, networkIDBytes.length);
+        const alterSign = await keypair.sign(message);
         hintedUserOp.extension.authentication.proof_data = base58.encode(alterSign);
         return hintedUserOp;
     }
@@ -9662,6 +9666,7 @@ class Mitum extends Generator {
         this._currency = new Currency(this.networkID, this.api, this.delegateIP);
         this._block = new Block(this.api, this.delegateIP);
         this._operation = new Operation(this.networkID, this.api, this.delegateIP);
+        this._aa = new AccountAbstraction(this.networkID, this.api, this.delegateIP);
         this._signer = new Signer(this.networkID, this.api);
         this._contract = new Contract(this.networkID, this.api, this.delegateIP);
         this._nft = new NFT(this.networkID, this.api, this.delegateIP);
@@ -9687,6 +9692,7 @@ class Mitum extends Generator {
         this._block = new Block(this.api, this.delegateIP);
         this._operation = new Operation(this.networkID, this.api, this.delegateIP);
         this._signer = new Signer(this.networkID, this.api);
+        this._aa = new AccountAbstraction(this.networkID, this.api, this.delegateIP);
         this._contract = new Contract(this.networkID, this.api, this.delegateIP);
         this._nft = new NFT(this.networkID, this.api, this.delegateIP);
         this._timestamp = new TimeStamp(this.networkID, this.api, this.delegateIP);
@@ -9699,7 +9705,6 @@ class Mitum extends Generator {
         this._storage = new Storage(this.networkID, this.api, this.delegateIP);
         this._payment = new Payment(this.networkID, this.api, this.delegateIP);
         this._did = new Did(this.networkID, this.api, this.delegateIP);
-        this._aa = undefined;
         // `_utils` is kept: it does not depend on the API or network ID, and
         // recreating it would reset a decimal set with `utils.setDecimal()`.
     }
